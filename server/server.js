@@ -18,7 +18,19 @@ app.use(
 app.use(express.json());
 
 const userRouter = require("./routes/userRoutes");
-app.use("/auth", userRouter);
+app.use("/api/auth", userRouter);
+
+// STATE ROUTES
+const stateRoutes = require("./routes/stateRoutes");
+app.use("/api/states", stateRoutes);
+
+// DISTRICT ROUTES
+const districtRoutes = require("./routes/districtRoutes");
+app.use("/api/districts", districtRoutes);
+
+// CITY ROUTES
+const cityRoutes = require("./routes/cityRoutes");
+app.use("/api/cities", cityRoutes);
 
 mongoose
   .connect(url)
@@ -26,5 +38,5 @@ mongoose
   .catch((error) => console.log(`Database Error:`, error));
 
 app.listen(port, () => {
-  console.log(`Server is running on ${clientUrl}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });

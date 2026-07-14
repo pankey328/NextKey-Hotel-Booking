@@ -50,6 +50,12 @@ const Login = () => {
       if (res.data.user) {
         localStorage.setItem("user", JSON.stringify(res.data.user));
         localStorage.setItem("theme", res.data.user.theme);
+
+        if (res.data.user.role === "admin") {
+          navigate("/superadmin"); // Redirect to Super Admin Dashboard
+        } else {
+          navigate("/"); // Redirect to User Dashboard
+        }
       }
       navigate("/home");
     } catch (error) {
@@ -86,7 +92,7 @@ const Login = () => {
         localStorage.setItem("theme", res.data.user.theme);
 
         if (res.data.user.role === "admin") {
-          navigate("/admin-dashboard"); // Redirect to Admin Dashboard
+          navigate("/superadmin"); // Redirect to Super Admin Dashboard
         } else {
           navigate("/"); // Redirect to User Dashboard
         }

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Home from "./components/Home";
 import Login from "./components/auth/Login";
 import Signup from "./components/auth/Signup";
@@ -7,6 +7,13 @@ import Navbar from "./components/Navbar";
 import ResetPassword from "./components/auth/ResetPassword";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import AdminDashboard from "./components/AdminDashboard";
+
+import ProtectedRoute from "./routes/ProtectedRoute";
+
+import SuperAdminLayout from "./SuperAdmin/SuperAdminLayout";
+import StateManager from "./SuperAdmin/pages/StateManager";
+import DistrictManager from "./SuperAdmin/pages/DistrictManager";
+import CityManager from "./SuperAdmin/pages/CityManager";
 
 function App() {
   return (
@@ -20,6 +27,19 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
+          <Route
+            path="/superadmin"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+                <SuperAdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="states" replace />} />
+            <Route path="states" element={<StateManager />} />
+            <Route path="districts" element={<DistrictManager />} />
+            <Route path="cities" element={<CityManager />} />
+          </Route>{" "}
         </Routes>
       </div>
     </BrowserRouter>
