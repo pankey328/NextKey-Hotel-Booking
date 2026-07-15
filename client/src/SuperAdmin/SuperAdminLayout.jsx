@@ -51,9 +51,18 @@ const SuperAdminLayout = () => {
           >
             Manage Cities
           </Link>
+          <Link
+            to="/superadmin/hotels"
+            className={`block px-4 py-3 rounded-lg transition-colors ${
+              isActive("/hotels")
+                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            Manage Hotels
+          </Link>
         </nav>
       </aside>
-
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-8">
         <Outlet />{" "}

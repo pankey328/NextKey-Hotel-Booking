@@ -14,6 +14,8 @@ import SuperAdminLayout from "./SuperAdmin/SuperAdminLayout";
 import StateManager from "./SuperAdmin/pages/StateManager";
 import DistrictManager from "./SuperAdmin/pages/DistrictManager";
 import CityManager from "./SuperAdmin/pages/CityManager";
+import HotelRegistration from "./components/HotelRegistration";
+import HotelManager from "./SuperAdmin/pages/HotelManager";
 
 function App() {
   return (
@@ -27,6 +29,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
+          <Route path="/register-hotel" element={<HotelRegistration />} />
           <Route
             path="/superadmin"
             element={
@@ -39,6 +42,7 @@ function App() {
             <Route path="states" element={<StateManager />} />
             <Route path="districts" element={<DistrictManager />} />
             <Route path="cities" element={<CityManager />} />
+            <Route path="hotels" element={<HotelManager />} />
           </Route>{" "}
         </Routes>
       </div>

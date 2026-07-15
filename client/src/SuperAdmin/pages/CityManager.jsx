@@ -71,15 +71,15 @@ const CityManager = () => {
   const handleStateChange = (e) => {
     const stateId = e.target.value;
     setSelectedStateId(stateId);
-    setSelectedDistrictId(""); // Reset the district dropdown
+    setSelectedDistrictId("");
     fetchDistrictsByState(stateId);
-    fetchCities(stateId, ""); // Fetch cities for this specific state
+    fetchCities(stateId, "");
   };
 
   const handleDistrictChange = (e) => {
     const districtId = e.target.value;
     setSelectedDistrictId(districtId);
-    fetchCities(selectedStateId, districtId); // Fetch cities for this specific district
+    fetchCities(selectedStateId, districtId);
   };
 
   const handleAddCity = async (e) => {
@@ -104,7 +104,6 @@ const CityManager = () => {
     }
   };
 
-  // FIX 3: Strict action handling to prevent ghost items in the UI
   const handleAction = async (action, id) => {
     try {
       if (action === "softDelete") {
@@ -144,7 +143,7 @@ const CityManager = () => {
             onSubmit={handleAddCity}
             className="flex flex-col md:flex-row gap-3 w-full max-w-5xl"
           >
-            {/* Step 1: Select State */}
+            {/* Select State */}
             <select
               value={selectedStateId}
               onChange={handleStateChange}
@@ -161,7 +160,7 @@ const CityManager = () => {
               ))}
             </select>
 
-            {/* Step 2: Select District */}
+            {/* Select District */}
             <select
               value={selectedDistrictId}
               onChange={handleDistrictChange}
@@ -179,7 +178,7 @@ const CityManager = () => {
               ))}
             </select>
 
-            {/* Step 3: Name City */}
+            {/* Name City */}
             <input
               type="text"
               placeholder="3. Enter city name..."
@@ -323,7 +322,7 @@ const CityManager = () => {
         </table>
       </div>
 
-      {/* ENHANCED VIEW MODAL */}
+      {/* VIEW MODAL */}
       {showViewModal && selectedCity && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
           <div

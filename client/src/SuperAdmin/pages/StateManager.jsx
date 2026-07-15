@@ -128,7 +128,7 @@ const StateManager = () => {
         </button>
       </div>
 
-      {/* Table Wrapper */}
+      {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700/60">
         <table className="w-full text-left border-collapse min-w-[500px]">
           <thead>
@@ -218,7 +218,7 @@ const StateManager = () => {
         </table>
       </div>
 
-      {/* ENHANCED VIEW MODAL */}
+      {/* VIEW MODAL */}
       {showViewModal && selectedState && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100 opacity-100">

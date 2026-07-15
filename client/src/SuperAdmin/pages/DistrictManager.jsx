@@ -175,7 +175,7 @@ const DistrictManager = () => {
         </button>
       </div>
 
-      {/* Table Wrapper */}
+      {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700/60">
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
@@ -280,7 +280,7 @@ const DistrictManager = () => {
         </table>
       </div>
 
-      {/* ENHANCED VIEW MODAL */}
+      {/* VIEW MODAL */}
       {showViewModal && selectedDistrict && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
           <div

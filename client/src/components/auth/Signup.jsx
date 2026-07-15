@@ -239,17 +239,34 @@ const Signup = () => {
             {isOtpSent ? "Verify & Sign Up" : "Send OTP"}
           </button>
 
+          {/* FOOTER LINKS */}
           {!isOtpSent && (
-            <div className="text-center mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm transition-colors">
-              <span className="text-gray-600 dark:text-gray-400">
-                Already have an account?{" "}
-              </span>
-              <Link
-                to="/login"
-                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
-              >
-                Log In
-              </Link>
+            <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-4 transition-colors">
+              {/* Standard Login */}
+              <div className="text-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Already have an account?{" "}
+                </span>
+                <Link
+                  to="/login"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+                >
+                  Log In
+                </Link>
+              </div>
+
+              {/* Vendor Registration CTA */}
+              <div className="text-center text-sm bg-gray-50 dark:bg-gray-700/40 p-3 rounded-lg border border-gray-100 dark:border-gray-600/50">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Looking to list your property?{" "}
+                </span>
+                <Link
+                  to="/register-hotel"
+                  className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold transition-colors ml-1"
+                >
+                  Become a Hotel?
+                </Link>
+              </div>
             </div>
           )}
         </form>
