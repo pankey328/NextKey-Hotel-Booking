@@ -39,6 +39,10 @@ app.use("/api/cities", cityRoutes);
 const hotelRoutes = require("./routes/hotelRoutes");
 app.use("/api/hotels", hotelRoutes);
 
+// VENDOR (ADMIN) ROUTES
+const vendorRoutes = require("./routes/vendorRoutes");
+app.use("/api/vendors", vendorRoutes);
+
 mongoose
   .connect(url)
   .then(() => console.log(`DATABASE Connected`))

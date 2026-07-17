@@ -96,7 +96,7 @@ const Signup = () => {
           noValidate
           className="space-y-4"
         >
-          {/* STEP 1: INITIAL FORM FIELDS */}
+          {/* INITIAL FORM FIELDS */}
           {!isOtpSent && (
             <>
               <div>
@@ -192,7 +192,7 @@ const Signup = () => {
             </>
           )}
 
-          {/* STEP 2: OTP FIELD */}
+          {/* OTP FIELD */}
           {isOtpSent && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 text-center transition-colors">
@@ -261,10 +261,10 @@ const Signup = () => {
                   Looking to list your property?{" "}
                 </span>
                 <Link
-                  to="/register-hotel"
+                  to="/partner-registration"
                   className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 font-semibold transition-colors ml-1"
                 >
-                  Become a Hotel?
+                  Become a Partner
                 </Link>
               </div>
             </div>

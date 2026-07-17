@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
-import { Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const HotelRegistration = () => {
+const EditHotel = () => {
+  const { id } = useParams(); // trackingId
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
-    hotelType: "Hotel",
+    hotelType: "",
     starRating: 3,
     email: "",
     phone: "",
@@ -14,32 +17,83 @@ const HotelRegistration = () => {
     description: "",
   });
   const [image, setImage] = useState(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState("");
 
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [cities, setCities] = useState([]);
+
   const [selectedStateId, setSelectedStateId] = useState("");
   const [selectedDistrictId, setSelectedDistrictId] = useState("");
   const [selectedCityId, setSelectedCityId] = useState("");
 
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const token = localStorage.getItem("token");
-
-  // Fetch states
+  // Fetch existing hotel data and dropdown lists on load
   useEffect(() => {
-    const fetchStates = async () => {
+    const fetchInitialData = async () => {
       try {
-        const res = await api.get("/states?isDeleted=false");
-        setStates(res.data.data);
+        // Fetch All States
+        const statesRes = await api.get("/states?isDeleted=false");
+        setStates(statesRes.data.data);
+
+        // Fetch Hotel Data
+        const hotelRes = await api.get(`/hotels/status/${id}`);
+        const hotel = hotelRes.data.data;
+
+        if (hotel.status === "approved") {
+          alert("Approved hotels cannot be edited.");
+          navigate("/admin-dashboard");
+          return;
+        }
+
+        setFormData({
+          name: hotel.name,
+          hotelType: hotel.hotelType,
+          starRating: hotel.starRating,
+          email: hotel.email,
+          phone: hotel.phone,
+          address: hotel.address,
+          locationLink: hotel.locationLink || "",
+          description: hotel.description || "",
+        });
+        setCurrentImageUrl(hotel.imageUrl);
+
+        // Set Location Dropdowns
+        const stateId = hotel.stateId?._id || hotel.stateId;
+        const districtId = hotel.districtId?._id || hotel.districtId;
+        const cityId = hotel.cityId?._id || hotel.cityId;
+
+        setSelectedStateId(stateId);
+
+        // Fetch dependent districts and cities based on existing hotel data
+        if (stateId) {
+          const distRes = await api.get(
+            `/districts?stateId=${stateId}&isDeleted=false`,
+          );
+          setDistricts(distRes.data.data);
+          setSelectedDistrictId(districtId);
+        }
+        if (districtId) {
+          const cityRes = await api.get(
+            `/cities?districtId=${districtId}&isDeleted=false`,
+          );
+          setCities(cityRes.data.data);
+          setSelectedCityId(cityId);
+        }
       } catch (error) {
-        console.error("Error fetching states:", error);
+        console.error("Error fetching data:", error);
+        alert("Failed to load property details.");
+        navigate("/admin-dashboard");
+      } finally {
+        setLoading(false);
       }
     };
-    fetchStates();
-  }, []);
+    fetchInitialData();
+  }, [id, navigate]);
 
+  // Handlers for Dropdowns
   const handleStateChange = async (e) => {
     const stateId = e.target.value;
     setSelectedStateId(stateId);
@@ -70,15 +124,13 @@ const HotelRegistration = () => {
     }
   };
 
+  // Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!image) return alert("Please upload a hotel image.");
     if (!selectedCityId)
       return alert("Please complete the location selection.");
+    setSubmitting(true);
 
-    setLoading(true);
-
-    // FormData to send files
     const submitData = new FormData();
     Object.keys(formData).forEach((key) =>
       submitData.append(key, formData[key]),
@@ -86,55 +138,38 @@ const HotelRegistration = () => {
     submitData.append("stateId", selectedStateId);
     submitData.append("districtId", selectedDistrictId);
     submitData.append("cityId", selectedCityId);
-    submitData.append("image", image);
+
+    // Only append image if a NEW one was selected
+    if (image) submitData.append("image", image);
 
     try {
-      await api.post("/hotels/register", submitData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setSuccess(true);
+      await api.put(`/hotels/update/${id}`, submitData);
+      alert("Property updated successfully! Status is now pending review.");
+      navigate("/admin-dashboard"); // Go back to dashboard
     } catch (error) {
-      alert(error.response?.data?.message || "Registration failed.");
+      alert(error.response?.data?.message || "Update failed.");
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
 
-  if (success) {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 max-w-md text-center">
-          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            ✓
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-            Registration Submitted!
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Your application is currently under review by our team. If approved,
-            you will receive your login credentials via email shortly.
-          </p>
-        </div>
+      <div className="p-12 text-center text-gray-500">
+        Loading Property Details...
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-10 w-full max-w-3xl border border-gray-100 dark:border-gray-700">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center w-full relative">
-            Add a New Property
-          </h1>
-        </div>
-        <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
-          Fill out the details below to list your property on our platform.
-        </p>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-10 w-full max-w-3xl">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-8">
+          Edit Property
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Same form fields as HotelRegistration.js */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Property Name
@@ -146,7 +181,7 @@ const HotelRegistration = () => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
 
@@ -159,7 +194,7 @@ const HotelRegistration = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, hotelType: e.target.value })
                 }
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="Hotel">Hotel</option>
                 <option value="Resort">Resort</option>
@@ -182,7 +217,7 @@ const HotelRegistration = () => {
                     starRating: Number(e.target.value),
                   })
                 }
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value={1}>1 Star</option>
                 <option value={2}>2 Stars</option>
@@ -203,7 +238,7 @@ const HotelRegistration = () => {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
 
@@ -218,7 +253,22 @@ const HotelRegistration = () => {
                   setFormData({ ...formData, phone: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Local Address
+              </label>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData({ ...formData, address: e.target.value })
+                }
+                required
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               />
             </div>
 
@@ -230,14 +280,14 @@ const HotelRegistration = () => {
                 value={selectedStateId}
                 onChange={handleStateChange}
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="" disabled>
                   Select State...
                 </option>
                 {states.map((state) => (
                   <option key={state._id} value={state._id}>
-                    {state.name.toUpperCase()}
+                    {state.name}
                   </option>
                 ))}
               </select>
@@ -252,14 +302,14 @@ const HotelRegistration = () => {
                 onChange={handleDistrictChange}
                 required
                 disabled={!selectedStateId}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="" disabled>
                   Select District...
                 </option>
                 {districts.map((district) => (
                   <option key={district._id} value={district._id}>
-                    {district.name.toUpperCase()}
+                    {district.name}
                   </option>
                 ))}
               </select>
@@ -274,38 +324,23 @@ const HotelRegistration = () => {
                 onChange={(e) => setSelectedCityId(e.target.value)}
                 required
                 disabled={!selectedDistrictId}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="" disabled>
                   Select City...
                 </option>
                 {cities.map((city) => (
                   <option key={city._id} value={city._id}>
-                    {city.name.toUpperCase()}
+                    {city.name}
                   </option>
                 ))}
               </select>
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Local Address
-              </label>
-              <input
-                type="text"
-                value={formData.address}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value })
-                }
-                required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-              />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Google Maps Location Link (Optional)
+              Google Maps Link (Optional)
             </label>
             <input
               type="url"
@@ -313,7 +348,7 @@ const HotelRegistration = () => {
               onChange={(e) =>
                 setFormData({ ...formData, locationLink: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
           </div>
 
@@ -322,49 +357,57 @@ const HotelRegistration = () => {
               Description
             </label>
             <textarea
-              name="description"
               rows="3"
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             ></textarea>
           </div>
 
-          <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-pointer">
-              {image
-                ? `Selected: ${image.name}`
-                : "Upload Main Property Image (Required)"}
+          {/* Image Upload section for Editing */}
+          <div className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 flex flex-col sm:flex-row items-center gap-4">
+            {currentImageUrl && !image && (
+              <img
+                src={currentImageUrl}
+                alt="Current Property"
+                className="w-24 h-24 object-cover rounded-md shadow-sm"
+              />
+            )}
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Update Property Image (Leave empty to keep current image)
+              </label>
               <input
                 type="file"
                 accept="image/*"
                 onChange={(e) => setImage(e.target.files[0])}
-                required
-                className="hidden"
+                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
               />
-            </label>
-            {!image && (
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                Click to browse (JPG, PNG, WEBP)
-              </span>
-            )}
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 disabled:opacity-70"
-          >
-            {loading
-              ? "Submitting Registration..."
-              : "Submit Registration Application"}
-          </button>
+          <div className="flex gap-4 pt-4">
+            <button
+              type="button"
+              onClick={() => navigate("/admin-dashboard")}
+              className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all"
+            >
+              {submitting ? "Saving Updates..." : "Save Changes"}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 };
 
-export default HotelRegistration;
+export default EditHotel;

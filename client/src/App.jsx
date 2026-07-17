@@ -6,7 +6,8 @@ import Signup from "./components/auth/Signup";
 import Navbar from "./components/Navbar";
 import ResetPassword from "./components/auth/ResetPassword";
 import ForgotPassword from "./components/auth/ForgotPassword";
-import AdminDashboard from "./components/AdminDashboard";
+import VendorDashboard from "./components/VendorDashboard";
+import VendorRegistration from "./components/VendorRegistration";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -16,7 +17,11 @@ import DistrictManager from "./SuperAdmin/pages/DistrictManager";
 import CityManager from "./SuperAdmin/pages/CityManager";
 import HotelRegistration from "./components/HotelRegistration";
 import HotelManager from "./SuperAdmin/pages/HotelManager";
-import CheckHotelStatus from "./components/CheckHotelStatus";
+import CheckVendorStatus from "./components/CheckVendorStatus";
+import VendorManager from "./SuperAdmin/pages/VendorManager";
+import EditHotel from "./components/EditHotel";
+import SuperAdminAddVendor from "./SuperAdmin/pages/SuperAdminAddVendor";
+import SuperAdminAddHotel from "./SuperAdmin/pages/SuperAdminAddHotel";
 
 function App() {
   return (
@@ -25,17 +30,45 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
-          <Route path="/register-hotel" element={<HotelRegistration />} />
-          <Route path="/check-hotel-status" element={<CheckHotelStatus />} />
+          <Route path="/check-partner-status" element={<CheckVendorStatus />} />
           <Route
-            path="/superadmin"
+            path="/partner-registration"
+            element={<VendorRegistration />}
+          />
+
+          <Route
+            path="/admin-dashboard"
             element={
-              <ProtectedRoute allowedRoles={["admin", "superadmin"]}>
+              <ProtectedRoute allowedRoles={["vendor"]}>
+                <VendorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/add-hotel"
+            element={
+              <ProtectedRoute allowedRoles={["vendor"]}>
+                <HotelRegistration />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/edit-hotel/:id"
+            element={
+              <ProtectedRoute allowedRoles={["vendor"]}>
+                <EditHotel />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/superadmin-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["super_admin"]}>
                 <SuperAdminLayout />
               </ProtectedRoute>
             }
@@ -44,8 +77,13 @@ function App() {
             <Route path="states" element={<StateManager />} />
             <Route path="districts" element={<DistrictManager />} />
             <Route path="cities" element={<CityManager />} />
+
+            <Route path="vendors" element={<VendorManager />} />
+            <Route path="add-vendor" element={<SuperAdminAddVendor />} />
+
             <Route path="hotels" element={<HotelManager />} />
-          </Route>{" "}
+            <Route path="add-hotel" element={<SuperAdminAddHotel />} />
+          </Route>
         </Routes>
       </div>
     </BrowserRouter>

@@ -94,6 +94,12 @@ const hotelSchema = new mongoose.Schema(
       required: true,
     },
 
+    vendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,

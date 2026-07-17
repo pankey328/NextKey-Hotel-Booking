@@ -51,13 +51,16 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(res.data.user));
         localStorage.setItem("theme", res.data.user.theme);
 
-        if (res.data.user.role === "admin") {
-          navigate("/superadmin"); // Redirect to Super Admin Dashboard
+        if (res.data.user.role === "super_admin") {
+          navigate("/superadmin-dashboard");
+        } else if (res.data.user.role === "vendor") {
+          navigate("/admin-dashboard");
+        } else if (res.data.user.role === "hotel") {
+          navigate("/hotel-dashboard");
         } else {
-          navigate("/"); // Redirect to User Dashboard
+          navigate("/");
         }
       }
-      navigate("/home");
     } catch (error) {
       console.log(error.response?.data?.message || error.message);
       alert("Login Failed");
@@ -91,13 +94,18 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(res.data.user));
         localStorage.setItem("theme", res.data.user.theme);
 
-        if (res.data.user.role === "admin") {
-          navigate("/superadmin"); // Redirect to Super Admin Dashboard
+        const userRole = res.data.user.role;
+
+        if (userRole === "super_admin") {
+          navigate("/superadmin-dashboard");
+        } else if (userRole === "vendor") {
+          navigate("/admin-dashboard");
+        } else if (userRole === "hotel") {
+          navigate("/hotel-dashboard");
         } else {
-          navigate("/"); // Redirect to User Dashboard
+          navigate("/");
         }
       }
-      //   navigate("/home");
     } catch (error) {
       console.log(error);
       alert("Google Login Failed");

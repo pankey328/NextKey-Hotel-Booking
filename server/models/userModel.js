@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin", "super_admin"],
+      enum: ["user", "vendor", "hotel", "super_admin"],
       default: "user",
     },
     theme: {
@@ -46,6 +46,10 @@ const userSchema = new mongoose.Schema(
     hotelId: {
       type: mongoose.Types.ObjectId,
       ref: "Hotel",
+    },
+    vendorId: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
     },
   },
   {

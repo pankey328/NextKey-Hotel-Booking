@@ -22,7 +22,7 @@ const SuperAdminLayout = () => {
 
         <nav className="flex-1 px-4 space-y-2 mt-4">
           <Link
-            to="/superadmin/states"
+            to="/superadmin-dashboard/states"
             className={`block px-4 py-3 rounded-lg transition-colors ${
               isActive("/states")
                 ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
@@ -32,7 +32,7 @@ const SuperAdminLayout = () => {
             Manage States
           </Link>
           <Link
-            to="/superadmin/districts"
+            to="/superadmin-dashboard/districts"
             className={`block px-4 py-3 rounded-lg transition-colors ${
               isActive("/districts")
                 ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
@@ -42,7 +42,7 @@ const SuperAdminLayout = () => {
             Manage Districts
           </Link>
           <Link
-            to="/superadmin/cities"
+            to="/superadmin-dashboard/cities"
             className={`block px-4 py-3 rounded-lg transition-colors ${
               isActive("/cities")
                 ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
@@ -52,7 +52,17 @@ const SuperAdminLayout = () => {
             Manage Cities
           </Link>
           <Link
-            to="/superadmin/hotels"
+            to="/superadmin-dashboard/vendors"
+            className={`block px-4 py-3 rounded-lg transition-colors ${
+              isActive("/vendors")
+                ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
+                : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            }`}
+          >
+            Manage Vendors
+          </Link>
+          <Link
+            to="/superadmin-dashboard/hotels"
             className={`block px-4 py-3 rounded-lg transition-colors ${
               isActive("/hotels")
                 ? "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 font-semibold"
