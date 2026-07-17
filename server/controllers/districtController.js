@@ -77,7 +77,7 @@ exports.getAllDistricts = async (req, res) => {
       isDeleted,
     };
 
-    // If stateId is provided, only fetch districts of that state
+    // If stateId is provided only fetch districts of that state
     if (stateId) {
       if (!mongoose.Types.ObjectId.isValid(stateId)) {
         return res.status(400).json({
@@ -138,7 +138,6 @@ exports.getOneDistrict = async (req, res) => {
     });
   }
 };
-
 
 // 4. Soft Delete
 exports.softDeleteDistrict = async (req, res) => {

@@ -13,4 +13,8 @@ router.patch("/:id/soft-delete", hotelController.softDeleteHotel);
 router.patch("/:id/restore", hotelController.restoreHotel);
 router.delete("/:id", hotelController.hardDeleteHotel);
 
+// Hotel Status & Update Routes
+router.get("/status/:id", hotelController.checkHotelStatus);
+router.put("/update/:id", hotelController.updateHotelRequest);
+
 module.exports = router;

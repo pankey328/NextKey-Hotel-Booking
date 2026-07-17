@@ -3,6 +3,8 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const { uploadImage } = require("../utils/cloudinary");
 const sendMail = require("../config/nodemailer");
+const { v4: uuidv4 } = require("uuid");
+const mongoose = require("mongoose");
 
 // 1. Register New Hotel Request
 exports.registerHotel = async (req, res) => {
@@ -25,8 +27,7 @@ exports.registerHotel = async (req, res) => {
 
     if (!req.files) {
       imageUrl = "";
-    } 
-    else {
+    } else {
       const uploadData = await uploadImage(req.files);
       imageUrl = uploadData?.[0]?.secure_url;
       //   console.log("uploadData", uploadData);
@@ -52,6 +53,8 @@ exports.registerHotel = async (req, res) => {
       });
     }
 
+    const trackingId = uuidv4();
+
     const newHotel = await Hotel.create({
       name,
       hotelType,
@@ -65,12 +68,25 @@ exports.registerHotel = async (req, res) => {
       stateId,
       districtId,
       cityId,
+      trackingId,
     });
+
+    const emailBody = `
+      <h2>Registration Received!</h2>
+      <p>Thank you for submitting <b>${name}</b> to our platform.</p>
+      <p>Your unique Application Tracking ID is: <b>${trackingId}</b></p>
+      <p>You can use this ID on our website to check your application status or update your details.</p>
+    `;
+    await sendMail.sendMail(
+      email,
+      "Hotel Registration - Tracking ID",
+      emailBody,
+    );
 
     res.status(201).json({
       success: true,
       message:
-        "Registration submitted successfully. Waiting for admin approval.",
+        "Registration submitted successfully. Waiting for admin approval also Check your email for your Tracking ID",
       data: newHotel,
     });
   } catch (error) {
@@ -108,27 +124,37 @@ exports.getHotels = async (req, res) => {
 
 // 3. Approve Hotel
 exports.approveHotel = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const hotel = await Hotel.findById(req.params.id);
+    const hotel = await Hotel.findById(req.params.id).session(session);
 
-    if (!hotel)
+    if (!hotel) {
+      await session.abortTransaction();
+      session.endSession();
       return res
         .status(404)
         .json({ success: false, message: "Hotel not found" });
+    }
 
-    const generatedPassword = Math.random().toString(36).slice(-8);
+    const generatedPassword = uuidv4().slice(0, 8);
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
     hotel.status = "approved";
-    await hotel.save();
+    await hotel.save({ session });
 
-    await User.create({
-      name: hotel.name,
-      email: hotel.email,
-      password: hashedPassword,
-      role: "hotel_admin",
-      hotelId: hotel._id,
-    });
+    await User.create(
+      [
+        {
+          name: hotel.name,
+          email: hotel.email,
+          password: hashedPassword,
+          role: "admin",
+          hotelId: hotel._id,
+        },
+      ],
+      { session },
+    );
 
     const emailBody = `
       <h2>Congratulations!</h2>
@@ -144,12 +170,17 @@ exports.approveHotel = async (req, res) => {
       emailBody,
     );
 
+    await session.commitTransaction();
+
     res.status(200).json({
       success: true,
       message: "Hotel approved and credentials sent via email.",
     });
   } catch (error) {
+    await session.abortTransaction();
     res.status(500).json({ message: error.message });
+  } finally {
+    session.endSession();
   }
 };
 
@@ -242,6 +273,76 @@ exports.hardDeleteHotel = async (req, res) => {
     res
       .status(200)
       .json({ sucess: true, message: "Hotel permanently deleted" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// 8. Check Hotel Status by UUID (Tracking Id)
+exports.checkHotelStatus = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({ trackingId: req.params.id });
+
+    if (!hotel) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found. Please check your Tracking ID.",
+      });
+    }
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        message: "Hotel data that matching the Tracking Id",
+        data: hotel,
+      });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Server error checking tracking Id" });
+  }
+};
+
+// 9. Update/Re-request Hotel Registration by UUID (Tracking Id)
+exports.updateHotelRequest = async (req, res) => {
+  try {
+    const hotel = await Hotel.findOne({ trackingId: req.params.id });
+
+    if (!hotel)
+      return res
+        .status(404)
+        .json({ success: false, message: "Hotel not found" });
+
+    if (hotel.status === "approved") {
+      return res
+        .status(400)
+        .json({ success: false, message: "Cannot edit an approved hotel." });
+    }
+
+    const updateData = { ...req.body };
+
+    if (req.files) {
+      const uploadData = await uploadImage(req.files);
+      if (uploadData && uploadData[0]?.secure_url) {
+        updateData.imageUrl = uploadData[0].secure_url;
+      }
+    }
+
+    if (hotel.status === "rejected") {
+      updateData.status = "pending";
+      updateData.rejectRemark = "";
+    }
+
+    const updatedHotel = await Hotel.findByIdAndUpdate(hotel._id, updateData, {
+      new: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Application updated successfully and is pending review.",
+      data: updatedHotel,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

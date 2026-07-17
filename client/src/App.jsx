@@ -16,6 +16,7 @@ import DistrictManager from "./SuperAdmin/pages/DistrictManager";
 import CityManager from "./SuperAdmin/pages/CityManager";
 import HotelRegistration from "./components/HotelRegistration";
 import HotelManager from "./SuperAdmin/pages/HotelManager";
+import CheckHotelStatus from "./components/CheckHotelStatus";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
           <Route path="/register-hotel" element={<HotelRegistration />} />
+          <Route path="/check-hotel-status" element={<CheckHotelStatus />} />
           <Route
             path="/superadmin"
             element={

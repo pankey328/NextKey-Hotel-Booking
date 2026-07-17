@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../api";
+import { Link } from "react-router-dom";
 
 const HotelRegistration = () => {
   const [formData, setFormData] = useState({
@@ -117,9 +118,18 @@ const HotelRegistration = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-10 w-full max-w-3xl border border-gray-100 dark:border-gray-700">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-2 text-center">
-          Become a Hotel Partner
-        </h1>
+        
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center w-full relative">
+            Become a Hotel Partner
+            <Link
+              to="/check-hotel-status"
+              className="absolute right-0 top-2 text-sm text-blue-600 hover:underline font-medium"
+            >
+              Check Status
+            </Link>
+          </h1>
+        </div>
         <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
           Fill out the details below to list your property on our platform.
         </p>

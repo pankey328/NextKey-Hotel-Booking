@@ -88,6 +88,12 @@ const hotelSchema = new mongoose.Schema(
       trim: true,
     },
 
+    trackingId: {
+      type: String,
+      unique: true,
+      required: true,
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,
