@@ -43,6 +43,14 @@ app.use("/api/hotels", hotelRoutes);
 const vendorRoutes = require("./routes/vendorRoutes");
 app.use("/api/vendors", vendorRoutes);
 
+// ROOM ROUTeS
+const roomRoutes = require("./routes/roomRoutes");
+app.use("/api/rooms", roomRoutes);
+
+// COUPONS ROUTES
+const couponsRoutes = require("./routes/couponRoutes");
+app.use("/api/coupons", couponsRoutes);
+
 mongoose
   .connect(url)
   .then(() => console.log(`DATABASE Connected`))

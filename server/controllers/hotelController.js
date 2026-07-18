@@ -124,7 +124,15 @@ exports.getHotels = async (req, res) => {
     if (status) query.status = status;
 
     if (req.user && req.user.role === "vendor") {
-      query.userId = req.user._id;
+      const vendorCompany = await VendorRequest.findOne({
+        email: req.user.email,
+      });
+
+      if (vendorCompany) {
+        query.$or = [{ userId: req.user._id }, { vendorId: vendorCompany._id }];
+      } else {
+        query.userId = req.user._id;
+      }
     }
 
     const hotels = await Hotel.find(query)
@@ -133,7 +141,7 @@ exports.getHotels = async (req, res) => {
       .populate("cityId", "name")
       .populate({
         path: "vendorId",
-        model: "VendorRequest", // This must match name in mongoose.model("VendorRequest", ...)
+        model: "VendorRequest",
         select: "companyName applicantName email phone",
       })
       .sort({ createdAt: -1 });
@@ -262,7 +270,6 @@ exports.approveHotel = async (req, res) => {
       vendorId: hotel.vendorId,
     });
 
-    // Send credentials
     const emailBody = `
       <h2>Hotel Live!</h2>
 
@@ -465,29 +472,45 @@ exports.updateHotelRequest = async (req, res) => {
 // SUPERADMIN: Add new Hotel with approved status
 exports.superAdminAddHotel = async (req, res) => {
   try {
-   if (!req.user || req.user.role !== "super_admin") {
-     return res.status(403).json({ success: false, message: "Unauthorized." });
-   }
+    if (!req.user || req.user.role !== "super_admin") {
+      return res.status(403).json({ success: false, message: "Unauthorized." });
+    }
 
     const {
-      name, hotelType, description, address, starRating, 
-      email, phone, locationLink, stateId, districtId, cityId, vendorId
+      name,
+      hotelType,
+      description,
+      address,
+      starRating,
+      email,
+      phone,
+      locationLink,
+      stateId,
+      districtId,
+      cityId,
+      vendorId,
     } = req.body;
 
     const hotelEmail = email.toLowerCase().trim();
 
     if (!vendorId) {
-      return res.status(400).json({ success: false, message: "Vendor selection is required." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Vendor selection is required." });
     }
 
     const existingUser = await User.findOne({ email: hotelEmail });
     if (existingUser) {
-      return res.status(400).json({ success: false, message: "Hotel email already in use." });
+      return res
+        .status(400)
+        .json({ success: false, message: "Hotel email already in use." });
     }
 
     const vendorRequest = await VendorRequest.findById(vendorId);
     if (!vendorRequest) {
-      return res.status(404).json({ success: false, message: "Selected vendor not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Selected vendor not found." });
     }
 
     let imageUrl = "";
@@ -495,15 +518,28 @@ exports.superAdminAddHotel = async (req, res) => {
       const uploadData = await uploadImage(req.files);
       imageUrl = uploadData?.[0]?.secure_url || "";
     }
-    if (!imageUrl) return res.status(400).json({ success: false, message: "Image required." });
+    if (!imageUrl)
+      return res
+        .status(400)
+        .json({ success: false, message: "Image required." });
 
     const trackingId = uuidv4();
     const newHotel = await Hotel.create({
-      name, hotelType, description, address, starRating,
-      email: hotelEmail, phone, locationLink, stateId, districtId, cityId, imageUrl,
+      name,
+      hotelType,
+      description,
+      address,
+      starRating,
+      email: hotelEmail,
+      phone,
+      locationLink,
+      stateId,
+      districtId,
+      cityId,
+      imageUrl,
       trackingId,
-      status: "approved", 
-      vendorId: vendorRequest._id,   
+      status: "approved",
+      vendorId: vendorRequest._id,
     });
 
     const generatedPassword = uuidv4().slice(0, 8);
@@ -524,12 +560,16 @@ exports.superAdminAddHotel = async (req, res) => {
       <p><strong>Hotel Login Credentials:</strong></p>
       <p><b>Email:</b> ${hotelEmail}<br><b>Password:</b> ${generatedPassword}</p>
     `;
-    await sendMail.sendMail(hotelEmail, "Hotel Live - Login Credentials", emailBody);
+    await sendMail.sendMail(
+      hotelEmail,
+      "Hotel Live - Login Credentials",
+      emailBody,
+    );
 
     res.status(201).json({
       success: true,
       message: "Hotel created and auto-approved. Credentials sent.",
-      data: newHotel
+      data: newHotel,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -23,4 +23,6 @@ router.patch("/:id/restore", vendorController.restoreVendor);
 
 router.delete("/:id", vendorController.hardDeleteVendor);
 
+router.post("/add-room", authMiddleware, vendorController.vendorCreateRoom);
+
 module.exports = router;

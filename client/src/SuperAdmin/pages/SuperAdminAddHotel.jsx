@@ -6,13 +6,11 @@ const SuperAdminAddHotel = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Dropdown Data
   const [vendors, setVendors] = useState([]);
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [cities, setCities] = useState([]);
 
-  // Form State
   const [formData, setFormData] = useState({
     vendorId: "",
     name: "",
@@ -35,11 +33,10 @@ const SuperAdminAddHotel = () => {
     const fetchInitialData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        // Fetch approved vendors
+
         const vendorRes = await api.get("/vendors?status=approved", config);
         setVendors(vendorRes.data.data || vendorRes.data);
 
-        // Fetch states
         const stateRes = await api.get("/states?isDeleted=false", config);
         setStates(stateRes.data.data || stateRes.data);
       } catch (error) {
@@ -140,7 +137,7 @@ const SuperAdminAddHotel = () => {
             className="w-full px-4 py-2.5 rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="" disabled>
-              Select Vendor 
+              Select Vendor
             </option>
             {vendors.map((v) => (
               <option key={v._id} value={v._id}>

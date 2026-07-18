@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api";
 
 const VendorDashboard = () => {
-  const [activeTab, setActiveTab] = useState("active"); 
+  const [activeTab, setActiveTab] = useState("active");
   const [myHotels, setMyHotels] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +22,10 @@ const VendorDashboard = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-      setMyHotels(res.data.data || res.data);
+
+      console.log("Vendor Hotels fetched:", res.data);
+
+      setMyHotels(res.data.data);
     } catch (error) {
       console.error("Error fetching hotels", error);
     } finally {
@@ -55,7 +58,7 @@ const VendorDashboard = () => {
         await api.delete(`/hotels/${id}`, config);
       }
 
-      fetchMyHotels(); 
+      fetchMyHotels();
     } catch (error) {
       alert(error.response?.data?.message || `Error performing ${action}`);
     }
@@ -174,7 +177,7 @@ const VendorDashboard = () => {
                             {hotel.status}
                           </span>
 
-                          {/* Rejection remark if applicable */}
+                          {/* Rejection remark */}
                           {hotel.status === "rejected" &&
                             activeTab === "active" && (
                               <div
@@ -189,13 +192,30 @@ const VendorDashboard = () => {
                           <div className="flex flex-wrap gap-2 justify-end mt-1">
                             <button
                               onClick={() => handleView(hotel)}
-                              className="text-xs px-3 py-1.5 rounded-md font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors"
+                              className="text-xs px-3 py-1.5 rounded-md font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors cursor-pointer"
                             >
                               View
                             </button>
 
                             {activeTab === "active" ? (
                               <>
+                                {hotel.status === "approved" && (
+                                  <>
+                                    <Link
+                                      to={`/admin-dashboard/add-room/${hotel._id}`}
+                                      className="text-xs px-3 py-1.5 rounded-md font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 transition-colors"
+                                    >
+                                      + Add Room
+                                    </Link>
+                                    <Link
+                                      to={`/admin-dashboard/coupons/${hotel._id}`}
+                                      className="text-xs px-3 py-1.5 rounded-md font-medium bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                                    >
+                                      Coupons
+                                    </Link>
+                                  </>
+                                )}
+
                                 {(hotel.status === "pending" ||
                                   hotel.status === "rejected") && (
                                   <Link
@@ -209,7 +229,7 @@ const VendorDashboard = () => {
                                   onClick={() =>
                                     handleAction("softDelete", hotel._id)
                                   }
-                                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 transition-colors"
+                                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 transition-colors cursor-pointer"
                                 >
                                   Delete
                                 </button>
@@ -220,7 +240,7 @@ const VendorDashboard = () => {
                                   onClick={() =>
                                     handleAction("restore", hotel._id)
                                   }
-                                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 transition-colors"
+                                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 transition-colors cursor-pointer"
                                 >
                                   Restore
                                 </button>
@@ -228,7 +248,7 @@ const VendorDashboard = () => {
                                   onClick={() =>
                                     handleAction("hardDelete", hotel._id)
                                   }
-                                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 transition-colors"
+                                  className="text-xs px-3 py-1.5 rounded-md font-medium bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 transition-colors cursor-pointer"
                                 >
                                   Hard Delete
                                 </button>

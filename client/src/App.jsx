@@ -22,6 +22,11 @@ import VendorManager from "./SuperAdmin/pages/VendorManager";
 import EditHotel from "./components/EditHotel";
 import SuperAdminAddVendor from "./SuperAdmin/pages/SuperAdminAddVendor";
 import SuperAdminAddHotel from "./SuperAdmin/pages/SuperAdminAddHotel";
+import HotelDashboard from "./components/HotelDashboard";
+import AddRoom from "./components/AddRoom";
+import EditRoom from "./components/EditRoom";
+import AddRoomByVendor from "./components/AddRoomByVendor";
+import CouponManagement from "./components/CouponManagement";
 
 function App() {
   return (
@@ -38,6 +43,31 @@ function App() {
           <Route
             path="/partner-registration"
             element={<VendorRegistration />}
+          />
+
+          <Route
+            path="/hotel-dashboard"
+            element={
+              <ProtectedRoute allowedRoles={["hotel"]}>
+                <HotelDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hotel-dashboard/add-room"
+            element={
+              <ProtectedRoute allowedRoles={["hotel"]}>
+                <AddRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hotel-dashboard/edit-room/:id"
+            element={
+              <ProtectedRoute allowedRoles={["hotel"]}>
+                <EditRoom />
+              </ProtectedRoute>
+            }
           />
 
           <Route
@@ -61,6 +91,22 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={["vendor"]}>
                 <EditHotel />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/add-room/:hotelId"
+            element={
+              <ProtectedRoute allowedRoles={["vendor"]}>
+                <AddRoomByVendor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin-dashboard/coupons/:hotelId"
+            element={
+              <ProtectedRoute allowedRoles={["vendor"]}>
+                <CouponManagement />
               </ProtectedRoute>
             }
           />

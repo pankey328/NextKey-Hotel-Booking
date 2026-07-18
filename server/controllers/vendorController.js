@@ -1,9 +1,12 @@
+const mongoose = require("mongoose");
 const VendorRequest = require("../models/VendorRequestModel");
 const User = require("../models/userModel");
-const bcrypt = require("bcrypt");
+const Hotel = require("../models/HotelModel");
+const Room = require("../models/RoomModel");
 const sendMail = require("../config/nodemailer");
+const { uploadImage } = require("../utils/cloudinary");
+const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
-const mongoose = require("mongoose");
 
 // 1. PUBLIC: Register as a Vendor
 exports.registerVendor = async (req, res) => {
@@ -512,5 +515,82 @@ exports.superAdminAddVendor = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// 11. VENDOR: Add Room to a Specific Hotel
+exports.vendorCreateRoom = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== "vendor") {
+      return res.status(403).json({
+        success: false,
+        message: "Only vendors can add rooms using this route.",
+      });
+    }
+
+    const { roomNumber, pricePerNight, hotelId } = req.body;
+
+    if (!roomNumber || !pricePerNight || !hotelId) {
+      return res.status(400).json({
+        success: false,
+        message: "Room Number, Price Per Night, and Hotel ID are required.",
+      });
+    }
+
+    const vendor = await VendorRequest.findOne({ email: req.user.email });
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor profile not found.",
+      });
+    }
+
+    const hotel = await Hotel.findOne({ _id: hotelId, vendorId: vendor._id });
+    if (!hotel) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Not authorized. This hotel does not belong to your vendor account.",
+      });
+    }
+
+    let parsedFacilities = [];
+    if (req.body.facilities) {
+      try {
+        parsedFacilities = JSON.parse(req.body.facilities);
+      } catch (err) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid format for facilities. Must be a valid JSON array.",
+        });
+      }
+    }
+
+    let imageUrls = [];
+    if (req.files) {
+      const uploadData = await uploadImage(req.files);
+      if (uploadData && Array.isArray(uploadData)) {
+        imageUrls = uploadData.map((data) => data.secure_url);
+      }
+    }
+
+    const newRoom = await Room.create({
+      ...req.body,
+      hotelId: hotel._id,
+      facilities: parsedFacilities,
+      images: imageUrls,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Room successfully added to your hotel.",
+      data: newRoom,
+    });
+  } catch (error) {
+    console.error("Error in vendorCreateRoom:", error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
