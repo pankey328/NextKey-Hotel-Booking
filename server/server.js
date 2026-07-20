@@ -51,6 +51,14 @@ app.use("/api/rooms", roomRoutes);
 const couponsRoutes = require("./routes/couponRoutes");
 app.use("/api/coupons", couponsRoutes);
 
+// SEARCH ROUTES
+const searchRoutes = require("./routes/searchRoutes");
+app.use("/api/search", searchRoutes);
+
+// BOOKING ROUTES
+const bookingRoutes = require("./routes/bookingRoutes");
+app.use("/api/bookings", bookingRoutes);
+
 mongoose
   .connect(url)
   .then(() => console.log(`DATABASE Connected`))

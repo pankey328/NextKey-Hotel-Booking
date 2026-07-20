@@ -66,7 +66,7 @@ const facilityCategories = {
 };
 
 const EditRoom = () => {
-  const { id } = useParams(); // Get room ID
+  const { id } = useParams(); 
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -139,21 +139,32 @@ const EditRoom = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+
+    if (type === "checkbox") {
+      setFormData({
+        ...formData,
+        [name]: checked,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleFacilityToggle = (facility) => {
-    setFormData((prev) => {
-      const exists = prev.facilities.includes(facility);
-      return {
-        ...prev,
-        facilities: exists
-          ? prev.facilities.filter((f) => f !== facility)
-          : [...prev.facilities, facility],
-      };
+    let facilities = [...formData.facilities];
+
+    if (facilities.includes(facility)) {
+      facilities = facilities.filter((item) => item !== facility);
+    } else {
+      facilities.push(facility);
+    }
+
+    setFormData({
+      ...formData,
+      facilities,
     });
   };
 
@@ -335,6 +346,18 @@ const EditRoom = () => {
                 type="number"
                 name="weekendPrice"
                 value={formData.weekendPrice}
+                onChange={handleInputChange}
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Holiday Price
+              </label>
+              <input
+                type="number"
+                name="holidayPrice"
+                value={formData.holidayPrice}
                 onChange={handleInputChange}
                 className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />

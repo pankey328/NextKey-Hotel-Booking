@@ -96,7 +96,6 @@ const Signup = () => {
           noValidate
           className="space-y-4"
         >
-          {/* INITIAL FORM FIELDS */}
           {!isOtpSent && (
             <>
               <div>
@@ -192,7 +191,6 @@ const Signup = () => {
             </>
           )}
 
-          {/* OTP FIELD */}
           {isOtpSent && (
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 text-center transition-colors">
@@ -239,10 +237,8 @@ const Signup = () => {
             {isOtpSent ? "Verify & Sign Up" : "Send OTP"}
           </button>
 
-          {/* FOOTER LINKS */}
           {!isOtpSent && (
             <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-700 flex flex-col gap-4 transition-colors">
-              {/* Standard Login */}
               <div className="text-center text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
                   Already have an account?{" "}
@@ -255,7 +251,6 @@ const Signup = () => {
                 </Link>
               </div>
 
-              {/* Vendor Registration CTA */}
               <div className="text-center text-sm bg-gray-50 dark:bg-gray-700/40 p-3 rounded-lg border border-gray-100 dark:border-gray-600/50">
                 <span className="text-gray-600 dark:text-gray-400">
                   Looking to list your property?{" "}

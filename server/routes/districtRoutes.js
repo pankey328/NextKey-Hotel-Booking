@@ -3,22 +3,22 @@ const router = express.Router();
 
 const districtController = require("../controllers/districtController");
 
-// 1. Create District
+// Create
 router.post("/", districtController.createDistrict);
 
-// 2. Get All Districts
+// Get All
 router.get("/", districtController.getAllDistricts);
 
-// 3. Get Single District
+// Get One
 router.get("/:id", districtController.getOneDistrict);
 
-// 4. Soft Delete District
+// Soft Delete
 router.patch("/:id/soft-delete", districtController.softDeleteDistrict);
 
-// 5. Restore District
+// Restore
 router.patch("/:id/restore", districtController.restoreDistrict);
 
-// 6. Permanent Delete District
+// Hard Delete
 router.delete("/:id", districtController.deleteDistrict);
 
 module.exports = router;

@@ -7,7 +7,6 @@ const roomSchema = new mongoose.Schema(
       ref: "Hotel",
       required: true,
     },
-    // Basic Info
     roomNumber: {
       type: String,
       required: true,
@@ -27,7 +26,6 @@ const roomSchema = new mongoose.Schema(
       type: String,
     },
 
-    // Pricing
     pricePerNight: {
       type: Number,
       required: true,
@@ -47,7 +45,6 @@ const roomSchema = new mongoose.Schema(
       default: false,
     },
 
-    // Capacity & Beds
     maxAdults: {
       type: Number,
       default: 2,
@@ -69,10 +66,8 @@ const roomSchema = new mongoose.Schema(
       default: "Double Bed",
     },
 
-    // Facilities
     facilities: [{ type: String }],
 
-    // Rules & Status
     status: {
       type: String,
       enum: [
@@ -89,7 +84,6 @@ const roomSchema = new mongoose.Schema(
       default: "Free Cancellation",
     },
 
-    // Media & System
     images: [{ type: String }],
     isDeleted: {
       type: Boolean,

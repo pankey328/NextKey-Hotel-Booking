@@ -3,22 +3,22 @@ const router = express.Router();
 
 const cityController = require("../controllers/cityController");
 
-// 1. Create City
+// Create
 router.post("/", cityController.createCity);
 
-// 2. Get All Cities
+// Get All
 router.get("/", cityController.getAllCities);
 
-// 3. Get Single City
+// Get One
 router.get("/:id", cityController.getOneCity);
 
-// 4. Soft Delete City
+// Soft Delete
 router.patch("/:id/soft-delete", cityController.softDeleteCity);
 
-// 5. Restore City
+// Restore
 router.patch("/:id/restore", cityController.restoreCity);
 
-// 6. Permanent Delete City
+// Hard Delete
 router.delete("/:id", cityController.deleteCity);
 
 module.exports = router;

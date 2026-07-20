@@ -27,6 +27,8 @@ import AddRoom from "./components/AddRoom";
 import EditRoom from "./components/EditRoom";
 import AddRoomByVendor from "./components/AddRoomByVendor";
 import CouponManagement from "./components/CouponManagement";
+import HotelDetails from "./components/HotelDetails";
+import SearchHotels from "./components/SearchHotels";
 
 function App() {
   return (
@@ -40,6 +42,10 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
           <Route path="/check-partner-status" element={<CheckVendorStatus />} />
+
+          <Route path="/search" element={<SearchHotels />} />
+          <Route path="/hotel/:id" element={<HotelDetails />} />
+
           <Route
             path="/partner-registration"
             element={<VendorRegistration />}

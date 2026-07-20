@@ -7,7 +7,6 @@ const StateManager = () => {
   const [newStateName, setNewStateName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // View Modal
   const [selectedState, setSelectedState] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
@@ -218,11 +217,11 @@ const StateManager = () => {
         </table>
       </div>
 
-      {/* VIEW MODAL */}
+      {/* MODAL */}
       {showViewModal && selectedState && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100 opacity-100">
-            {/* Modal Header */}
+            {/* Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                 State Details

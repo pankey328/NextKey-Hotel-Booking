@@ -3,26 +3,26 @@ const router = express.Router();
 const couponController = require("../controllers/couponController");
 const authMiddleware = require("../middleware/authMiddleware");
 
-// 1. Create coupon
+// Create
 router.post("/", authMiddleware, couponController.createCoupon);
 
-// 2. Get all coupons
+// Get all
 router.get("/:hotelId", authMiddleware, couponController.getHotelCoupons);
 
-// 3. Update coupon
+// Update
 router.put("/:id", authMiddleware, couponController.updateCoupon);
 
-// 4. Soft Delete
+// Soft Delete
 router.patch(
   "/:id/soft-delete",
   authMiddleware,
   couponController.softDeleteCoupon,
 );
 
-// 5. Restore
+// Restore
 router.patch("/:id/restore", authMiddleware, couponController.restoreCoupon);
 
-// 6. Hard Delete
+// Hard Delete
 router.delete("/:id", authMiddleware, couponController.hardDeleteCoupon);
 
 module.exports = router;

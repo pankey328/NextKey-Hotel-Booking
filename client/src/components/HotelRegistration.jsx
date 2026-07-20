@@ -2,6 +2,21 @@ import React, { useState, useEffect } from "react";
 import api from "../api";
 import { Link } from "react-router-dom";
 
+const hotelFeaturesList = [
+  "Parking",
+  "Elevator",
+  "Luggage Storage",
+  "Restaurant",
+  "Cafe",
+  "Bar",
+  "Gym",
+  "Swimming Pool",
+  "EV Charging Station",
+  "Garden",
+  "Terrace",
+  "Laundry Service",
+];
+
 const HotelRegistration = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -12,6 +27,7 @@ const HotelRegistration = () => {
     address: "",
     locationLink: "",
     description: "",
+    features: [],
   });
   const [image, setImage] = useState(null);
 
@@ -27,7 +43,6 @@ const HotelRegistration = () => {
 
   const token = localStorage.getItem("token");
 
-  // Fetch states
   useEffect(() => {
     const fetchStates = async () => {
       try {
@@ -51,9 +66,7 @@ const HotelRegistration = () => {
         `/districts?stateId=${stateId}&isDeleted=false`,
       );
       setDistricts(res.data.data);
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) {}
   };
 
   const handleDistrictChange = async (e) => {
@@ -65,9 +78,22 @@ const HotelRegistration = () => {
         `/cities?districtId=${districtId}&isDeleted=false`,
       );
       setCities(res.data.data);
-    } catch (error) {
-      console.error(error);
+    } catch (error) {}
+  };
+
+  const handleFeatureChange = (feature) => {
+    let features = [...formData.features];
+
+    if (features.includes(feature)) {
+      features = features.filter((item) => item !== feature);
+    } else {
+      features.push(feature);
     }
+
+    setFormData({
+      ...formData,
+      features,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -78,11 +104,14 @@ const HotelRegistration = () => {
 
     setLoading(true);
 
-    // FormData to send files
     const submitData = new FormData();
-    Object.keys(formData).forEach((key) =>
-      submitData.append(key, formData[key]),
-    );
+    Object.keys(formData).forEach((key) => {
+      if (key === "features") {
+        submitData.append("features", JSON.stringify(formData.features));
+      } else {
+        submitData.append(key, formData[key]);
+      }
+    });
     submitData.append("stateId", selectedStateId);
     submitData.append("districtId", selectedDistrictId);
     submitData.append("cityId", selectedCityId);
@@ -90,9 +119,7 @@ const HotelRegistration = () => {
 
     try {
       await api.post("/hotels/register", submitData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess(true);
     } catch (error) {
@@ -129,12 +156,10 @@ const HotelRegistration = () => {
             Add a New Property
           </h1>
         </div>
-        <p className="text-gray-500 dark:text-gray-400 text-center mb-8">
-          Fill out the details below to list your property on our platform.
-        </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Inputs (Name, Type, Rating, Email, Phone, State, District, City, Address) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Property Name
@@ -159,7 +184,7 @@ const HotelRegistration = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, hotelType: e.target.value })
                 }
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value="Hotel">Hotel</option>
                 <option value="Resort">Resort</option>
@@ -182,7 +207,7 @@ const HotelRegistration = () => {
                     starRating: Number(e.target.value),
                   })
                 }
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value={1}>1 Star</option>
                 <option value={2}>2 Stars</option>
@@ -230,14 +255,14 @@ const HotelRegistration = () => {
                 value={selectedStateId}
                 onChange={handleStateChange}
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>
                   Select State...
                 </option>
-                {states.map((state) => (
-                  <option key={state._id} value={state._id}>
-                    {state.name.toUpperCase()}
+                {states.map((s) => (
+                  <option key={s._id} value={s._id}>
+                    {s.name.toUpperCase()}
                   </option>
                 ))}
               </select>
@@ -252,14 +277,14 @@ const HotelRegistration = () => {
                 onChange={handleDistrictChange}
                 required
                 disabled={!selectedStateId}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>
                   Select District...
                 </option>
-                {districts.map((district) => (
-                  <option key={district._id} value={district._id}>
-                    {district.name.toUpperCase()}
+                {districts.map((d) => (
+                  <option key={d._id} value={d._id}>
+                    {d.name.toUpperCase()}
                   </option>
                 ))}
               </select>
@@ -274,14 +299,14 @@ const HotelRegistration = () => {
                 onChange={(e) => setSelectedCityId(e.target.value)}
                 required
                 disabled={!selectedDistrictId}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               >
                 <option value="" disabled>
                   Select City...
                 </option>
-                {cities.map((city) => (
-                  <option key={city._id} value={city._id}>
-                    {city.name.toUpperCase()}
+                {cities.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name.toUpperCase()}
                   </option>
                 ))}
               </select>
@@ -301,35 +326,57 @@ const HotelRegistration = () => {
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
               />
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Google Maps Location Link (Optional)
-            </label>
-            <input
-              type="url"
-              value={formData.locationLink}
-              onChange={(e) =>
-                setFormData({ ...formData, locationLink: e.target.value })
-              }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Google Maps Location Link (Optional)
+              </label>
+              <input
+                type="url"
+                value={formData.locationLink}
+                onChange={(e) =>
+                  setFormData({ ...formData, locationLink: e.target.value })
+                }
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
-            </label>
-            <textarea
-              name="description"
-              rows="3"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-            ></textarea>
+            {/* Property Features Selection */}
+            <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+              <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+                Property Features & Amenities
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                {hotelFeaturesList.map((feature) => (
+                  <label
+                    key={feature}
+                    className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:text-blue-600 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.features.includes(feature)}
+                      onChange={() => handleFeatureChange(feature)}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 cursor-pointer"
+                    />
+                    {feature}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Description
+              </label>
+              <textarea
+                rows="3"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+              ></textarea>
+            </div>
           </div>
 
           <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">

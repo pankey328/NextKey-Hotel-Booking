@@ -1,27 +1,23 @@
 const Room = require("../models/RoomModel");
 const Hotel = require("../models/HotelModel");
 const { uploadImage } = require("../utils/cloudinary");
-const { default: mongoose } = require("mongoose");
 
-const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id)
-
-// 1. Add New Room
+// Add New Room
 exports.createRoom = async (req, res) => {
   try {
     const { roomNumber, pricePerNight } = req.body;
 
     if (!roomNumber || !pricePerNight) {
       return res.status(400).json({
-        success: false,
-        message: "Room Number and Price Per Night are required.",
+        message: "Room Number and Price Per Night are required",
       });
     }
 
     const hotel = await Hotel.findOne({ email: req.user.email });
+
     if (!hotel) {
       return res.status(404).json({
-        success: false,
-        message: "Hotel profile not found for this user.",
+        message: "Hotel profile not found for this user",
       });
     }
 
@@ -31,8 +27,7 @@ exports.createRoom = async (req, res) => {
         parsedFacilities = JSON.parse(req.body.facilities);
       } catch (err) {
         return res.status(400).json({
-          success: false,
-          message: "Invalid format for facilities. Must be a valid JSON array.",
+          message: "Invalid format for facilities",
         });
       }
     }
@@ -40,7 +35,6 @@ exports.createRoom = async (req, res) => {
     let imageUrls = [];
     if (req.files) {
       const uploadData = await uploadImage(req.files);
-
       if (uploadData && Array.isArray(uploadData)) {
         imageUrls = uploadData.map((data) => data.secure_url);
       }
@@ -53,67 +47,57 @@ exports.createRoom = async (req, res) => {
       images: imageUrls,
     });
 
-    res.status(201).json({
-      success: true,
+    return res.status(201).json({
       message: "Room created successfully",
       data: newRoom,
     });
   } catch (error) {
-    console.error("Error in createRoom:", error.message);
-    res.status(500).json({
-      success: false,
+    return res.status(500).json({
       message: error.message,
     });
   }
 };
 
-// 2. Get Rooms for the Logged-in Hotel
+// Get Rooms for Hotel
 exports.getMyRooms = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
 
     const hotel = await Hotel.findOne({ email: req.user.email });
-    if (!hotel)
-      return res.status(404).json({ message: "Hotel profile not found." });
+
+    if (!hotel) {
+      return res.status(404).json({ message: "Hotel profile not found" });
+    }
 
     const rooms = await Room.find({
       hotelId: hotel._id,
       isDeleted,
     }).sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       hotelInfo: hotel,
       data: rooms,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
+// Update Room Status
 exports.updateRoomStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid Room ID format.",
+        message: "Room ID is required",
       });
     }
 
-    const allowedStatuses = [
-      "Available",
-      "Occupied",
-      "Reserved",
-      "Under Maintenance",
-      "Out of Service",
-    ];
-    if (!status || !allowedStatuses.includes(status)) {
+    if (!status) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid or missing status value.",
+        message: "Invalid or missing status value",
       });
     }
 
@@ -125,143 +109,136 @@ exports.updateRoomStatus = async (req, res) => {
 
     if (!updatedRoom) {
       return res.status(404).json({
-        success: false,
-        message: "Room not found.",
+        message: "Room not found",
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Room status updated successfully.",
+    return res.status(200).json({
+      message: "Room status updated successfully",
       data: updatedRoom,
     });
   } catch (error) {
-    console.error("Update Room Status Error:", error.message);
-    res.status(500).json({
-      success: false,
+    return res.status(500).json({
       message: error.message,
     });
   }
 };
 
-// 4. Soft Delete (Move to Bin)
+// Soft Delete (Move to Bin)
 exports.softDeleteRoom = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!isValidObjectId(id))
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Room ID." });
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Room ID is required",
+      });
+    }
 
     const room = await Room.findByIdAndUpdate(id, { isDeleted: true });
-    if (!room)
-      return res
-        .status(404)
-        .json({ success: false, message: "Room not found." });
 
-    res.status(200).json({ success: true, message: "Room moved to bin." });
+    if (!room) return res.status(404).json({ message: "Room not found" });
+
+    return res.status(200).json({ message: "Room moved to bin" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 5. Restore Room
+// Restore Room
 exports.restoreRoom = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!isValidObjectId(id))
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Room ID." });
+
+    if (!id) {
+      return res.status(400).json({
+        message: "Room ID is required",
+      });
+    }
 
     const room = await Room.findByIdAndUpdate(id, { isDeleted: false });
-    if (!room)
-      return res
-        .status(404)
-        .json({ success: false, message: "Room not found." });
+    if (!room) return res.status(404).json({ message: "Room not found" });
 
-    res.status(200).json({ success: true, message: "Room restored." });
+    return res.status(200).json({ message: "Room restored" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 6. Hard Delete (Permanent)
+// Hard Delete
 exports.hardDeleteRoom = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid Room ID format.",
+        message: "Room ID is required",
       });
     }
 
     const room = await Room.findById(id);
     if (!room) {
       return res.status(404).json({
-        success: false,
-        message: "Room not found.",
+        message: "Room not found",
       });
     }
 
     await Room.findByIdAndDelete(id);
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Room permanently deleted.",
     });
   } catch (error) {
-    console.error("Hard Delete Room Error:", error.message);
-    res.status(500).json({
-      success: false,
+    return res.status(500).json({
       message: error.message,
     });
   }
 };
 
-// 7. Get Single Room by ID (Edit Form)
+// Get Single Room by ID (Edit Form)
 exports.getRoomById = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Room ID format." });
+    if (!id) {
+      return res.status(400).json({
+        message: "Room ID is required",
+      });
     }
 
     const room = await Room.findById(id);
     if (!room) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Room not found." });
+      return res.status(404).json({ message: "Room not found" });
     }
 
-    res.status(200).json({ success: true, data: room });
+    return res.status(200).json({ message: "Room Data fetched", data: room });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 8. Update Room
+// Update Room
 exports.updateRoom = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid Room ID format." });
+    if (!id) {
+      return res.status(400).json({
+        message: "Room ID is required",
+      });
     }
 
     const hotel = await Hotel.findOne({ email: req.user.email });
+    if (!hotel) {
+      return res.status(404).json({
+        message: "Hotel not found",
+      });
+    }
     const room = await Room.findById(id);
 
     if (!room || room.hotelId.toString() !== hotel._id.toString()) {
       return res
         .status(403)
-        .json({ success: false, message: "Not authorized to edit this room." });
+        .json({ message: "Not authorized to edit this room." });
     }
 
     let parsedFacilities = room.facilities;
@@ -269,19 +246,16 @@ exports.updateRoom = async (req, res) => {
       try {
         parsedFacilities = JSON.parse(req.body.facilities);
       } catch (err) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid facilities format." });
+        return res.status(400).json({ message: "Invalid facilities format" });
       }
     }
 
     let finalImages = [];
-
     if (req.body.existingImages) {
       try {
         finalImages = JSON.parse(req.body.existingImages);
       } catch (err) {
-        finalImages = room.images; 
+        finalImages = room.images;
       }
     }
 
@@ -289,7 +263,7 @@ exports.updateRoom = async (req, res) => {
       const uploadData = await uploadImage(req.files);
       if (uploadData && Array.isArray(uploadData)) {
         const newUrls = uploadData.map((data) => data.secure_url);
-        finalImages = [...finalImages, ...newUrls]; // Merge old and new images
+        finalImages = [...finalImages, ...newUrls];
       }
     }
 
@@ -303,13 +277,11 @@ exports.updateRoom = async (req, res) => {
       { new: true, runValidators: true },
     );
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Room updated successfully.",
       data: updatedRoom,
     });
   } catch (error) {
-    console.error("Update Room Error:", error.message);
-    res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

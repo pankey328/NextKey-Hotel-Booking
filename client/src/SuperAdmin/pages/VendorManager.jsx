@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import api from "../../api";
 
 const VendorManager = () => {
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("pending"); 
+  const [activeTab, setActiveTab] = useState("pending");
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -17,10 +17,6 @@ const VendorManager = () => {
 
   const token = localStorage.getItem("token");
 
-  const config = {
-    headers: { Authorization: `Bearer ${token}` },
-  };
-
   const fetchVendors = async () => {
     setLoading(true);
     try {
@@ -29,10 +25,12 @@ const VendorManager = () => {
           ? `/vendors?isDeleted=true`
           : `/vendors?isDeleted=false&status=${activeTab}`;
 
-      const res = await api.get(url, config);
+      const res = await api.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setVendors(res.data.data || res.data);
     } catch (error) {
-      console.error(error);
+      console.log(error);
     } finally {
       setLoading(false);
     }
@@ -43,10 +41,14 @@ const VendorManager = () => {
   }, [activeTab]);
 
   const handleApprove = async (id) => {
-    if (!window.confirm("Approve this vendor and generate login credentials?"))
-      return;
     try {
-      await api.put(`/vendors/approve/${id}`, {}, config);
+      await api.put(
+        `/vendors/approve/${id}`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       fetchVendors();
     } catch (error) {
       alert(error.response?.data?.message || "Error approving vendor.");
@@ -60,7 +62,9 @@ const VendorManager = () => {
       await api.put(
         `/vendors/reject/${selectedVendor._id}`,
         { remark: rejectRemark },
-        config,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       );
       setShowRejectModal(false);
       setRejectRemark("");
@@ -74,16 +78,28 @@ const VendorManager = () => {
   const handleAction = async (action, id) => {
     try {
       if (action === "softDelete") {
-        await api.patch(`/vendors/${id}/soft-delete`, {}, config);
-      } else if (action === "restore") {
-        await api.patch(`/vendors/${id}/restore`, {}, config);
-      } else if (action === "hardDelete") {
-        const confirmDelete = window.confirm(
-          "Are you sure? This cannot be undone.",
+        await api.patch(
+          `/vendors/${id}/soft-delete`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
         );
+      } else if (action === "restore") {
+        await api.patch(
+          `/vendors/${id}/restore`,
+          {},
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+      } else if (action === "hardDelete") {
+        const confirmDelete = window.confirm("Are you sure?.");
         if (!confirmDelete) return;
 
-        await api.delete(`/vendors/${id}`, config);
+        await api.delete(`/vendors/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
 
       fetchVendors();
@@ -278,10 +294,7 @@ const VendorManager = () => {
       {/* VIEW MODAL */}
       {showViewModal && selectedVendor && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div
-            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                 Vendor Profile

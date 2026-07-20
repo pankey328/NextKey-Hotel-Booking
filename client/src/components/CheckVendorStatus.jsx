@@ -17,7 +17,7 @@ const CheckVendorStatus = () => {
     try {
       const res = await api.get(`/vendors/status/${trackingId}`);
       setVendorData(res.data.data);
-      // Pre-fill form
+
       setFormData({
         companyName: res.data.data.companyName,
         applicantName: res.data.data.applicantName,
@@ -47,7 +47,6 @@ const CheckVendorStatus = () => {
     }
   };
 
-  // Ask for Tracking ID
   if (!vendorData) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">

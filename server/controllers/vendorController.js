@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const VendorRequest = require("../models/VendorRequestModel");
 const User = require("../models/userModel");
 const Hotel = require("../models/HotelModel");
@@ -8,18 +7,24 @@ const { uploadImage } = require("../utils/cloudinary");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
 
-// 1. PUBLIC: Register as a Vendor
+// Register a Vendor(admin)
 exports.registerVendor = async (req, res) => {
   try {
     const { companyName, applicantName, email, phone } = req.body;
 
+    if (!email || !companyName || !applicantName || !phone) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+
     const existingReq = await VendorRequest.findOne({
       email: email.toLowerCase().trim(),
     });
+
     if (existingReq) {
       return res.status(400).json({
-        success: false,
-        message: "A request with this email already exists.",
+        message: "A request with this email already exists",
       });
     }
 
@@ -43,17 +48,16 @@ exports.registerVendor = async (req, res) => {
       emailBody,
     );
 
-    res.status(201).json({
-      success: true,
-      message: "Registration submitted successfully.",
+    return res.status(201).json({
+      message: "Registration submitted successfully",
       data: newRequest,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 2. SUPERADMIN: Get Vendor Requests
+// Get Requests (SUPERADMIN)
 exports.getVendorRequests = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
@@ -61,13 +65,16 @@ exports.getVendorRequests = async (req, res) => {
     if (req.query.status) query.status = req.query.status;
 
     const requests = await VendorRequest.find(query).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: requests });
+
+    return res
+      .status(200)
+      .json({ message: "All vendor requests fetched", data: requests });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 3. SUPERADMIN: Approve Vendor (Transaction)
+// Approve = SUPERADMIN (Transaction)
 
 /* exports.approveVendor = async (req, res) => {
   const session = await mongoose.startSession();
@@ -82,30 +89,25 @@ exports.getVendorRequests = async (req, res) => {
       throw new Error("Vendor request not found");
     }
 
-    // Prevent duplicate approval
     if (vendorReq.status === "approved") {
-      throw new Error("Vendor is already approved.");
+      throw new Error("Vendor is already approved");
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({
       email: vendorReq.email,
     }).session(session);
 
     if (existingUser) {
-      throw new Error("A user with this email already exists.");
+      throw new Error("A user with this email already exists");
     }
 
-    // Generate password
     const generatedPassword = uuidv4().slice(0, 8);
     const hashedPassword = await bcrypt.hash(generatedPassword, 10);
 
-    // Update vendor request
     vendorReq.status = "approved";
     vendorReq.rejectRemark = "";
     await vendorReq.save({ session });
 
-    // Create Vendor User
     await User.create(
       [
         {
@@ -113,13 +115,11 @@ exports.getVendorRequests = async (req, res) => {
           email: vendorReq.email,
           password: hashedPassword,
           role: "vendor",
-
         },
       ],
       { session },
     );
 
-    // Send credentials
     const emailBody = `
       <h2>Welcome to Our Platform!</h2>
 
@@ -147,16 +147,14 @@ exports.getVendorRequests = async (req, res) => {
 
     await session.commitTransaction();
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message:
-        "Vendor approved successfully. Login credentials have been sent via email.",
+        "Vendor approved successfully. Login credentials have been sent via email",
     });
   } catch (error) {
     await session.abortTransaction();
 
-    res.status(500).json({
-      success: false,
+    return res.status(500).json({
       message: error.message,
     });
   } finally {
@@ -164,29 +162,26 @@ exports.getVendorRequests = async (req, res) => {
   }
 }; */
 
-// 3. SUPERADMIN: Approve Vendor (Without Transaction)
+// Approve = SUPERADMIN (Without Transaction)
 exports.approveVendor = async (req, res) => {
   try {
     const vendorReq = await VendorRequest.findById(req.params.id);
 
     if (!vendorReq) {
       return res.status(404).json({
-        success: false,
-        message: "Vendor request not found.",
+        message: "Vendor request not found",
       });
     }
 
     if (vendorReq.isDeleted) {
       return res.status(400).json({
-        success: false,
-        message: "Cannot approve an inactive/deleted vendor request.",
+        message: "Cannot approve an inactive vendor request",
       });
     }
 
     if (vendorReq.status === "approved") {
       return res.status(400).json({
-        success: false,
-        message: "Vendor is already approved.",
+        message: "Vendor is already approved",
       });
     }
 
@@ -196,8 +191,7 @@ exports.approveVendor = async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
-        success: false,
-        message: "A user with this email already exists.",
+        message: "A user with this email already exists",
       });
     }
 
@@ -241,21 +235,17 @@ exports.approveVendor = async (req, res) => {
     );
 
     return res.status(200).json({
-      success: true,
       message:
-        "Vendor approved successfully. Login credentials have been sent via email.",
+        "Vendor approved successfully. Login credentials have been sent via email",
     });
   } catch (error) {
-    console.error("Approve Vendor Error:", error);
-
     return res.status(500).json({
-      success: false,
       message: error.message || "Internal Server Error",
     });
   }
 };
 
-// 4. SUPERADMIN: Reject Vendor
+// Reject (SUPERADMIN)
 exports.rejectVendor = async (req, res) => {
   try {
     const { remark } = req.body;
@@ -263,14 +253,11 @@ exports.rejectVendor = async (req, res) => {
     const vendorReq = await VendorRequest.findById(req.params.id);
 
     if (!vendorReq) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Vendor request not found" });
+      return res.status(404).json({ message: "Vendor request not found" });
     }
 
     if (!remark) {
       return res.status(400).json({
-        success: false,
         message: "Rejection remark is required",
       });
     }
@@ -295,16 +282,15 @@ exports.rejectVendor = async (req, res) => {
       emailBody,
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Vendor request rejected and email sent.",
+    return res.status(200).json({
+      message: "Vendor request rejected and email sent",
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 5. SUPERADMIN: Soft Delete Vendor
+// Soft Delete (SUPERADMIN)
 exports.softDeleteVendor = async (req, res) => {
   try {
     const vendor = await VendorRequest.findByIdAndUpdate(
@@ -315,22 +301,20 @@ exports.softDeleteVendor = async (req, res) => {
 
     if (!vendor) {
       return res.status(404).json({
-        success: false,
         message: "Vendor request not found",
       });
     }
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Vendor moved to inactive list",
       data: vendor,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 6. SUPERADMIN: Restore Vendor
+// Restore (SUPERADMIN)
 exports.restoreVendor = async (req, res) => {
   try {
     const vendor = await VendorRequest.findByIdAndUpdate(
@@ -341,29 +325,26 @@ exports.restoreVendor = async (req, res) => {
 
     if (!vendor) {
       return res.status(404).json({
-        success: false,
         message: "Vendor request not found",
       });
     }
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Vendor restored successfully",
       data: vendor,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 7. SUPERADMIN: Hard Delete Vendor
+// Hard Delete (SUPERADMIN)
 exports.hardDeleteVendor = async (req, res) => {
   try {
     const vendor = await VendorRequest.findById(req.params.id);
 
     if (!vendor) {
       return res.status(404).json({
-        success: false,
         message: "Vendor request not found",
       });
     }
@@ -376,16 +357,15 @@ exports.hardDeleteVendor = async (req, res) => {
 
     await VendorRequest.findByIdAndDelete(req.params.id);
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Vendor permanently deleted",
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 8. PUBLIC: Check Vendor Status by Tracking ID
+// Check Vendor Status by Tracking ID (PUBLIC)
 exports.checkVendorStatus = async (req, res) => {
   try {
     const vendor = await VendorRequest.findOne({
@@ -394,42 +374,37 @@ exports.checkVendorStatus = async (req, res) => {
 
     if (!vendor) {
       return res.status(404).json({
-        success: false,
-        message: "Application not found. Please check your Tracking ID.",
+        message: "Application not found. Please check your Tracking ID",
       });
     }
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Vendor application found",
       data: vendor,
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Server error checking tracking ID",
+    return res.status(500).json({
+      message: "Server Side Error",
     });
   }
 };
 
-// 9. PUBLIC: Update Vendor Request by Tracking ID
+// Update Vendor Request by Tracking ID (PUBLIC)
 exports.updateVendorRequest = async (req, res) => {
   try {
-    const vendor = await VendorRequest.findOne({
+    const vendorReq = await VendorRequest.findOne({
       trackingId: req.params.id,
     });
 
-    if (!vendor) {
+    if (!vendorReq) {
       return res.status(404).json({
-        success: false,
         message: "Vendor request not found",
       });
     }
 
-    if (vendor.status === "approved") {
+    if (vendorReq.status === "approved") {
       return res.status(400).json({
-        success: false,
-        message: "Cannot edit an approved vendor.",
+        message: "Cannot edit an approved vendor",
       });
     }
 
@@ -439,42 +414,42 @@ exports.updateVendorRequest = async (req, res) => {
       updateData.email = updateData.email.toLowerCase().trim();
     }
 
-    if (vendor.status === "rejected") {
+    if (vendorReq.status === "rejected") {
       updateData.status = "pending";
       updateData.rejectRemark = "";
     }
 
     const updatedVendor = await VendorRequest.findByIdAndUpdate(
-      vendor._id,
+      vendorReq._id,
       updateData,
       { new: true },
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Vendor application updated successfully and is pending review.",
+    return res.status(200).json({
+      message: "Vendor application updated successfully and is pending review",
       data: updatedVendor,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 10. SUPERADMIN: Add new vendor with approved status
+// Add new vendor with approved status (SUPERADMIN)
 exports.superAdminAddVendor = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== "super_admin") {
-      return res.status(403).json({ success: false, message: "Unauthorized." });
+    const { companyName, applicantName, email, phone } = req.body;
+
+    if (!companyName || !applicantName || !email || !phone) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
     }
 
-    const { companyName, applicantName, email, phone } = req.body;
     const vendorEmail = email.toLowerCase().trim();
 
     const existingUser = await User.findOne({ email: vendorEmail });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Email already in use." });
+      return res.status(400).json({ message: "Email already in use" });
     }
 
     const trackingId = uuidv4();
@@ -506,41 +481,37 @@ exports.superAdminAddVendor = async (req, res) => {
       <p><b>Email:</b> ${vendorEmail}<br><b>Password:</b> ${generatedPassword}</p>
       <p>Please log in and change your password immediately.</p>
     `;
+
     await sendMail.sendMail(vendorEmail, "Vendor Account Created", emailBody);
 
-    res.status(201).json({
-      success: true,
-      message: "Vendor created and auto-approved. Credentials sent.",
+    return res.status(201).json({
+      message: "Vendor created Successfully, Credentials sent to Mail ID",
       data: newVendor,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 11. VENDOR: Add Room to a Specific Hotel
+// Add Room to a Specific Hotel (VENDOR)
 exports.vendorCreateRoom = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "vendor") {
       return res.status(403).json({
-        success: false,
-        message: "Only vendors can add rooms using this route.",
+        message: "Only vendors can add rooms using this route",
       });
     }
-
     const { roomNumber, pricePerNight, hotelId } = req.body;
 
     if (!roomNumber || !pricePerNight || !hotelId) {
       return res.status(400).json({
-        success: false,
-        message: "Room Number, Price Per Night, and Hotel ID are required.",
+        message: "Room Number, Price Per Night, and Hotel ID are required",
       });
     }
 
     const vendor = await VendorRequest.findOne({ email: req.user.email });
     if (!vendor) {
       return res.status(404).json({
-        success: false,
         message: "Vendor profile not found.",
       });
     }
@@ -548,9 +519,8 @@ exports.vendorCreateRoom = async (req, res) => {
     const hotel = await Hotel.findOne({ _id: hotelId, vendorId: vendor._id });
     if (!hotel) {
       return res.status(403).json({
-        success: false,
         message:
-          "Not authorized. This hotel does not belong to your vendor account.",
+          "Not authorized. This hotel does not belong to your vendor account",
       });
     }
 
@@ -560,8 +530,7 @@ exports.vendorCreateRoom = async (req, res) => {
         parsedFacilities = JSON.parse(req.body.facilities);
       } catch (err) {
         return res.status(400).json({
-          success: false,
-          message: "Invalid format for facilities. Must be a valid JSON array.",
+          message: "Invalid format for facilities",
         });
       }
     }
@@ -581,15 +550,12 @@ exports.vendorCreateRoom = async (req, res) => {
       images: imageUrls,
     });
 
-    res.status(201).json({
-      success: true,
-      message: "Room successfully added to your hotel.",
+    return res.status(201).json({
+      message: "Room successfully added to your hotel",
       data: newRoom,
     });
   } catch (error) {
-    console.error("Error in vendorCreateRoom:", error.message);
-    res.status(500).json({
-      success: false,
+    return res.status(500).json({
       message: error.message,
     });
   }

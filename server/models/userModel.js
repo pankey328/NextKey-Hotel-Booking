@@ -44,12 +44,12 @@ const userSchema = new mongoose.Schema(
       default: "local",
     },
     hotelId: {
-      type: mongoose.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Hotel",
     },
     vendorId: {
-      type: mongoose.Types.ObjectId,
-      ref: "User",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "VendorRequest",
     },
   },
   {

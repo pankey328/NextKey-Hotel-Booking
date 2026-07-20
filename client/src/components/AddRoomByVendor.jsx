@@ -66,7 +66,7 @@ const facilityCategories = {
 };
 
 const AddRoomByVendor = () => {
-  const { hotelId } = useParams(); // Get hotel ID 
+  const { hotelId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -95,21 +95,32 @@ const AddRoomByVendor = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+
+    if (type === "checkbox") {
+      setFormData({
+        ...formData,
+        [name]: checked,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleFacilityToggle = (facility) => {
-    setFormData((prev) => {
-      const exists = prev.facilities.includes(facility);
-      return {
-        ...prev,
-        facilities: exists
-          ? prev.facilities.filter((f) => f !== facility)
-          : [...prev.facilities, facility],
-      };
+    let facilities = [...formData.facilities];
+
+    if (facilities.includes(facility)) {
+      facilities = facilities.filter((item) => item !== facility);
+    } else {
+      facilities.push(facility);
+    }
+
+    setFormData({
+      ...formData,
+      facilities,
     });
   };
 
@@ -172,7 +183,7 @@ const AddRoomByVendor = () => {
           </p>
         </div>
         <button
-          onClick={() => navigate("/vendor-dashboard")}
+          onClick={() => navigate("/admin-dashboard")}
           className="text-blue-600 hover:underline text-sm font-medium"
         >
           &larr; Back to Dashboard

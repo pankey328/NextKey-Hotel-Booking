@@ -2,6 +2,22 @@ import React, { useState, useEffect } from "react";
 import api from "../api";
 import { useNavigate, useParams } from "react-router-dom";
 
+// NEW: Global list of features
+const hotelFeaturesList = [
+  "Parking",
+  "Elevator",
+  "Luggage Storage",
+  "Restaurant",
+  "Cafe",
+  "Bar",
+  "Gym",
+  "Swimming Pool",
+  "EV Charging Station",
+  "Garden",
+  "Terrace",
+  "Laundry Service",
+];
+
 const EditHotel = () => {
   const { id } = useParams(); // trackingId
   const navigate = useNavigate();
@@ -15,6 +31,7 @@ const EditHotel = () => {
     address: "",
     locationLink: "",
     description: "",
+    features: [], // NEW: Added to state
   });
   const [image, setImage] = useState(null);
   const [currentImageUrl, setCurrentImageUrl] = useState("");
@@ -30,15 +47,12 @@ const EditHotel = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Fetch existing hotel data and dropdown lists on load
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        // Fetch All States
         const statesRes = await api.get("/states?isDeleted=false");
         setStates(statesRes.data.data);
 
-        // Fetch Hotel Data
         const hotelRes = await api.get(`/hotels/status/${id}`);
         const hotel = hotelRes.data.data;
 
@@ -57,17 +71,16 @@ const EditHotel = () => {
           address: hotel.address,
           locationLink: hotel.locationLink || "",
           description: hotel.description || "",
+          features: hotel.features || [],
         });
         setCurrentImageUrl(hotel.imageUrl);
 
-        // Set Location Dropdowns
         const stateId = hotel.stateId?._id || hotel.stateId;
         const districtId = hotel.districtId?._id || hotel.districtId;
         const cityId = hotel.cityId?._id || hotel.cityId;
 
         setSelectedStateId(stateId);
 
-        // Fetch dependent districts and cities based on existing hotel data
         if (stateId) {
           const distRes = await api.get(
             `/districts?stateId=${stateId}&isDeleted=false`,
@@ -93,7 +106,6 @@ const EditHotel = () => {
     fetchInitialData();
   }, [id, navigate]);
 
-  // Handlers for Dropdowns
   const handleStateChange = async (e) => {
     const stateId = e.target.value;
     setSelectedStateId(stateId);
@@ -124,7 +136,21 @@ const EditHotel = () => {
     }
   };
 
-  // Submit Handler
+  const handleFeatureChange = (feature) => {
+    let features = [...formData.features];
+
+    if (features.includes(feature)) {
+      features = features.filter((item) => item !== feature);
+    } else {
+      features.push(feature);
+    }
+
+    setFormData({
+      ...formData,
+      features,
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedCityId)
@@ -132,20 +158,24 @@ const EditHotel = () => {
     setSubmitting(true);
 
     const submitData = new FormData();
-    Object.keys(formData).forEach((key) =>
-      submitData.append(key, formData[key]),
-    );
+    Object.keys(formData).forEach((key) => {
+      if (key === "features") {
+        submitData.append("features", JSON.stringify(formData.features));
+      } else {
+        submitData.append(key, formData[key]);
+      }
+    });
+
     submitData.append("stateId", selectedStateId);
     submitData.append("districtId", selectedDistrictId);
     submitData.append("cityId", selectedCityId);
 
-    // Only append image if a NEW one was selected
     if (image) submitData.append("image", image);
 
     try {
       await api.put(`/hotels/update/${id}`, submitData);
       alert("Property updated successfully! Status is now pending review.");
-      navigate("/admin-dashboard"); // Go back to dashboard
+      navigate("/admin-dashboard");
     } catch (error) {
       alert(error.response?.data?.message || "Update failed.");
     } finally {
@@ -169,7 +199,6 @@ const EditHotel = () => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Same form fields as HotelRegistration.js */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Property Name
@@ -350,6 +379,29 @@ const EditHotel = () => {
               }
               className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             />
+          </div>
+
+          {/* Property Features Selection */}
+          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+              Property Features & Amenities
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {hotelFeaturesList.map((feature) => (
+                <label
+                  key={feature}
+                  className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:text-blue-600 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.features.includes(feature)}
+                    onChange={() => handleFeatureChange(feature)}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 cursor-pointer"
+                  />
+                  {feature}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div>

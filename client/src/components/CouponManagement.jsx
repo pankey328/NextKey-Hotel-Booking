@@ -23,16 +23,14 @@ const CouponManagement = () => {
   });
 
   const token = localStorage.getItem("token");
-  const config = { headers: { Authorization: `Bearer ${token}` } };
 
   const fetchCoupons = async () => {
     setLoading(true);
     try {
       const isDeleted = activeTab === "trash";
-      const res = await api.get(
-        `/coupons/${hotelId}?isDeleted=${isDeleted}`,
-        config,
-      );
+      const res = await api.get(`/coupons/${hotelId}?isDeleted=${isDeleted}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setCoupons(res.data.data);
     } catch (err) {
       alert(err.response?.data?.message || "Error fetching coupons");
@@ -49,9 +47,15 @@ const CouponManagement = () => {
     e.preventDefault();
     try {
       if (isEdit) {
-        await api.put(`/coupons/${currentCoupon._id}`, currentCoupon, config);
+        await api.put(`/coupons/${currentCoupon._id}`, currentCoupon, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       } else {
-        await api.post(`/coupons`, { ...currentCoupon, hotelId }, config);
+        await api.post(
+          `/coupons`,
+          { ...currentCoupon, hotelId },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       }
       setShowModal(false);
       fetchCoupons();
@@ -63,10 +67,17 @@ const CouponManagement = () => {
   const handleAction = async (action, id) => {
     try {
       if (action === "softDelete") {
-        if (!window.confirm("Move this coupon to the trash?")) return;
-        await api.patch(`/coupons/${id}/soft-delete`, {}, config);
+        await api.patch(
+          `/coupons/${id}/soft-delete`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       } else if (action === "restore") {
-        await api.patch(`/coupons/${id}/restore`, {}, config);
+        await api.patch(
+          `/coupons/${id}/restore`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       } else if (action === "hardDelete") {
         if (
           !window.confirm(
@@ -74,7 +85,9 @@ const CouponManagement = () => {
           )
         )
           return;
-        await api.delete(`/coupons/${id}`, config);
+        await api.delete(`/coupons/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
       fetchCoupons();
     } catch (err) {

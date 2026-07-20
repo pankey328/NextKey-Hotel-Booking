@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
 import api from "../../api";
 
 const HotelManager = () => {
-  const navigate = useNavigate(); 
-  const [activeTab, setActiveTab] = useState("pending"); 
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("pending");
 
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -82,19 +82,27 @@ const HotelManager = () => {
 
   const handleAction = async (action, id) => {
     try {
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-
       if (action === "softDelete") {
-        await api.patch(`/hotels/${id}/soft-delete`, {}, config);
+        await api.patch(
+          `/hotels/${id}/soft-delete`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       } else if (action === "restore") {
-        await api.patch(`/hotels/${id}/restore`, {}, config);
+        await api.patch(
+          `/hotels/${id}/restore`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
       } else if (action === "hardDelete") {
         const confirmDelete = window.confirm(
           "Are you sure? This cannot be undone.",
         );
         if (!confirmDelete) return;
 
-        await api.delete(`/hotels/${id}`, config);
+        await api.delete(`/hotels/${id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
 
       fetchHotels();
@@ -115,7 +123,7 @@ const HotelManager = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 transition-colors duration-300">
-      {/* HEADER SECTION WITH BUTTON */}
+      {/* HEADER */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
@@ -217,7 +225,7 @@ const HotelManager = () => {
                     </div>
                   </td>
 
-                  {/* VENDOR INFO (Fixed mapping) */}
+                  {/* VENDOR INFO */}
                   <td className="py-3 px-4">
                     <div className="font-bold text-gray-800 dark:text-gray-200 text-sm">
                       {hotel.vendorId?.companyName || "No Company"}
@@ -312,10 +320,7 @@ const HotelManager = () => {
       {/* VIEW MODAL */}
       {showViewModal && selectedHotel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div
-            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                 Hotel Profile
@@ -353,7 +358,7 @@ const HotelManager = () => {
                   </span>
                 </div>
 
-                {/* VENDOR DETAILS IN MODAL (Fixed mapping) */}
+                {/* VENDOR DETAILS IN MODAL */}
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md border border-gray-100 dark:border-gray-600">
                   <span className="text-gray-500 text-xs uppercase font-bold tracking-wider block mb-2">
                     Managed By (Vendor)
@@ -398,12 +403,34 @@ const HotelManager = () => {
                     {selectedHotel.address}
                   </span>
                 </div>
-                <div className="pt-2">
+
+                {/* Features Section */}
+                {selectedHotel.features &&
+                  selectedHotel.features.length > 0 && (
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                      <span className="text-gray-500 block mb-2">
+                        Features & Amenities:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedHotel.features.map((feature, index) => (
+                          <span
+                            key={index}
+                            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs border border-blue-100 dark:border-blue-800"
+                          >
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                   <span className="text-gray-500 block mb-1">Description:</span>{" "}
                   <p className="text-gray-700 dark:text-gray-300 italic">
                     "{selectedHotel.description}"
                   </p>
                 </div>
+
                 {selectedHotel.status === "rejected" && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
                     <strong>Rejection Reason:</strong>{" "}

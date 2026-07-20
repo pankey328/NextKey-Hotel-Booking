@@ -4,7 +4,6 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 const SuperAdminLayout = () => {
   const location = useLocation();
 
-  // Helper to highlight active menu item
   const isActive = (path) => location.pathname.includes(path);
 
   return (
@@ -76,7 +75,8 @@ const SuperAdminLayout = () => {
       {/* Main Content Area */}
       <main className="flex-1 overflow-y-auto p-8">
         <Outlet />{" "}
-        {/* This renders StateManager, DistrictManager, etc based on route */}
+        {/* This renders StateManager, DistrictManager, etc based on
+        route*/}
       </main>
     </div>
   );

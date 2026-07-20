@@ -7,11 +7,13 @@ const vendorRequestSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     applicantName: {
       type: String,
       required: true,
       trim: true,
     },
+
     email: {
       type: String,
       required: true,
@@ -19,26 +21,31 @@ const vendorRequestSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     phone: {
       type: String,
       required: true,
       trim: true,
     },
+
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "pending",
     },
+
     rejectRemark: {
       type: String,
       default: "",
       trim: true,
     },
+
     trackingId: {
       type: String,
       unique: true,
       required: true,
     },
+
     isDeleted: {
       type: Boolean,
       default: false,

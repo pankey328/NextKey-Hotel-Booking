@@ -8,20 +8,24 @@ const districtSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     stateId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "State",
       required: true,
     },
+
     isDeleted: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true, versionKey: false },
+  {
+    timestamps: true,
+    versionKey: false,
+  },
 );
 
-// Prevent duplicate district names within the same state
 districtSchema.index({ stateId: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model("District", districtSchema);

@@ -2,29 +2,20 @@ const mongoose = require("mongoose");
 const District = require("../models/DistrictModel");
 const State = require("../models/StateModel");
 
-// 1. Create District
+// Create District
 exports.createDistrict = async (req, res) => {
   try {
     let { name, stateId } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
-        success: false,
-        message: "District name is required.",
+        message: "District name is required",
       });
     }
 
     if (!stateId) {
       return res.status(400).json({
-        success: false,
-        message: "State is required.",
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(stateId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid State ID.",
+        message: "State is required",
       });
     }
 
@@ -32,8 +23,7 @@ exports.createDistrict = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        success: false,
-        message: "State not found.",
+        message: "State not found",
       });
     }
 
@@ -43,9 +33,8 @@ exports.createDistrict = async (req, res) => {
     });
 
     if (existingDistrict) {
-      return res.status(409).json({
-        success: false,
-        message: "District already exists in this state.",
+      return res.status(400).json({
+        message: "District already exists in this state",
       });
     }
 
@@ -55,19 +44,17 @@ exports.createDistrict = async (req, res) => {
     });
 
     return res.status(201).json({
-      success: true,
-      message: "District created successfully.",
+      message: "District created successfully",
       data: district,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 2. Get All Districts
+// Get All Districts
 exports.getAllDistricts = async (req, res) => {
   try {
     const { stateId } = req.query;
@@ -77,15 +64,7 @@ exports.getAllDistricts = async (req, res) => {
       isDeleted,
     };
 
-    // If stateId is provided only fetch districts of that state
     if (stateId) {
-      if (!mongoose.Types.ObjectId.isValid(stateId)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid state ID.",
-        });
-      }
-
       filter.stateId = stateId;
     }
 
@@ -94,27 +73,23 @@ exports.getAllDistricts = async (req, res) => {
       .sort({ createdAt: -1 });
 
     return res.status(200).json({
-      success: true,
-      count: districts.length,
       data: districts,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 3. Get One District
+// Get One District
 exports.getOneDistrict = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid District ID.",
+        message: "District ID is required",
       });
     }
 
@@ -122,32 +97,28 @@ exports.getOneDistrict = async (req, res) => {
 
     if (!district) {
       return res.status(404).json({
-        success: false,
-        message: "District not found.",
+        message: "District not found",
       });
     }
 
     return res.status(200).json({
-      success: true,
       data: district,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 4. Soft Delete
+// Soft Delete
 exports.softDeleteDistrict = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid District ID.",
+        message: "District ID is required",
       });
     }
 
@@ -155,15 +126,13 @@ exports.softDeleteDistrict = async (req, res) => {
 
     if (!district) {
       return res.status(404).json({
-        success: false,
-        message: "District not found.",
+        message: "District not found",
       });
     }
 
     if (district.isDeleted) {
       return res.status(400).json({
-        success: false,
-        message: "District is already inactive.",
+        message: "District is already inactive",
       });
     }
 
@@ -171,27 +140,24 @@ exports.softDeleteDistrict = async (req, res) => {
     await district.save();
 
     return res.status(200).json({
-      success: true,
-      message: "District moved to inactive successfully.",
+      message: "District moved to inactive successfully",
       data: district,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 5. Restore District
+// Restore District
 exports.restoreDistrict = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid District ID.",
+        message: "District ID is required",
       });
     }
 
@@ -199,15 +165,13 @@ exports.restoreDistrict = async (req, res) => {
 
     if (!district) {
       return res.status(404).json({
-        success: false,
-        message: "District not found.",
+        message: "District not found",
       });
     }
 
     if (!district.isDeleted) {
       return res.status(400).json({
-        success: false,
-        message: "District is already active.",
+        message: "District is already active",
       });
     }
 
@@ -215,27 +179,24 @@ exports.restoreDistrict = async (req, res) => {
     await district.save();
 
     return res.status(200).json({
-      success: true,
-      message: "District restored successfully.",
+      message: "District restored successfully",
       data: district,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 6. Hard Delete
+// Hard Delete
 exports.deleteDistrict = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid District ID.",
+        message: "District ID is required",
       });
     }
 
@@ -243,7 +204,6 @@ exports.deleteDistrict = async (req, res) => {
 
     if (!district) {
       return res.status(404).json({
-        success: false,
         message: "District not found.",
       });
     }
@@ -251,12 +211,10 @@ exports.deleteDistrict = async (req, res) => {
     await district.deleteOne();
 
     return res.status(200).json({
-      success: true,
-      message: "District permanently deleted.",
+      message: "District permanently deleted",
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }

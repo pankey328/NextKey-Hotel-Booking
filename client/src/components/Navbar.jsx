@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import useTheme from "../../src/hooks/useTheme"; 
+import useTheme from "../../src/hooks/useTheme";
 
 const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
@@ -32,7 +32,6 @@ const Navbar = () => {
           aria-label="Toggle Dark Mode"
         >
           {theme === "dark" ? (
-            // Sun Icon for Dark Mode
             <svg
               className="w-5 h-5"
               fill="none"
@@ -48,7 +47,6 @@ const Navbar = () => {
               />
             </svg>
           ) : (
-            // Moon Icon for Light Mode
             <svg
               className="w-5 h-5"
               fill="none"

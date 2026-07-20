@@ -26,7 +26,5 @@ const citySchema = new mongoose.Schema(
   { timestamps: true, versionKey: false },
 );
 
-// Prevent duplicate city names within the same district
 citySchema.index({ districtId: 1, name: 1 }, { unique: true });
-
 module.exports = mongoose.model("City", citySchema);

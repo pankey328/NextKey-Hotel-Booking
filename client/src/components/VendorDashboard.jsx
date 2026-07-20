@@ -269,17 +269,14 @@ const VendorDashboard = () => {
       {/* VIEW MODAL */}
       {showViewModal && selectedHotel && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div
-            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
                 Property Details
               </h2>
               <button
                 onClick={() => setShowViewModal(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer text-2xl"
+                className="text-gray-400 hover:text-gray-600 text-2xl"
               >
                 &times;
               </button>
@@ -315,6 +312,8 @@ const VendorDashboard = () => {
                     {selectedHotel.hotelType} ({selectedHotel.starRating}★)
                   </span>
                 </div>
+
+                {/* Restored Email & Phone */}
                 <div>
                   <span className="text-gray-500">Email:</span>{" "}
                   <span className="dark:text-white">{selectedHotel.email}</span>
@@ -323,6 +322,7 @@ const VendorDashboard = () => {
                   <span className="text-gray-500">Phone:</span>{" "}
                   <span className="dark:text-white">{selectedHotel.phone}</span>
                 </div>
+
                 <div>
                   <span className="text-gray-500">Location:</span>{" "}
                   <span className="dark:text-white">
@@ -331,14 +331,37 @@ const VendorDashboard = () => {
                     {selectedHotel.stateId?.name}
                   </span>
                 </div>
+
+                {/* Restored Address */}
                 <div>
                   <span className="text-gray-500">Address:</span>{" "}
                   <span className="dark:text-white">
                     {selectedHotel.address}
                   </span>
                 </div>
+
+                {/* Features Section */}
+                {selectedHotel.features &&
+                  selectedHotel.features.length > 0 && (
+                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
+                      <span className="text-gray-500 block mb-2">
+                        Features & Amenities:
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedHotel.features.map((feature, index) => (
+                          <span
+                            key={index}
+                            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs border border-blue-100 dark:border-blue-800"
+                          >
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 block mb-1">Description:</span>{" "}
+                  <span className="text-gray-500 block mb-1">Description:</span>
                   <p className="text-gray-700 dark:text-gray-300 italic">
                     {selectedHotel.description || "No description provided."}
                   </p>

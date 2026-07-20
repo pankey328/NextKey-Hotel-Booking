@@ -5,16 +5,14 @@ const bcrypt = require("bcrypt");
 const { uploadImage } = require("../utils/cloudinary");
 const sendMail = require("../config/nodemailer");
 const { v4: uuidv4 } = require("uuid");
-const mongoose = require("mongoose");
 
-// 1. Register New Hotel Request
+// Register New Hotel
 exports.registerHotel = async (req, res) => {
   try {
     if (!req.user || req.user.role !== "vendor") {
-      return res.status(403).json({
-        success: false,
-        message: "Only approved vendors can add hotels.",
-      });
+      return res
+        .status(403)
+        .json({ message: "Only approved vendors can add hotels." });
     }
     const {
       name,
@@ -28,49 +26,55 @@ exports.registerHotel = async (req, res) => {
       stateId,
       districtId,
       cityId,
+      features,
     } = req.body;
 
-    let imageUrl;
+    if (
+      !name ||
+      !hotelType ||
+      !address ||
+      !email ||
+      !phone ||
+      !stateId ||
+      !districtId ||
+      !cityId
+    ) {
+      return res.status(400).json({ message: "Required fields are missing" });
+    }
 
-    if (!req.files) {
-      imageUrl = "";
-    } else {
+    let parsedFeatures = [];
+    if (features) {
+      try {
+        parsedFeatures = JSON.parse(features);
+      } catch (e) {
+        parsedFeatures = [];
+      }
+    }
+
+    let imageUrl;
+    if (!req.files) imageUrl = "";
+    else {
       const uploadData = await uploadImage(req.files);
       imageUrl = uploadData?.[0]?.secure_url;
     }
 
-    if (!imageUrl) {
-      return res.status(400).json({
-        success: false,
-        message: "Hotel image is required",
-      });
-    }
+    if (!imageUrl)
+      return res.status(400).json({ message: "Hotel image is required" });
+
+    const vendorDetails = await VendorRequest.findOne({
+      email: req.user.email,
+    });
+    if (!vendorDetails)
+      return res.status(404).json({ message: "Vendor details not found" });
 
     const existingHotel = await Hotel.findOne({
       email: email.toLowerCase().trim(),
       isDeleted: false,
     });
-
-    if (existingHotel) {
-      return res.status(400).json({
-        success: false,
-        message: "A registration with this email already exists.",
-      });
-    }
-
-    const vendorDetails = await VendorRequest.findOne({
-      email: req.user.email,
-    });
-
-    if (!vendorDetails) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor company details not found for this user.",
-      });
-    }
+    if (existingHotel)
+      return res.status(400).json({ message: "Email already exists" });
 
     const trackingId = uuidv4();
-
     const newHotel = await Hotel.create({
       name,
       hotelType,
@@ -86,13 +90,13 @@ exports.registerHotel = async (req, res) => {
       cityId,
       trackingId,
       vendorId: vendorDetails._id,
+      features: parsedFeatures,
     });
 
     const emailBody = `
       <h2>Registration Received!</h2>
       <p>Your hotel <b>${name}</b> has been submitted for Superadmin approval.</p>      
-      <p>Your unique Application Tracking ID is: <b>${trackingId}</b></p>
-      <p>You can use this ID on our website to check your application status or update your details.</p>
+      <p>Your Tracking ID is: <b>${trackingId}</b></p>
     `;
     await sendMail.sendMail(
       email,
@@ -100,21 +104,17 @@ exports.registerHotel = async (req, res) => {
       emailBody,
     );
 
-    res.status(201).json({
-      success: true,
+    return res.status(201).json({
       message:
-        "Registration submitted successfully. Waiting for admin approval also Check your email for your Tracking ID",
+        "Registration submitted successfully. Check your email for your Tracking ID",
       data: newHotel,
     });
   } catch (error) {
-    console.log(error.message);
-    res.status(500).json({
-      message: error.message,
-    });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 2. Get Hotels (status/isDeleted)
+// Get Hotels (status/isDeleted)
 exports.getHotels = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
@@ -128,35 +128,31 @@ exports.getHotels = async (req, res) => {
         email: req.user.email,
       });
 
-      if (vendorCompany) {
-        query.$or = [{ userId: req.user._id }, { vendorId: vendorCompany._id }];
-      } else {
-        query.userId = req.user._id;
+      if (!vendorCompany) {
+        return res.status(404).json({
+          message: "Vendor profile not found",
+        });
       }
+      query.vendorId = vendorCompany._id;
     }
 
     const hotels = await Hotel.find(query)
       .populate("stateId", "name")
       .populate("districtId", "name")
       .populate("cityId", "name")
-      .populate({
-        path: "vendorId",
-        model: "VendorRequest",
-        select: "companyName applicantName email phone",
-      })
+      .populate("vendorId", "companyName applicantName email phone")
       .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "All related Hotels Info fetched",
       data: hotels,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 3. Approve Hotel (Transaction)
+// Approve Hotel (Transaction)
 /* exports.approveHotel = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -168,7 +164,7 @@ exports.getHotels = async (req, res) => {
       session.endSession();
       return res
         .status(404)
-        .json({ success: false, message: "Hotel not found" });
+        .json({  message: "Hotel not found" });
     }
 
     const generatedPassword = uuidv4().slice(0, 8);
@@ -205,41 +201,37 @@ exports.getHotels = async (req, res) => {
 
     await session.commitTransaction();
 
-    res.status(200).json({
-      success: true,
+   return res.status(200).json({
       message: "Hotel approved and credentials sent via email.",
     });
   } catch (error) {
     await session.abortTransaction();
-    res.status(500).json({ message: error.message });
+   return res.status(500).json({ message: error.message });
   } finally {
     session.endSession();
   }
 }; */
 
-// 3. Approve Hotel (Without Transaction)
+// Approve Hotel (Without Transaction)
 exports.approveHotel = async (req, res) => {
   try {
     const hotel = await Hotel.findById(req.params.id);
 
     if (!hotel) {
       return res.status(404).json({
-        success: false,
-        message: "Hotel not found.",
+        message: "Hotel not found",
       });
     }
 
     if (hotel.isDeleted) {
       return res.status(400).json({
-        success: false,
-        message: "Cannot approve an inactive/deleted hotel.",
+        message: "Cannot approve an inactive/deleted hotel",
       });
     }
 
     if (hotel.status === "approved") {
       return res.status(400).json({
-        success: false,
-        message: "Hotel is already approved.",
+        message: "Hotel is already approved",
       });
     }
 
@@ -249,7 +241,6 @@ exports.approveHotel = async (req, res) => {
 
     if (existingUser) {
       return res.status(400).json({
-        success: false,
         message: "A user with this email already exists.",
       });
     }
@@ -294,20 +285,16 @@ exports.approveHotel = async (req, res) => {
     );
 
     return res.status(200).json({
-      success: true,
-      message: "Hotel approved successfully. Login credentials have been sent.",
+      message: "Hotel approved successfully, Login credentials have been sent",
     });
   } catch (error) {
-    console.error("Approve Hotel Error:", error);
-
     return res.status(500).json({
-      success: false,
       message: error.message || "Internal Server Error",
     });
   }
 };
 
-// 4. Reject Hotel
+// Reject Hotel
 exports.rejectHotel = async (req, res) => {
   try {
     const { remark } = req.body;
@@ -318,6 +305,12 @@ exports.rejectHotel = async (req, res) => {
     }
     if (!remark) {
       return res.status(400).json({ message: "Rejection remark is required" });
+    }
+
+    if (hotel.isDeleted) {
+      return res.status(400).json({
+        message: "Inactive hotel cannot be updated",
+      });
     }
 
     hotel.status = "rejected";
@@ -335,16 +328,15 @@ exports.rejectHotel = async (req, res) => {
       emailBody,
     );
 
-    res.status(200).json({
-      success: true,
-      message: "Hotel rejected and notification sent.",
+    return res.status(200).json({
+      message: "Hotel rejected and notification sent",
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 5. Soft Delete (Inactive)
+// Soft Delete (Inactive)
 exports.softDeleteHotel = async (req, res) => {
   try {
     const hotel = await Hotel.findByIdAndUpdate(
@@ -352,19 +344,19 @@ exports.softDeleteHotel = async (req, res) => {
       { isDeleted: true },
       { new: true },
     );
+
     if (!hotel) return res.status(404).json({ message: "Hotel not found" });
 
-    res.status(200).json({
-      success: true,
+    return res.status(200).json({
       message: "Hotel moved to inactive list",
       data: hotel,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 6. Restore Hotel (Active)
+// Restore Hotel (Active)
 exports.restoreHotel = async (req, res) => {
   try {
     const hotel = await Hotel.findByIdAndUpdate(
@@ -378,11 +370,11 @@ exports.restoreHotel = async (req, res) => {
       .status(200)
       .json({ message: "Hotel restored successfully", data: hotel });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 7. Hard Delete
+// Hard Delete
 exports.hardDeleteHotel = async (req, res) => {
   try {
     const hotel = await Hotel.findById(req.params.id);
@@ -393,55 +385,58 @@ exports.hardDeleteHotel = async (req, res) => {
     }
 
     await Hotel.findByIdAndDelete(req.params.id);
-    res
-      .status(200)
-      .json({ sucess: true, message: "Hotel permanently deleted" });
+    return res.status(200).json({ message: "Hotel permanently deleted" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// 8. Check Hotel Status by UUID (Tracking Id)
+// Check Hotel Status by UUID (Tracking Id)
 exports.checkHotelStatus = async (req, res) => {
   try {
     const hotel = await Hotel.findOne({ trackingId: req.params.id });
 
     if (!hotel) {
       return res.status(404).json({
-        success: false,
-        message: "Application not found. Please check your Tracking ID.",
+        message: "Application not found check your Tracking ID",
       });
     }
 
-    res.status(200).json({
-      success: true,
-      message: "Hotel data that matching the Tracking Id",
+    return res.status(200).json({
+      message: "Hotel data matching the Tracking Id",
       data: hotel,
     });
   } catch (error) {
-    res
+    return res
       .status(500)
-      .json({ success: false, message: "Server error checking tracking Id" });
+      .json({ message: "Server error checking tracking Id" });
   }
 };
 
-// 9. Update/Re-request Hotel Registration by UUID (Tracking Id)
+// Update Hotel Registration by UUID (Tracking Id)
 exports.updateHotelRequest = async (req, res) => {
   try {
     const hotel = await Hotel.findOne({ trackingId: req.params.id });
 
-    if (!hotel)
-      return res
-        .status(404)
-        .json({ success: false, message: "Hotel not found" });
+    if (!hotel) return res.status(404).json({ message: "Hotel not found" });
 
-    if (hotel.status === "approved") {
+    if (hotel.status === "approved")
+      return res.status(400).json({ message: "Cannot edit an approved hotel" });
+
+    if (hotel.isDeleted)
       return res
         .status(400)
-        .json({ success: false, message: "Cannot edit an approved hotel." });
-    }
+        .json({ message: "Inactive hotel cannot be updated" });
 
     const updateData = { ...req.body };
+
+    if (updateData.features) {
+      try {
+        updateData.features = JSON.parse(updateData.features);
+      } catch (e) {
+        delete updateData.features;
+      }
+    }
 
     if (req.files) {
       const uploadData = await uploadImage(req.files);
@@ -459,23 +454,18 @@ exports.updateHotelRequest = async (req, res) => {
       new: true,
     });
 
-    res.status(200).json({
-      success: true,
-      message: "Application updated successfully and is pending review.",
+    return res.status(200).json({
+      message: "Application updated successfully and pending review",
       data: updatedHotel,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };
 
-// SUPERADMIN: Add new Hotel with approved status
+// Add new Hotel with approved status (SUPERADMIN)
 exports.superAdminAddHotel = async (req, res) => {
   try {
-    if (!req.user || req.user.role !== "super_admin") {
-      return res.status(403).json({ success: false, message: "Unauthorized." });
-    }
-
     const {
       name,
       hotelType,
@@ -489,39 +479,53 @@ exports.superAdminAddHotel = async (req, res) => {
       districtId,
       cityId,
       vendorId,
+      features,
     } = req.body;
 
-    const hotelEmail = email.toLowerCase().trim();
-
-    if (!vendorId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Vendor selection is required." });
+    if (
+      !name ||
+      !hotelType ||
+      !address ||
+      !email ||
+      !phone ||
+      !stateId ||
+      !districtId ||
+      !cityId
+    ) {
+      return res.status(400).json({ message: "Required fields are missing" });
     }
+
+    let parsedFeatures = [];
+    if (features) {
+      try {
+        parsedFeatures = JSON.parse(features);
+      } catch (e) {
+        parsedFeatures = [];
+      }
+    }
+
+    const hotelEmail = email.toLowerCase().trim();
+    if (!vendorId)
+      return res.status(400).json({ message: "Vendor selection is required." });
 
     const existingUser = await User.findOne({ email: hotelEmail });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Hotel email already in use." });
-    }
+    if (existingUser)
+      return res.status(400).json({ message: "Hotel email already in use" });
+
+    const existingHotel = await Hotel.findOne({ email: hotelEmail });
+    if (existingHotel)
+      return res.status(400).json({ message: "Hotel already exists" });
 
     const vendorRequest = await VendorRequest.findById(vendorId);
-    if (!vendorRequest) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Selected vendor not found." });
-    }
+    if (!vendorRequest)
+      return res.status(404).json({ message: "Selected vendor not found" });
 
     let imageUrl = "";
     if (req.files) {
       const uploadData = await uploadImage(req.files);
       imageUrl = uploadData?.[0]?.secure_url || "";
     }
-    if (!imageUrl)
-      return res
-        .status(400)
-        .json({ success: false, message: "Image required." });
+    if (!imageUrl) return res.status(400).json({ message: "Image required." });
 
     const trackingId = uuidv4();
     const newHotel = await Hotel.create({
@@ -540,6 +544,7 @@ exports.superAdminAddHotel = async (req, res) => {
       trackingId,
       status: "approved",
       vendorId: vendorRequest._id,
+      features: parsedFeatures,
     });
 
     const generatedPassword = uuidv4().slice(0, 8);
@@ -557,7 +562,6 @@ exports.superAdminAddHotel = async (req, res) => {
     const emailBody = `
       <h2>Hotel Live!</h2>
       <p>Your hotel <b>${name}</b> has been added directly by the Admin and is live.</p>
-      <p><strong>Hotel Login Credentials:</strong></p>
       <p><b>Email:</b> ${hotelEmail}<br><b>Password:</b> ${generatedPassword}</p>
     `;
     await sendMail.sendMail(
@@ -566,12 +570,10 @@ exports.superAdminAddHotel = async (req, res) => {
       emailBody,
     );
 
-    res.status(201).json({
-      success: true,
-      message: "Hotel created and auto-approved. Credentials sent.",
-      data: newHotel,
-    });
+    return res
+      .status(201)
+      .json({ message: "Hotel created and auto-approved. Credentials sent." });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 };

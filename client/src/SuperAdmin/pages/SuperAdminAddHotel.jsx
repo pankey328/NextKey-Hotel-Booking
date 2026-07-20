@@ -2,6 +2,21 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
 
+const hotelFeaturesList = [
+  "Parking",
+  "Elevator",
+  "Luggage Storage",
+  "Restaurant",
+  "Cafe",
+  "Bar",
+  "Gym",
+  "Swimming Pool",
+  "EV Charging Station",
+  "Garden",
+  "Terrace",
+  "Laundry Service",
+];
+
 const SuperAdminAddHotel = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -21,6 +36,7 @@ const SuperAdminAddHotel = () => {
     address: "",
     locationLink: "",
     description: "",
+    features: [],
   });
   const [selectedStateId, setSelectedStateId] = useState("");
   const [selectedDistrictId, setSelectedDistrictId] = useState("");
@@ -33,15 +49,11 @@ const SuperAdminAddHotel = () => {
     const fetchInitialData = async () => {
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
-
         const vendorRes = await api.get("/vendors?status=approved", config);
         setVendors(vendorRes.data.data || vendorRes.data);
-
         const stateRes = await api.get("/states?isDeleted=false", config);
         setStates(stateRes.data.data || stateRes.data);
-      } catch (error) {
-        console.error("Error fetching initial data", error);
-      }
+      } catch (error) {}
     };
     fetchInitialData();
   }, [token]);
@@ -58,9 +70,7 @@ const SuperAdminAddHotel = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setDistricts(res.data.data || res.data);
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) {}
   };
 
   const handleDistrictChange = async (e) => {
@@ -73,9 +83,22 @@ const SuperAdminAddHotel = () => {
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setCities(res.data.data || res.data);
-    } catch (error) {
-      console.error(error);
+    } catch (error) {}
+  };
+
+  const handleFeatureChange = (feature) => {
+    let features = [...formData.features];
+
+    if (features.includes(feature)) {
+      features = features.filter((item) => item !== feature);
+    } else {
+      features.push(feature);
     }
+
+    setFormData({
+      ...formData,
+      features,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -87,9 +110,13 @@ const SuperAdminAddHotel = () => {
 
     setLoading(true);
     const submitData = new FormData();
-    Object.keys(formData).forEach((key) =>
-      submitData.append(key, formData[key]),
-    );
+    Object.keys(formData).forEach((key) => {
+      if (key === "features") {
+        submitData.append("features", JSON.stringify(formData.features));
+      } else {
+        submitData.append(key, formData[key]);
+      }
+    });
     submitData.append("stateId", selectedStateId);
     submitData.append("districtId", selectedDistrictId);
     submitData.append("cityId", selectedCityId);
@@ -123,7 +150,6 @@ const SuperAdminAddHotel = () => {
       </p>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* VENDOR SELECTION */}
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
           <label className="block text-sm font-bold text-blue-800 dark:text-blue-300 mb-1">
             Assign to Vendor *
@@ -134,7 +160,7 @@ const SuperAdminAddHotel = () => {
             onChange={(e) =>
               setFormData({ ...formData, vendorId: e.target.value })
             }
-            className="w-full px-4 py-2.5 rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="w-full px-4 py-2.5 rounded-lg border border-blue-200 dark:border-blue-700 bg-white dark:bg-gray-800 text-white"
           >
             <option value="" disabled>
               Select Vendor
@@ -148,6 +174,7 @@ const SuperAdminAddHotel = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Default string/number inputs */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Property Name
@@ -159,7 +186,7 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             />
           </div>
           <div>
@@ -171,7 +198,7 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, hotelType: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             >
               <option value="Hotel">Hotel</option>
               <option value="Resort">Resort</option>
@@ -187,7 +214,7 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, starRating: Number(e.target.value) })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             >
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
@@ -198,7 +225,7 @@ const SuperAdminAddHotel = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Hotel Email (Login ID)
+              Hotel Email
             </label>
             <input
               type="email"
@@ -207,7 +234,7 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             />
           </div>
           <div>
@@ -221,7 +248,7 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, phone: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             />
           </div>
           <div>
@@ -235,9 +262,10 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, address: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             />
           </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               State
@@ -246,7 +274,7 @@ const SuperAdminAddHotel = () => {
               required
               value={selectedStateId}
               onChange={handleStateChange}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             >
               <option value="" disabled>
                 Select State...
@@ -267,7 +295,7 @@ const SuperAdminAddHotel = () => {
               disabled={!selectedStateId}
               value={selectedDistrictId}
               onChange={handleDistrictChange}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             >
               <option value="" disabled>
                 Select District...
@@ -288,7 +316,7 @@ const SuperAdminAddHotel = () => {
               disabled={!selectedDistrictId}
               value={selectedCityId}
               onChange={(e) => setSelectedCityId(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             >
               <option value="" disabled>
                 Select City...
@@ -302,7 +330,7 @@ const SuperAdminAddHotel = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Google Maps Link (Optional)
+              Google Maps Link
             </label>
             <input
               type="url"
@@ -310,9 +338,33 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, locationLink: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             />
           </div>
+
+          {/* NEW: Property Features Selection */}
+          <div className="md:col-span-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
+              Property Features & Amenities
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {hotelFeaturesList.map((feature) => (
+                <label
+                  key={feature}
+                  className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:text-blue-600 transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.features.includes(feature)}
+                    onChange={() => handleFeatureChange(feature)}
+                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 cursor-pointer"
+                  />
+                  {feature}
+                </label>
+              ))}
+            </div>
+          </div>
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Property Image
@@ -322,7 +374,7 @@ const SuperAdminAddHotel = () => {
               accept="image/*"
               onChange={(e) => setImage(e.target.files[0])}
               required
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             />
           </div>
           <div className="md:col-span-2">
@@ -335,7 +387,7 @@ const SuperAdminAddHotel = () => {
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-white"
             ></textarea>
           </div>
         </div>
@@ -353,7 +405,7 @@ const SuperAdminAddHotel = () => {
             disabled={loading}
             className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-lg shadow-md transition-all"
           >
-            {loading ? "Creating..." : "Create & Approve Hotel"}
+            {loading ? "Creating..." : "Create & Approve"}
           </button>
         </div>
       </form>

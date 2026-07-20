@@ -7,14 +7,17 @@ const stateSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
-      trim: true, 
+      trim: true,
     },
     isDeleted: {
       type: Boolean,
       default: false,
     },
   },
-  { timestamps: true, versionKey:false },
+  {
+    timestamps: true,
+    versionKey: false,
+  },
 );
 
 module.exports = mongoose.model("State", stateSchema);

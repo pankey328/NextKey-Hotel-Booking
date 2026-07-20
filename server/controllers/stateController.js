@@ -1,14 +1,12 @@
-const mongoose = require("mongoose");
 const State = require("../models/StateModel");
 
-// 1. Create a new State
+// Create a new State
 exports.createState = async (req, res) => {
   try {
     let { name } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({
-        success: false,
         message: "State name is required.",
       });
     }
@@ -16,8 +14,7 @@ exports.createState = async (req, res) => {
     const existingState = await State.findOne({ name });
 
     if (existingState) {
-      return res.status(409).json({
-        success: false,
+      return res.status(400).json({
         message: "State already exists.",
       });
     }
@@ -25,19 +22,17 @@ exports.createState = async (req, res) => {
     const state = await State.create({ name });
 
     return res.status(201).json({
-      success: true,
-      message: "State created successfully.",
+      message: "State created successfully",
       data: state,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 2. Get All States 
+// Get All States
 exports.getAllStates = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
@@ -47,27 +42,23 @@ exports.getAllStates = async (req, res) => {
     });
 
     return res.status(200).json({
-      success: true,
-      count: states.length,
       data: states,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 3. Get Single State
+// Get Single State
 exports.getOneState = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid state ID.",
+        message: "State ID is required.",
       });
     }
 
@@ -75,32 +66,28 @@ exports.getOneState = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        success: false,
         message: "State not found.",
       });
     }
 
     return res.status(200).json({
-      success: true,
       data: state,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 4. Soft Delete (Inactive)
+// Soft Delete (Inactive)
 exports.softDeleteState = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid state ID.",
+        message: "State ID is required.",
       });
     }
 
@@ -108,14 +95,12 @@ exports.softDeleteState = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        success: false,
         message: "State not found.",
       });
     }
 
     if (state.isDeleted) {
       return res.status(400).json({
-        success: false,
         message: "State is already inactive.",
       });
     }
@@ -124,27 +109,24 @@ exports.softDeleteState = async (req, res) => {
     await state.save();
 
     return res.status(200).json({
-      success: true,
-      message: "State moved to inactive successfully.",
+      message: "State inactived successfully (soft deleted)",
       data: state,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 5. Restore State (Active)
+// Restore State (Active)
 exports.restoreState = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid state ID.",
+        message: "State ID is required.",
       });
     }
 
@@ -152,14 +134,12 @@ exports.restoreState = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        success: false,
         message: "State not found.",
       });
     }
 
     if (!state.isDeleted) {
       return res.status(400).json({
-        success: false,
         message: "State is already active.",
       });
     }
@@ -168,27 +148,24 @@ exports.restoreState = async (req, res) => {
     await state.save();
 
     return res.status(200).json({
-      success: true,
-      message: "State restored successfully.",
+      message: "State restored successfully",
       data: state,
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }
 };
 
-// 6. Hard Delete (Permanent)
+// Hard Delete
 exports.deleteState = async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!id) {
       return res.status(400).json({
-        success: false,
-        message: "Invalid state ID.",
+        message: "State ID is required.",
       });
     }
 
@@ -196,7 +173,6 @@ exports.deleteState = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        success: false,
         message: "State not found.",
       });
     }
@@ -204,12 +180,10 @@ exports.deleteState = async (req, res) => {
     await state.deleteOne();
 
     return res.status(200).json({
-      success: true,
-      message: "State permanently deleted.",
+      message: "State permanently deleted",
     });
   } catch (error) {
     return res.status(500).json({
-      success: false,
       message: error.message,
     });
   }

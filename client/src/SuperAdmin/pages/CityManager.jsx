@@ -14,7 +14,7 @@ const CityManager = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // View Modal State
+  // View Modal
   const [selectedCity, setSelectedCity] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
@@ -133,7 +133,7 @@ const CityManager = () => {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 transition-colors duration-300">
-      {/* Upper Header & Add Form */}
+      {/* Form */}
       <div className="flex flex-col mb-8">
         <div className="w-full">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
@@ -150,9 +150,7 @@ const CityManager = () => {
               className="w-full md:flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer text-sm sm:text-base"
               required
             >
-              <option value="" disabled>
-                1. Select State...
-              </option>
+              <option value="">Select State...</option>
               {states.map((state) => (
                 <option key={state._id} value={state._id}>
                   {state.name.toUpperCase()}
@@ -168,9 +166,7 @@ const CityManager = () => {
               required
               disabled={!selectedStateId || districts.length === 0}
             >
-              <option value="" disabled>
-                2. Select District...
-              </option>
+              <option value="">Select District...</option>
               {districts.map((district) => (
                 <option key={district._id} value={district._id}>
                   {district.name.toUpperCase()}
@@ -181,7 +177,7 @@ const CityManager = () => {
             {/* Name City */}
             <input
               type="text"
-              placeholder="3. Enter city name..."
+              placeholder="Enter city name..."
               value={newCityName}
               onChange={(e) => setNewCityName(e.target.value)}
               className="w-full md:flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors text-sm sm:text-base"
@@ -283,6 +279,7 @@ const CityManager = () => {
                     >
                       View
                     </button>
+
                     {activeTab === "active" ? (
                       <>
                         <button
@@ -325,10 +322,7 @@ const CityManager = () => {
       {/* VIEW MODAL */}
       {showViewModal && selectedCity && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div
-            className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100 opacity-100"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden transform transition-all scale-100 opacity-100">
             {/* Modal Header */}
             <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-800 dark:text-white">
