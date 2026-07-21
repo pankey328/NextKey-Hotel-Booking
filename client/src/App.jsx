@@ -1,34 +1,39 @@
 import React from "react";
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+
 import Home from "./components/Home";
 import Login from "./components/auth/Login";
 import Signup from "./components/auth/Signup";
 import Navbar from "./components/Navbar";
 import ResetPassword from "./components/auth/ResetPassword";
 import ForgotPassword from "./components/auth/ForgotPassword";
+
+import SearchHotels from "./components/SearchHotels";
+import HotelDetails from "./components/HotelDetails";
+import MyBookings from "./components/MyBookings";
+
 import VendorDashboard from "./components/VendorDashboard";
 import VendorRegistration from "./components/VendorRegistration";
+import CheckVendorStatus from "./components/CheckVendorStatus";
+import HotelRegistration from "./components/HotelRegistration";
+import EditHotel from "./components/EditHotel";
+import AddRoomByVendor from "./components/AddRoomByVendor";
+import CouponManagement from "./components/CouponManagement";
 
-import ProtectedRoute from "./routes/ProtectedRoute";
+import HotelDashboard from "./components/HotelDashboard";
+import AddRoom from "./components/AddRoom";
+import EditRoom from "./components/EditRoom";
 
 import SuperAdminLayout from "./SuperAdmin/SuperAdminLayout";
 import StateManager from "./SuperAdmin/pages/StateManager";
 import DistrictManager from "./SuperAdmin/pages/DistrictManager";
 import CityManager from "./SuperAdmin/pages/CityManager";
-import HotelRegistration from "./components/HotelRegistration";
 import HotelManager from "./SuperAdmin/pages/HotelManager";
-import CheckVendorStatus from "./components/CheckVendorStatus";
 import VendorManager from "./SuperAdmin/pages/VendorManager";
-import EditHotel from "./components/EditHotel";
 import SuperAdminAddVendor from "./SuperAdmin/pages/SuperAdminAddVendor";
 import SuperAdminAddHotel from "./SuperAdmin/pages/SuperAdminAddHotel";
-import HotelDashboard from "./components/HotelDashboard";
-import AddRoom from "./components/AddRoom";
-import EditRoom from "./components/EditRoom";
-import AddRoomByVendor from "./components/AddRoomByVendor";
-import CouponManagement from "./components/CouponManagement";
-import HotelDetails from "./components/HotelDetails";
-import SearchHotels from "./components/SearchHotels";
+
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
@@ -42,13 +47,27 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/forget-password" element={<ForgotPassword />} />
           <Route path="/check-partner-status" element={<CheckVendorStatus />} />
-
           <Route path="/search" element={<SearchHotels />} />
-          <Route path="/hotel/:id" element={<HotelDetails />} />
-
           <Route
             path="/partner-registration"
             element={<VendorRegistration />}
+          />
+
+          <Route
+            path="/my-bookings"
+            element={
+              <ProtectedRoute>
+                <MyBookings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/hotel/:id"
+            element={
+              <ProtectedRoute>
+                <HotelDetails />
+              </ProtectedRoute>
+            }
           />
 
           <Route

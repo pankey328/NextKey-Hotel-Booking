@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import FrontDesk from "./FrontDesk";
 import api from "../api";
 
 const HotelDashboard = () => {
+  const [currentView, setCurrentView] = useState("front-desk");
+
   const [activeTab, setActiveTab] = useState("active");
   const [rooms, setRooms] = useState([]);
   const [hotelInfo, setHotelInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [activeModalImage, setActiveModalImage] = useState(0); 
+  const [activeModalImage, setActiveModalImage] = useState(0);
 
   const token = localStorage.getItem("token");
+
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   const fetchRooms = async () => {
@@ -45,9 +48,11 @@ const HotelDashboard = () => {
       if (action === "softDelete") {
         if (!window.confirm("Move this room to the inactive bin?")) return;
         await api.patch(`/rooms/${id}/soft-delete`, {}, config);
-      } else if (action === "restore") {
+      } 
+      else if (action === "restore") {
         await api.patch(`/rooms/${id}/restore`, {}, config);
-      } else if (action === "hardDelete") {
+      } 
+      else if (action === "hardDelete") {
         if (
           !window.confirm(
             "Permanently delete this room? This cannot be undone.",
@@ -73,224 +78,317 @@ const HotelDashboard = () => {
 
   const handleView = (room) => {
     setSelectedRoom(room);
-    setActiveModalImage(0); 
+    setActiveModalImage(0);
     setShowViewModal(true);
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-4 sm:p-6 min-h-screen transition-colors duration-300">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 rounded-xl flex items-center justify-center text-2xl font-bold shadow-sm">
-            {hotelInfo?.name ? hotelInfo.name.charAt(0).toUpperCase() : "H"}
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-              {hotelInfo ? hotelInfo.name : "Loading Hotel..."}
-            </h1>
-            <div className="flex items-center gap-2 text-sm mt-1">
-              <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded font-medium text-xs">
-                {hotelInfo ? hotelInfo.hotelType : "Hotel Dashboard"}
-              </span>
-              <span className="text-gray-500 dark:text-gray-400">
-                •{" "}
-                {hotelInfo ? hotelInfo.email : "Manage your rooms and pricing"}
-              </span>
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      {/* DASHBOARD SIDEBAR */}
+      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col shrink-0">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-extrabold text-gray-800 dark:text-white tracking-wide">
+            Manager Panel
+          </h2>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Hotel Operations Dashboard
+          </p>
+        </div>
+
+        <nav className="flex-1 p-4 space-y-2">
+          <button
+            onClick={() => setCurrentView("front-desk")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
+              currentView === "front-desk"
+                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+            }`}
+          >
+            Reservations
+          </button>
+
+          <button
+            onClick={() => setCurrentView("rooms")}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
+              currentView === "rooms"
+                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
+                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+            }`}
+          >
+            Manage Rooms
+          </button>
+        </nav>
+      </aside>
+
+      {/* MAIN CONTENT CONTAINER */}
+      <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        {/* MOBILE VIEW SWITCHER */}
+        <div className="flex md:hidden gap-2 mb-6 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <button
+            onClick={() => setCurrentView("front-desk")}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+              currentView === "front-desk"
+                ? "bg-blue-600 text-white"
+                : "text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            Reservations
+          </button>
+          <button
+            onClick={() => setCurrentView("rooms")}
+            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+              currentView === "rooms"
+                ? "bg-blue-600 text-white"
+                : "text-gray-600 dark:text-gray-300"
+            }`}
+          >
+            Manage Rooms
+          </button>
+        </div>
+
+        {/* TOP HOTEL PROFILE BAR */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 rounded-xl flex items-center justify-center text-2xl font-bold shadow-sm">
+              {hotelInfo?.name ? hotelInfo.name.charAt(0).toUpperCase() : "H"}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                {hotelInfo ? hotelInfo.name : "Loading Hotel Details..."}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2 text-sm mt-1">
+                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded font-medium text-xs">
+                  {hotelInfo ? hotelInfo.hotelType : "Hotel Dashboard"}
+                </span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  •{" "}
+                  {hotelInfo
+                    ? hotelInfo.email
+                    : "Manage properties and guest bookings"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <Link
-          to="/hotel-dashboard/add-room"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Add New Room
-        </Link>
-      </div>
-
-      {/* TABS */}
-      <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 px-2">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`pb-3 px-1 font-medium border-b-2 transition-all ${
-            activeTab === "active"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Active Rooms
-        </button>
-        <button
-          onClick={() => setActiveTab("inactive")}
-          className={`pb-3 px-1 font-medium border-b-2 transition-all ${
-            activeTab === "inactive"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Inactive Bin
-        </button>
-      </div>
-
-      {/* ROOM CARDS GRID */}
-      {loading ? (
-        <div className="text-center py-12 text-gray-500">Loading rooms...</div>
-      ) : rooms.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
-          No {activeTab} rooms found.
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {rooms.map((room) => (
-            <div
-              key={room._id}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+          {currentView === "rooms" && (
+            <Link
+              to="/hotel-dashboard/add-room"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95"
             >
-              {/* Card Image */}
-              <div
-                className="h-48 bg-gray-200 dark:bg-gray-700 relative cursor-pointer"
-                onClick={() => handleView(room)}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
               >
-                {room.images && room.images.length > 0 ? (
-                  <img
-                    src={room.images[0]}
-                    alt={`Room ${room.roomNumber}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    No Image
-                  </div>
-                )}
+                <path
+                  fillRule="evenodd"
+                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Add New Room
+            </Link>
+          )}
+        </div>
 
-                {/* Status Badge */}
-                <div className="absolute top-3 right-3">
-                  <span
-                    className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md shadow-sm ${
-                      room.status === "Available"
-                        ? "bg-green-500 text-white"
-                        : room.status === "Occupied"
-                          ? "bg-red-500 text-white"
-                          : room.status === "Reserved"
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-500 text-white"
-                    }`}
-                  >
-                    {room.status}
-                  </span>
-                </div>
+        {currentView === "front-desk" ? (
+          hotelInfo ? (
+            <FrontDesk hotelId={hotelInfo._id} />
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              Loading hotel reservations...
+            </div>
+          )
+        ) : (
+          <div>
+            {/* ROOM TABS */}
+            <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 px-2">
+              <button
+                onClick={() => setActiveTab("active")}
+                className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
+                  activeTab === "active"
+                    ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                    : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+                }`}
+              >
+                Active Rooms
+              </button>
+              <button
+                onClick={() => setActiveTab("inactive")}
+                className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
+                  activeTab === "inactive"
+                    ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                    : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+                }`}
+              >
+                Inactive Bin
+              </button>
+            </div>
+
+            {/* ROOM CARDS GRID */}
+            {loading ? (
+              <div className="text-center py-12 text-gray-500">
+                Loading rooms...
               </div>
-
-              {/* Card Body */}
-              <div className="p-5 flex-1 flex flex-col">
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                    <h3
-                      className="text-lg font-bold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 transition-colors"
+            ) : rooms.length === 0 ? (
+              <div className="text-center py-12 text-gray-500 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                No {activeTab} rooms found.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {rooms.map((room) => (
+                  <div
+                    key={room._id}
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-md transition-shadow flex flex-col"
+                  >
+                    {/* Card Image */}
+                    <div
+                      className="h-48 bg-gray-200 dark:bg-gray-700 relative cursor-pointer"
                       onClick={() => handleView(room)}
                     >
-                      Room {room.roomNumber}{" "}
-                      {room.roomName && `- ${room.roomName}`}
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {room.roomType} • Floor {room.floorNumber}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                      ₹{room.pricePerNight}
-                    </span>
-                    <span className="text-xs text-gray-500 block">/ night</span>
-                  </div>
-                </div>
+                      {room.images && room.images.length > 0 ? (
+                        <img
+                          src={room.images[0]}
+                          alt={`Room ${room.roomNumber}`}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          No Image
+                        </div>
+                      )}
 
-                <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                  <p>Capacity: {room.totalGuests} Guests</p>
-                  <p>
-                    Beds: {room.numberOfBeds} {room.bedType}
-                  </p>
-                </div>
+                      {/* Room Availability Status Badge */}
+                      <div className="absolute top-3 right-3">
+                        <span
+                          className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded-md shadow-sm ${
+                            room.status === "Available"
+                              ? "bg-green-500 text-white"
+                              : room.status === "Occupied"
+                                ? "bg-red-500 text-white"
+                                : room.status === "Reserved"
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-gray-500 text-white"
+                          }`}
+                        >
+                          {room.status}
+                        </span>
+                      </div>
+                    </div>
 
-                {/* Card Actions (Footer) */}
-                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex-1">
-                    <select
-                      value={room.status}
-                      onChange={(e) =>
-                        handleStatusChange(room._id, e.target.value)
-                      }
-                      disabled={activeTab === "inactive"}
-                      className="w-full text-xs font-medium px-2 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 outline-none cursor-pointer"
-                    >
-                      <option value="Available">Set Available</option>
-                      <option value="Occupied">Set Occupied</option>
-                      <option value="Reserved">Set Reserved</option>
-                      <option value="Under Maintenance">Maintenance</option>
-                      <option value="Out of Service">Out of Service</option>
-                    </select>
-                  </div>
+                    {/* Card Body */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h3
+                            className="text-lg font-bold text-gray-900 dark:text-white cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() => handleView(room)}
+                          >
+                            Room {room.roomNumber}{" "}
+                            {room.roomName && `- ${room.roomName}`}
+                          </h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {room.roomType} • Floor {room.floorNumber}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                            ₹{room.pricePerNight}
+                          </span>
+                          <span className="text-xs text-gray-500 block">
+                            / night
+                          </span>
+                        </div>
+                      </div>
 
-                  <div className="flex gap-2">
-                    {activeTab === "active" ? (
-                      <>
-                        <Link
-                          to={`/hotel-dashboard/edit-room/${room._id}`}
-                          className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400"
-                        >
-                          Edit
-                        </Link>
-                        <button
-                          onClick={() => handleAction("softDelete", room._id)}
-                          className="px-3 py-1.5 text-xs font-medium rounded-md bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400"
-                        >
-                          Bin
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleAction("restore", room._id)}
-                          className="px-3 py-1.5 text-xs font-medium rounded-md bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400"
-                        >
-                          Restore
-                        </button>
-                        <button
-                          onClick={() => handleAction("hardDelete", room._id)}
-                          className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400"
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
+                      <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                        <p>Capacity: {room.totalGuests} Guests</p>
+                        <p>
+                          Beds: {room.numberOfBeds} {room.bedType}
+                        </p>
+                      </div>
+
+                      {/* Card Actions (Footer) */}
+                      <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex-1">
+                          <select
+                            value={room.status}
+                            onChange={(e) =>
+                              handleStatusChange(room._id, e.target.value)
+                            }
+                            disabled={activeTab === "inactive"}
+                            className="w-full text-xs font-medium px-2 py-1.5 rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 outline-none cursor-pointer"
+                          >
+                            <option value="Available">Set Available</option>
+                            <option value="Occupied">Set Occupied</option>
+                            <option value="Reserved">Set Reserved</option>
+                            <option value="Under Maintenance">
+                              Maintenance
+                            </option>
+                            <option value="Out of Service">
+                              Out of Service
+                            </option>
+                          </select>
+                        </div>
+
+                        <div className="flex gap-2">
+                          {activeTab === "active" ? (
+                            <>
+                              <Link
+                                to={`/hotel-dashboard/edit-room/${room._id}`}
+                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400"
+                              >
+                                Edit
+                              </Link>
+                              <button
+                                onClick={() =>
+                                  handleAction("softDelete", room._id)
+                                }
+                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-orange-50 text-orange-600 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 cursor-pointer"
+                              >
+                                Bin
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() =>
+                                  handleAction("restore", room._id)
+                                }
+                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 cursor-pointer"
+                              >
+                                Restore
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleAction("hardDelete", room._id)
+                                }
+                                className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 cursor-pointer"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </main>
 
-      {/* FULL DETAILS VIEW MODAL */}
+      {/* ROOM DETAILS MODAL */}
       {showViewModal && selectedRoom && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 sm:p-6 transition-opacity overflow-y-auto">
           <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-5xl shadow-2xl relative my-auto overflow-hidden flex flex-col md:flex-row max-h-[90vh]">
             {/* Close Button */}
             <button
               onClick={() => setShowViewModal(false)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors cursor-pointer"
             >
               &times;
             </button>
@@ -336,7 +434,11 @@ const HotelDashboard = () => {
                       src={img}
                       alt={`Thumb ${idx}`}
                       onClick={() => setActiveModalImage(idx)}
-                      className={`h-16 w-16 object-cover rounded-md cursor-pointer border-2 transition-all ${activeModalImage === idx ? "border-blue-500 opacity-100" : "border-transparent opacity-60 hover:opacity-100"}`}
+                      className={`h-16 w-16 object-cover rounded-md cursor-pointer border-2 transition-all ${
+                        activeModalImage === idx
+                          ? "border-blue-500 opacity-100"
+                          : "border-transparent opacity-60 hover:opacity-100"
+                      }`}
                     />
                   ))}
                 </div>

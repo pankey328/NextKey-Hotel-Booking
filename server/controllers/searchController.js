@@ -1,6 +1,7 @@
 const Hotel = require("../models/HotelModel");
 const Room = require("../models/RoomModel");
 
+// Get Hotels by serach query
 exports.searchHotels = async (req, res) => {
   try {
     const {
