@@ -19,4 +19,10 @@ router.get(
 // Update status of room booking 
 router.put('/:id/status', authMiddleware, bookingController.updateBookingStatus)
 
+// Temporary lock a room for a user
+router.post("/temp-lock", authMiddleware, bookingController.createTempBooking);
+
+// Get all room availability for a hotel
+router.get("/availability/:hotelId", bookingController.getRoomAvailability);
+
 module.exports = router;

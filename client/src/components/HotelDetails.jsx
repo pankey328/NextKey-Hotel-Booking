@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import api from "../api";
 
 const roomFacilitiesList = [
@@ -19,6 +21,8 @@ const HotelDetails = () => {
   const { id } = useParams();
   const [hotel, setHotel] = useState(null);
   const [rooms, setRooms] = useState([]);
+  const [roomBookings, setRoomBookings] = useState({});
+
   const [loading, setLoading] = useState(true);
 
   const [showRoomModal, setShowRoomModal] = useState(false);
@@ -27,8 +31,8 @@ const HotelDetails = () => {
 
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [roomToBook, setRoomToBook] = useState(null);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
+  const [checkIn, setCheckIn] = useState(null);
+  const [checkOut, setCheckOut] = useState(null);
   const [totalDays, setTotalDays] = useState(0);
   const [coupons, setCoupons] = useState([]);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
@@ -51,9 +55,21 @@ const HotelDetails = () => {
         setHotel(hotelRes.data.data);
 
         const roomRes = await api.get(`/search/hotels/${id}/rooms`);
-        setRooms(roomRes.data.data);
+        const roomData = roomRes.data.data || [];
+        setRooms(roomData);
+
+        const availabilityRes = await api.get(`/bookings/availability/${id}`);
+        const allBlocks = availabilityRes.data.data || [];
+
+        const bookingMap = {};
+        for (const room of roomData) {
+          bookingMap[room._id] = allBlocks.filter(
+            (b) => b.roomId?.toString() === room._id.toString(),
+          );
+        }
+        setRoomBookings(bookingMap);
       } catch (error) {
-        console.error("Error fetching data", error.response?.data || error);
+        console.error("Error fetching availability data", error);
       } finally {
         setLoading(false);
       }
@@ -64,18 +80,69 @@ const HotelDetails = () => {
     }
   }, [id]);
 
+  // Lock Dates and Fetch Coupons ONLY when both dates are selected
   useEffect(() => {
-    if (checkIn && checkOut) {
-      const inDate = new Date(checkIn);
-      const outDate = new Date(checkOut);
-      const diffTime = outDate - inDate;
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setTotalDays(diffDays > 0 ? diffDays : 0);
+    const fetchData = async () => {
+      if (!checkIn || !checkOut || !roomToBook) {
+        setTotalDays(0);
+        setCoupons([]);
+        return;
+      }
+
+      const days = Math.max(
+        0,
+        Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)),
+      );
+
+      setTotalDays(days);
       setAppliedCoupon(null);
-    } else {
-      setTotalDays(0);
-    }
-  }, [checkIn, checkOut]);
+
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const formatDate = (date) => date.toISOString().split("T")[0];
+
+      try {
+        await api.post(
+          "/bookings/temp-lock",
+          {
+            roomId: roomToBook._id,
+            checkInDate: formatDate(checkIn),
+            checkOutDate: formatDate(checkOut),
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+
+        const { data } = await api.get(`/coupons/${hotel._id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const now = new Date();
+
+        const validCoupons = (data.data || []).filter(
+          (coupon) =>
+            coupon.status === "active" &&
+            new Date(coupon.availFrom) <= now &&
+            new Date(coupon.expiryDate) > now,
+        );
+
+        setCoupons(validCoupons);
+      } catch (err) {
+        alert(
+          err.response?.data?.message || "These dates just became unavailable.",
+        );
+
+        setCheckIn(null);
+        setCheckOut(null);
+        setTotalDays(0);
+        setCoupons([]);
+      }
+    };
+
+    fetchData();
+  }, [checkIn, checkOut, roomToBook, hotel]);
 
   const handleRoomFilterChange = (e) => {
     const { name, value } = e.target;
@@ -128,7 +195,6 @@ const HotelDetails = () => {
       room.discount < Number(roomFilters.minDiscount)
     )
       return false;
-
     if (roomFilters.facilities.length > 0) {
       const hasAll = roomFilters.facilities.every((f) =>
         room.facilities?.includes(f),
@@ -147,61 +213,66 @@ const HotelDetails = () => {
   };
 
   const handleOpenBooking = async (room) => {
-    setRoomToBook(room);
-    setCheckIn("");
-    setCheckOut("");
-    setTotalDays(0);
-    setAppliedCoupon(null);
-    setShowBookingModal(true);
-
     const token = localStorage.getItem("token");
+    if (!token) return alert("You must be logged in to book a room.");
 
+    setBookingLoading(true);
     try {
-      const res = await api.get(`/coupons/${hotel._id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // fetch the latest availability
+      const availabilityRes = await api.get(`/bookings/availability/${id}`);
+      const allBlocks = availabilityRes.data.data || [];
 
-      const allCoupons = res.data.data || [];
-      const now = new Date();
+      setRoomBookings((prev) => ({
+        ...prev,
+        [room._id]: allBlocks.filter(
+          (b) => b.roomId?.toString() === room._id.toString(),
+        ),
+      }));
 
-      const validCoupons = allCoupons.filter((c) => {
-        const isStatusActive = c.status === "active";
-        const isNotExpired = new Date(c.expiryDate) > now;
-        const isStarted = new Date(c.availFrom) <= now;
-        return isStatusActive && isNotExpired && isStarted;
-      });
-
-      setCoupons(validCoupons);
+      setRoomToBook(room);
+      setCheckIn(null);
+      setCheckOut(null);
+      setTotalDays(0);
+      setAppliedCoupon(null);
+      setShowBookingModal(true);
     } catch (err) {
-      console.error("Could not fetch coupons", err);
+      alert("Failed to load calendar. Please try again.");
+    } finally {
+      setBookingLoading(false);
     }
   };
 
   const basePrice =
     totalDays > 0 && roomToBook ? totalDays * roomToBook.pricePerNight : 0;
-
   let discountAmount = 0;
   if (appliedCoupon && basePrice >= appliedCoupon.minPrice) {
     let calculatedDiscount = (basePrice * appliedCoupon.discount) / 100;
     discountAmount = Math.min(calculatedDiscount, appliedCoupon.maxDiscount);
   }
-
   const finalPrice = basePrice - discountAmount;
 
   const handleConfirmBooking = async () => {
-    if (totalDays <= 0) return alert("Please select valid dates.");
+    if (totalDays <= 0 || !checkIn || !checkOut)
+      return alert("Please select valid dates.");
 
     setBookingLoading(true);
     try {
       const token = localStorage.getItem("token");
       if (!token) return alert("You must be logged in to book a room.");
 
+      const formatLocalDate = (dateObj) => {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      };
+
       const payload = {
         hotelId: hotel._id,
         roomId: roomToBook._id,
         couponId: appliedCoupon ? appliedCoupon._id : null,
-        checkInDate: checkIn,
-        checkOutDate: checkOut,
+        checkInDate: formatLocalDate(checkIn),
+        checkOutDate: formatLocalDate(checkOut),
         totalDays,
         originalPrice: basePrice,
         finalPrice,
@@ -221,6 +292,39 @@ const HotelDetails = () => {
     }
   };
 
+  const getBlockedDateRanges = (roomId) => {
+    const blocks = roomBookings[roomId] || [];
+    const bookedDates = []; // Red
+    const pendingDates = []; // Yellow
+    const tempDates = []; // Grey
+
+    for (const b of blocks) {
+      if (!b.checkInDate || !b.checkOutDate) continue;
+
+      let currentDate = new Date(b.checkInDate);
+      currentDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(b.checkOutDate);
+      endDate.setHours(0, 0, 0, 0);
+
+      while (currentDate <= endDate) {
+        const dateObj = new Date(currentDate);
+        const dateStr = dateObj.toDateString();
+
+        if (b.status === "pending") {
+          pendingDates.push(dateStr);
+        } else if (b.status === "temp-locked") {
+          tempDates.push(dateStr);
+        } else {
+          bookedDates.push(dateStr); // confirmed, checked-in
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+
+    return { bookedDates, pendingDates, tempDates };
+  };
+
   if (loading)
     return (
       <div className="text-center p-20 text-xl font-bold dark:text-white transition-colors duration-300">
@@ -234,10 +338,31 @@ const HotelDetails = () => {
       </div>
     );
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date();
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900 transition-colors duration-300 min-h-screen pb-12">
+      <style>{`
+        .react-datepicker__day--booked-disabled {
+          background-color: #ef4444 !important; /* Red */
+          color: white !important;
+          border-radius: 0.3rem;
+          cursor: not-allowed !important;
+        }
+        .react-datepicker__day--pending-disabled {
+          background-color: #facc15 !important; /* Yellow */
+          color: black !important;
+          border-radius: 0.3rem;
+          cursor: not-allowed !important;
+        }
+        .react-datepicker__day--temp-disabled {
+          background-color: #9ca3af !important; /* Grey */
+          color: white !important;
+          border-radius: 0.3rem;
+          cursor: not-allowed !important;
+        }
+      `}</style>
+
       {/* Hero Header */}
       <div className="w-full h-80 bg-gray-800 dark:bg-gray-950 relative">
         <img
@@ -274,7 +399,6 @@ const HotelDetails = () => {
           </div>
 
           <div className="space-y-4">
-            {/* Price Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Price Range (₹)
@@ -299,7 +423,6 @@ const HotelDetails = () => {
               </div>
             </div>
 
-            {/* Bed Type */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Bed Size
@@ -321,7 +444,6 @@ const HotelDetails = () => {
               </select>
             </div>
 
-            {/* Room Status */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Availability
@@ -339,7 +461,6 @@ const HotelDetails = () => {
               </select>
             </div>
 
-            {/* Cancellation Policy */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Cancellation
@@ -362,7 +483,6 @@ const HotelDetails = () => {
               </select>
             </div>
 
-            {/* Discount */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Min Discount (%)
@@ -377,7 +497,6 @@ const HotelDetails = () => {
               />
             </div>
 
-            {/* Room Facilities */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Room Facilities
@@ -651,11 +770,40 @@ const HotelDetails = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Check-in Date
                   </label>
-                  <input
-                    type="date"
-                    min={today}
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
+                  <DatePicker
+                    selected={checkIn}
+                    onChange={(date) => {
+                      setCheckIn(date);
+                      if (checkOut && date >= checkOut) setCheckOut(null);
+                    }}
+                    selectsStart
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    minDate={today}
+                    filterDate={(date) => {
+                      const { bookedDates, pendingDates, tempDates } =
+                        getBlockedDateRanges(roomToBook._id);
+                      const dStr = date.toDateString();
+                      return (
+                        !bookedDates.includes(dStr) &&
+                        !pendingDates.includes(dStr) &&
+                        !tempDates.includes(dStr) // STEP C check added
+                      );
+                    }}
+                    dayClassName={(date) => {
+                      const { bookedDates, pendingDates, tempDates } =
+                        getBlockedDateRanges(roomToBook._id);
+                      const dStr = date.toDateString();
+                      if (pendingDates.includes(dStr))
+                        return "react-datepicker__day--pending-disabled";
+                      if (tempDates.includes(dStr))
+                        // STEP C check added
+                        return "react-datepicker__day--temp-disabled";
+                      if (bookedDates.includes(dStr))
+                        return "react-datepicker__day--booked-disabled";
+                      return undefined;
+                    }}
+                    placeholderText="Select Check-in"
                     className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -663,11 +811,50 @@ const HotelDetails = () => {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Check-out Date
                   </label>
-                  <input
-                    type="date"
-                    min={checkIn || today}
-                    value={checkOut}
-                    onChange={(e) => setCheckOut(e.target.value)}
+                  <DatePicker
+                    selected={checkOut}
+                    onChange={(date) => setCheckOut(date)}
+                    selectsEnd
+                    startDate={checkIn}
+                    endDate={checkOut}
+                    minDate={
+                      checkIn ? new Date(checkIn.getTime() + 86400000) : today
+                    }
+                    filterDate={(date) => {
+                      const { bookedDates, pendingDates, tempDates } =
+                        getBlockedDateRanges(roomToBook._id);
+                      const dStr = date.toDateString();
+
+                      if (
+                        bookedDates.includes(dStr) ||
+                        pendingDates.includes(dStr) ||
+                        tempDates.includes(dStr) // STEP C check added
+                      )
+                        return false;
+                      if (!checkIn) return true;
+
+                      // Prevent checkout selection if any blocked date falls between checkIn and checkout
+                      return !bookedDates
+                        .concat(pendingDates, tempDates)
+                        .some((bStr) => {
+                          const bDate = new Date(bStr);
+                          return bDate > checkIn && bDate <= date;
+                        });
+                    }}
+                    dayClassName={(date) => {
+                      const { bookedDates, pendingDates, tempDates } =
+                        getBlockedDateRanges(roomToBook._id);
+                      const dStr = date.toDateString();
+                      if (pendingDates.includes(dStr))
+                        return "react-datepicker__day--pending-disabled";
+                      if (tempDates.includes(dStr))
+                        // STEP C check added
+                        return "react-datepicker__day--temp-disabled";
+                      if (bookedDates.includes(dStr))
+                        return "react-datepicker__day--booked-disabled";
+                      return undefined;
+                    }}
+                    placeholderText="Select Check-out"
                     className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>

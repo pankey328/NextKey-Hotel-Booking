@@ -7,7 +7,7 @@ exports.createState = async (req, res) => {
 
     if (!name || !name.trim()) {
       return res.status(400).json({
-        message: "State name is required.",
+        message: "State name is required",
       });
     }
 
@@ -15,7 +15,7 @@ exports.createState = async (req, res) => {
 
     if (existingState) {
       return res.status(400).json({
-        message: "State already exists.",
+        message: "State already exists",
       });
     }
 
@@ -58,7 +58,7 @@ exports.getOneState = async (req, res) => {
 
     if (!id) {
       return res.status(400).json({
-        message: "State ID is required.",
+        message: "State ID is required",
       });
     }
 
@@ -66,7 +66,7 @@ exports.getOneState = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        message: "State not found.",
+        message: "State not found",
       });
     }
 
@@ -87,7 +87,7 @@ exports.softDeleteState = async (req, res) => {
 
     if (!id) {
       return res.status(400).json({
-        message: "State ID is required.",
+        message: "State ID is required",
       });
     }
 
@@ -95,13 +95,13 @@ exports.softDeleteState = async (req, res) => {
 
     if (!state) {
       return res.status(404).json({
-        message: "State not found.",
+        message: "State not found",
       });
     }
 
     if (state.isDeleted) {
       return res.status(400).json({
-        message: "State is already inactive.",
+        message: "State is already inactive",
       });
     }
 
@@ -126,7 +126,7 @@ exports.restoreState = async (req, res) => {
 
     if (!id) {
       return res.status(400).json({
-        message: "State ID is required.",
+        message: "State ID is required",
       });
     }
 
@@ -140,7 +140,7 @@ exports.restoreState = async (req, res) => {
 
     if (!state.isDeleted) {
       return res.status(400).json({
-        message: "State is already active.",
+        message: "State is already active",
       });
     }
 
@@ -165,7 +165,7 @@ exports.deleteState = async (req, res) => {
 
     if (!id) {
       return res.status(400).json({
-        message: "State ID is required.",
+        message: "State ID is required",
       });
     }
 
