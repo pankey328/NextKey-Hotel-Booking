@@ -80,7 +80,7 @@ const HotelDetails = () => {
     }
   }, [id]);
 
-  // Lock Dates and Fetch Coupons ONLY when both dates are selected
+  // Lock Dates and Fetch Coupons only when both dates are selected
   useEffect(() => {
     const fetchData = async () => {
       if (!checkIn || !checkOut || !roomToBook) {
@@ -218,7 +218,6 @@ const HotelDetails = () => {
 
     setBookingLoading(true);
     try {
-      // fetch the latest availability
       const availabilityRes = await api.get(`/bookings/availability/${id}`);
       const allBlocks = availabilityRes.data.data || [];
 
@@ -344,19 +343,19 @@ const HotelDetails = () => {
     <div className="bg-gray-50 dark:bg-gray-900 transition-colors duration-300 min-h-screen pb-12">
       <style>{`
         .react-datepicker__day--booked-disabled {
-          background-color: #ef4444 !important; /* Red */
+          background-color: #ef4444 !important;
           color: white !important;
           border-radius: 0.3rem;
           cursor: not-allowed !important;
         }
         .react-datepicker__day--pending-disabled {
-          background-color: #facc15 !important; /* Yellow */
+          background-color: #facc15 !important;
           color: black !important;
           border-radius: 0.3rem;
           cursor: not-allowed !important;
         }
         .react-datepicker__day--temp-disabled {
-          background-color: #9ca3af !important; /* Grey */
+          background-color: #9ca3af !important;
           color: white !important;
           border-radius: 0.3rem;
           cursor: not-allowed !important;
@@ -787,7 +786,7 @@ const HotelDetails = () => {
                       return (
                         !bookedDates.includes(dStr) &&
                         !pendingDates.includes(dStr) &&
-                        !tempDates.includes(dStr) // STEP C check added
+                        !tempDates.includes(dStr)
                       );
                     }}
                     dayClassName={(date) => {
@@ -797,7 +796,6 @@ const HotelDetails = () => {
                       if (pendingDates.includes(dStr))
                         return "react-datepicker__day--pending-disabled";
                       if (tempDates.includes(dStr))
-                        // STEP C check added
                         return "react-datepicker__day--temp-disabled";
                       if (bookedDates.includes(dStr))
                         return "react-datepicker__day--booked-disabled";
@@ -828,12 +826,11 @@ const HotelDetails = () => {
                       if (
                         bookedDates.includes(dStr) ||
                         pendingDates.includes(dStr) ||
-                        tempDates.includes(dStr) // STEP C check added
+                        tempDates.includes(dStr)
                       )
                         return false;
                       if (!checkIn) return true;
 
-                      // Prevent checkout selection if any blocked date falls between checkIn and checkout
                       return !bookedDates
                         .concat(pendingDates, tempDates)
                         .some((bStr) => {
@@ -848,7 +845,6 @@ const HotelDetails = () => {
                       if (pendingDates.includes(dStr))
                         return "react-datepicker__day--pending-disabled";
                       if (tempDates.includes(dStr))
-                        // STEP C check added
                         return "react-datepicker__day--temp-disabled";
                       if (bookedDates.includes(dStr))
                         return "react-datepicker__day--booked-disabled";
