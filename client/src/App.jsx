@@ -20,9 +20,9 @@ import EditHotel from "./components/EditHotel";
 import AddRoomByVendor from "./components/AddRoomByVendor";
 import CouponManagement from "./components/CouponManagement";
 
-import HotelDashboard from "./components/HotelDashboard";
-import AddRoom from "./components/AddRoom";
-import EditRoom from "./components/EditRoom";
+import HotelDashboard from "./components/HotelDashboard/HotelDashboard";
+import AddRoom from "./components/HotelDashboard/AddRoom";
+import EditRoom from "./components/HotelDashboard/EditRoom";
 
 import SuperAdminLayout from "./SuperAdmin/SuperAdminLayout";
 import StateManager from "./SuperAdmin/pages/StateManager";

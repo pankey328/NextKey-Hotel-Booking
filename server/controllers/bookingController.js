@@ -1,5 +1,6 @@
 const Booking = require("../models/BookingModel");
 const TempBooking = require("../models/TempBookingModel");
+const Review = require("../models/ReviewModel");
 const mongoose = require("mongoose");
 
 // Creates new booking (Without Transaction)
@@ -273,5 +274,158 @@ exports.getRoomAvailability = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });
+  }
+};
+
+// Submit a Review (User)
+exports.submitBookingReview = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    const { ratings, comment } = req.body;
+    const userId = req.user.id;
+
+    const booking = await Booking.findById(bookingId);
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    if (booking.status !== "checked-out") {
+      return res
+        .status(400)
+        .json({ message: "You can only review after checking out" });
+    }
+    if (booking.isRated) {
+      return res
+        .status(400)
+        .json({ message: "You have already reviewed this stay" });
+    }
+
+    const newReview = await Review.create({
+      bookingId,
+      userId,
+      hotelId: booking.hotelId,
+      roomId: booking.roomId,
+      ratings,
+      comment,
+    });
+
+    booking.isRated = true;
+    await booking.save();
+
+    return res.status(201).json({
+      message: "feedback submitted!",
+      data: newReview,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Get Hotel Dashboard DATA (Hotel/Vendor)
+exports.getDashboardStats = async (req, res) => {
+  try {
+    const { hotelId } = req.params;
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const [newBookingsCount, checkInsToday, checkOutsToday, recentBookings] =
+      await Promise.all([
+        Booking.countDocuments({
+          hotelId,
+          status: "pending",
+        }),
+
+        Booking.countDocuments({
+          hotelId,
+          checkInDate: {
+            $gte: startOfToday,
+            $lte: endOfToday,
+          },
+          status: {
+            $in: ["pending", "confirmed", "checked-in"],
+          },
+        }),
+
+        Booking.countDocuments({
+          hotelId,
+          checkOutDate: {
+            $gte: startOfToday,
+            $lte: endOfToday,
+          },
+          status: {
+            $in: ["confirmed", "checked-in", "checked-out"],
+          },
+        }),
+
+        Booking.find({ hotelId })
+          .sort({ createdAt: -1 })
+          .limit(5)
+          .populate("userId", "name")
+          .populate("roomId", "roomType"),
+      ]);
+
+    const completedBookings = await Booking.find({
+      hotelId,
+      status: {
+        $in: ["confirmed", "checked-in", "checked-out"],
+      },
+    });
+
+    let totalRevenue = 0;
+
+    for (const booking of completedBookings) {
+      totalRevenue += booking.finalPrice;
+    }
+
+    const reviews = await Review.find({ hotelId });
+
+    let totalRoom = 0;
+    let totalCleaning = 0;
+    let totalService = 0;
+
+    for (const review of reviews) {
+      totalRoom += review.ratings.room;
+      totalCleaning += review.ratings.cleaning;
+      totalService += review.ratings.service;
+    }
+
+    const totalReviews = reviews.length;
+
+    let avgRoom = 0;
+    let avgCleaning = 0;
+    let avgService = 0;
+    let overallRating = 0;
+
+    if (totalReviews > 0) {
+      avgRoom = totalRoom / totalReviews;
+      avgCleaning = totalCleaning / totalReviews;
+      avgService = totalService / totalReviews;
+
+      overallRating = (avgRoom + avgCleaning + avgService) / 3;
+    }
+
+    res.status(200).json({
+      message: "Dashboard DATA Fetched Successfully",
+      data: {
+        newBookingsCount,
+        checkInsToday,
+        checkOutsToday,
+        totalRevenue,
+        recentBookings,
+        ratings: {
+          overall: overallRating.toFixed(1),
+          room: avgRoom.toFixed(1),
+          cleaning: avgCleaning.toFixed(1),
+          service: avgService.toFixed(1),
+          totalReviews,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };

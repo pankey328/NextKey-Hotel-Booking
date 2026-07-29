@@ -7,6 +7,13 @@ const MyBookings = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("active");
 
+  // Review Modal State
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [ratings, setRatings] = useState({ room: 5, cleaning: 5, service: 5 });
+  const [comment, setComment] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+
   const fetchMyBookings = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -51,8 +58,58 @@ const MyBookings = () => {
     }
   };
 
-  const activeStatuses = ["pending", "confirmed", "checked-in"];
+  const openReviewModal = (booking) => {
+    setSelectedBooking(booking);
+    setRatings({ room: 5, cleaning: 5, service: 5 });
+    setComment("");
+    setShowReviewModal(true);
+  };
 
+  const submitReview = async () => {
+    const token = localStorage.getItem("token");
+    setReviewLoading(true);
+    try {
+      await api.post(
+        `/bookings/${selectedBooking._id}/review`,
+        { ratings, comment },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      alert("Thank you for your feedback!");
+      setShowReviewModal(false);
+      fetchMyBookings();
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const StarSelector = ({ label, field }) => (
+    <div className="flex justify-between items-center mb-3">
+      <span className="font-medium text-gray-700 dark:text-gray-300">
+        {label}
+      </span>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            type="button"
+            onClick={() => setRatings({ ...ratings, [field]: star })}
+            className={`text-2xl transition-colors ${
+              ratings[field] >= star
+                ? "text-yellow-400"
+                : "text-gray-300 dark:text-gray-600"
+            }`}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  const activeStatuses = ["pending", "confirmed", "checked-in"];
   const pastStatuses = ["checked-out", "cancelled", "rejected"];
 
   const filteredBookings = bookings.filter((b) =>
@@ -193,7 +250,7 @@ const MyBookings = () => {
                       </span>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex flex-wrap gap-3 items-center">
                       <Link
                         to={`/hotel/${booking.hotelId?._id}`}
                         className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -211,6 +268,23 @@ const MyBookings = () => {
                           Cancel Booking
                         </button>
                       )}
+
+                      {/* Rate Your Stay Button */}
+                      {booking.status === "checked-out" && !booking.isRated && (
+                        <button
+                          onClick={() => openReviewModal(booking)}
+                          className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-bold shadow transition-colors"
+                        >
+                          Rate Your Stay
+                        </button>
+                      )}
+
+                      {/* Reviewed Status Badge */}
+                      {booking.status === "checked-out" && booking.isRated && (
+                        <span className="px-4 py-2 text-green-600 dark:text-green-400 font-bold text-sm flex items-center">
+                          ✓ Reviewed
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -219,6 +293,67 @@ const MyBookings = () => {
           </div>
         )}
       </div>
+
+      {/* REVIEW MODAL */}
+      {showReviewModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                Rate your stay
+              </h2>
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="p-6">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                How was your experience at{" "}
+                <strong className="text-gray-800 dark:text-gray-200">
+                  {selectedBooking.hotelId?.name}
+                </strong>
+                ?
+              </p>
+
+              <StarSelector label="Room Comfort" field="room" />
+              <StarSelector label="Cleanliness" field="cleaning" />
+              <StarSelector label="Staff & Service" field="service" />
+
+              <div className="mt-6">
+                <label className="block font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Additional Comments (Optional)
+                </label>
+                <textarea
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Tell us what you loved or what could be improved..."
+                  className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg p-3 outline-none focus:ring-2 focus:ring-blue-500 h-28 resize-none"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="px-5 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitReview}
+                disabled={reviewLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium shadow-sm disabled:opacity-50 transition-colors"
+              >
+                {reviewLoading ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

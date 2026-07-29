@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../api";
-import FrontDesk from "./FrontDesk";
+import FrontDesk from "./HotelDashboard/Reservations";
 
 const VendorDashboard = () => {
   const [currentView, setCurrentView] = useState("properties");
