@@ -12,13 +12,13 @@ import SearchHotels from "./components/SearchHotels";
 import HotelDetails from "./components/HotelDetails";
 import MyBookings from "./components/MyBookings";
 
-import VendorDashboard from "./components/VendorDashboard";
+import VendorDashboard from "./components/VendorDashboard/VendorDashboard";
 import VendorRegistration from "./components/VendorRegistration";
 import CheckVendorStatus from "./components/CheckVendorStatus";
-import HotelRegistration from "./components/HotelRegistration";
-import EditHotel from "./components/EditHotel";
-import AddRoomByVendor from "./components/AddRoomByVendor";
-import CouponManagement from "./components/CouponManagement";
+import AddHotel from "./components/VendorDashboard/AddHotel";
+import EditHotel from "./components/VendorDashboard/EditHotel";
+import AddRoomByVendor from "./components/VendorDashboard/AddRoomByVendor";
+import CouponManagement from "./components/VendorDashboard/CouponManagement";
 
 import HotelDashboard from "./components/HotelDashboard/HotelDashboard";
 import AddRoom from "./components/HotelDashboard/AddRoom";
@@ -107,7 +107,7 @@ function App() {
             path="/admin-dashboard/add-hotel"
             element={
               <ProtectedRoute allowedRoles={["vendor"]}>
-                <HotelRegistration />
+                <AddHotel />
               </ProtectedRoute>
             }
           />

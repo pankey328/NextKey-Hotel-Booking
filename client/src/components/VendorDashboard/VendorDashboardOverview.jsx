@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
 
-const DashboardOverview = ({ hotelInfo, rooms }) => {
+const VendorDashboardOverview = ({ myHotels, jumpToHotelOverview }) => {
   const [stats, setStats] = useState({
+    totalProperties: 0,
     newBookingsCount: 0,
     checkInsToday: 0,
     checkOutsToday: 0,
@@ -12,21 +13,11 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  const totalRooms = rooms.length;
-  const availableRooms = rooms.filter((r) => r.status === "Available").length;
-  const occupiedRooms = rooms.filter((r) => r.status === "Occupied").length;
-  const reservedRooms = rooms.filter((r) => r.status === "Reserved").length;
-  const maintenanceRooms = rooms.filter(
-    (r) => r.status === "Under Maintenance" || r.status === "Out of Service",
-  ).length;
-
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      if (!hotelInfo?._id) return;
-
+    const fetchVendorStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await api.get(`/bookings/hotel-stats/${hotelInfo._id}`, {
+        const res = await api.get(`/bookings/vendor-stats`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -34,36 +25,34 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
           setStats(res.data.data);
         }
       } catch (error) {
-        console.log("Failed to fetch dashboard stats", error);
+        console.log("Failed to fetch vendor dashboard stats", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardStats();
-  }, [hotelInfo]);
+    fetchVendorStats();
+  }, []);
 
   const getRatingPercentage = (rating) => `${(Number(rating) / 5) * 100}%`;
 
   if (loading) {
     return (
       <div className="text-center py-10 text-gray-500 font-medium">
-        Loading Dashboard Metrics...
+        Fetching Data Across All Properties...
       </div>
     );
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Top Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* New Bookings */}
         <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Pending Bookings
+              Total Properties
             </h3>
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-lg">
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -74,21 +63,20 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                 ></path>
               </svg>
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {stats.newBookingsCount}
+            {stats.totalProperties}
           </div>
         </div>
 
-        {/* Check-In Today */}
         <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Check-In Today
+              Total Check-Ins
             </h3>
             <div className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 rounded-lg">
               <svg
@@ -111,13 +99,12 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
           </div>
         </div>
 
-        {/* Check-Out Today */}
         <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Check-Out Today
+              Total Pending
             </h3>
-            <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 rounded-lg">
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-lg">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -128,21 +115,20 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="2"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 ></path>
               </svg>
             </div>
           </div>
           <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {stats.checkOutsToday}
+            {stats.newBookingsCount}
           </div>
         </div>
 
-        {/* Total Revenue */}
         <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Total Revenue
+              Portfolio Revenue
             </h3>
             <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 rounded-lg">
               <svg
@@ -166,91 +152,53 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
         </div>
       </div>
 
-      {/* Middle Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Dynamic Room Availability */}
+        {/* Hotel List */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm lg:col-span-2">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-              Room Availability
+              Active Properties
             </h2>
           </div>
-
-          <div className="w-full h-8 flex rounded-xl overflow-hidden mb-8">
-            <div
-              className="bg-blue-500 h-full transition-all duration-500"
-              style={{
-                width: totalRooms
-                  ? `${(occupiedRooms / totalRooms) * 100}%`
-                  : "0%",
-              }}
-            ></div>
-            <div
-              className="bg-yellow-400 h-full transition-all duration-500"
-              style={{
-                width: totalRooms
-                  ? `${(reservedRooms / totalRooms) * 100}%`
-                  : "0%",
-              }}
-            ></div>
-            <div
-              className="bg-green-400 h-full transition-all duration-500"
-              style={{
-                width: totalRooms
-                  ? `${(availableRooms / totalRooms) * 100}%`
-                  : "0%",
-              }}
-            ></div>
-            <div
-              className="bg-gray-300 h-full transition-all duration-500"
-              style={{
-                width: totalRooms
-                  ? `${(maintenanceRooms / totalRooms) * 100}%`
-                  : "0%",
-              }}
-            ></div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-blue-500"></span>{" "}
-                Occupied
-              </div>
-              <div className="text-2xl font-bold">{occupiedRooms}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-yellow-400"></span>{" "}
-                Reserved
-              </div>
-              <div className="text-2xl font-bold">{reservedRooms}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-400"></span>{" "}
-                Available
-              </div>
-              <div className="text-2xl font-bold">{availableRooms}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500 mb-1 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-gray-300"></span>{" "}
-                Maintenance
-              </div>
-              <div className="text-2xl font-bold">{maintenanceRooms}</div>
-            </div>
+          <div className="space-y-4">
+            {myHotels
+              .filter((h) => h.status === "approved")
+              .slice(0, 4)
+              .map((hotel) => (
+                <div
+                  key={hotel._id}
+                  onClick={() => jumpToHotelOverview(hotel._id)}
+                  className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-lg border border-gray-100 dark:border-gray-700 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 text-blue-600 dark:bg-blue-900/40 rounded-lg flex items-center justify-center font-bold">
+                      {hotel.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                        {hotel.name}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {hotel.cityId?.name} • {hotel.starRating}★{" "}
+                        {hotel.hotelType}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-gray-400 group-hover:text-blue-600">
+                    &rarr;
+                  </span>
+                </div>
+              ))}
           </div>
         </div>
 
-        {/* Dynamic Rating Bar */}
+        {/* Global Rating */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-              Overall Rating
+              Network Rating
             </h2>
           </div>
-
           <div className="flex items-end gap-3 mb-6">
             <div className="text-5xl font-extrabold text-gray-900 dark:text-white">
               {stats.ratings.overall > 0 ? stats.ratings.overall : "--"}
@@ -265,11 +213,10 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
                     : "Average"}
               </div>
               <div className="text-xs text-gray-500">
-                from {stats.ratings.totalReviews} reviews
+                across {stats.ratings.totalReviews} reviews
               </div>
             </div>
           </div>
-
           <div className="space-y-3">
             <div className="flex items-center text-sm">
               <span className="w-24 text-gray-600 dark:text-gray-400">
@@ -317,19 +264,19 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
         </div>
       </div>
 
-      {/* Dynamic Booking List Table */}
+      {/* Global Bookings List */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden mt-6">
         <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-            Recent Bookings
+            Recent Global Bookings
           </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-700/50 uppercase border-b border-gray-100 dark:border-gray-700">
               <tr>
+                <th className="px-6 py-4 font-medium">Hotel</th>
                 <th className="px-6 py-4 font-medium">Guest Name</th>
-                <th className="px-6 py-4 font-medium">Room Type</th>
                 <th className="px-6 py-4 font-medium">Check-In & Out</th>
                 <th className="px-6 py-4 font-medium">Status</th>
               </tr>
@@ -347,16 +294,11 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
                     key={booking._id}
                     className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30"
                   >
-                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
-                      {booking.userId?.name || "Guest"}
+                    <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
+                      {booking.hotelId?.name || "Unknown"}
                     </td>
-                    <td className="px-6 py-4">
-                      <span className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full ${booking.status === "confirmed" || booking.status === "checked-in" ? "bg-green-500" : "bg-blue-500"}`}
-                        ></span>
-                        {booking.roomId?.roomType || "Standard"}
-                      </span>
+                    <td className="px-6 py-4 font-medium text-gray-600 dark:text-gray-300">
+                      {booking.userId?.name || "Guest"}
                     </td>
                     <td className="px-6 py-4 text-gray-500">
                       {new Date(booking.checkInDate).toLocaleDateString(
@@ -366,7 +308,7 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
                       -{" "}
                       {new Date(booking.checkOutDate).toLocaleDateString(
                         "en-GB",
-                        { month: "short", day: "2-digit", year: "numeric" },
+                        { month: "short", day: "2-digit" },
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -395,4 +337,4 @@ const DashboardOverview = ({ hotelInfo, rooms }) => {
   );
 };
 
-export default DashboardOverview;
+export default VendorDashboardOverview;

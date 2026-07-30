@@ -1,6 +1,8 @@
 const Booking = require("../models/BookingModel");
 const TempBooking = require("../models/TempBookingModel");
 const Review = require("../models/ReviewModel");
+const VendorRequest = require("../models/VendorRequestModel");
+const Hotel = require("../models/HotelModel");
 const mongoose = require("mongoose");
 
 // Creates new booking (Without Transaction)
@@ -319,7 +321,7 @@ exports.submitBookingReview = async (req, res) => {
   }
 };
 
-// Get Hotel Dashboard DATA (Hotel/Vendor)
+// Get Hotel Dashboard DATA (Hotel)
 exports.getDashboardStats = async (req, res) => {
   try {
     const { hotelId } = req.params;
@@ -427,5 +429,115 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({
       message: error.message,
     });
+  }
+};
+
+// Get Vendor Dashboard DATA (Vendor)
+exports.getVendorDashboardStats = async (req, res) => {
+  try {
+    const vendorCompany = await VendorRequest.findOne({
+      email: req.user.email,
+    });
+    if (!vendorCompany) {
+      return res.status(404).json({ message: "Vendor profile not found" });
+    }
+
+    const hotels = await Hotel.find({
+      vendorId: vendorCompany._id,
+      isDeleted: false,
+      status: "approved",
+    });
+    const hotelIds = hotels.map((h) => h._id);
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999);
+
+    const [
+      newBookingsCount,
+      checkInsToday,
+      checkOutsToday,
+      completedBookings,
+      recentBookings,
+      reviews,
+    ] = await Promise.all([
+      Booking.countDocuments({ hotelId: { $in: hotelIds }, status: "pending" }),
+
+      Booking.countDocuments({
+        hotelId: { $in: hotelIds },
+        checkInDate: { $gte: startOfToday, $lte: endOfToday },
+        status: { $in: ["pending", "confirmed", "checked-in"] },
+      }),
+
+      Booking.countDocuments({
+        hotelId: { $in: hotelIds },
+        checkOutDate: { $gte: startOfToday, $lte: endOfToday },
+        status: { $in: ["confirmed", "checked-in", "checked-out"] },
+      }),
+
+      Booking.find({
+        hotelId: { $in: hotelIds },
+        status: { $in: ["confirmed", "checked-in", "checked-out"] },
+      }).select("finalPrice"),
+
+      Booking.find({ hotelId: { $in: hotelIds } })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("userId", "name")
+        .populate("roomId", "roomType")
+        .populate("hotelId", "name"),
+
+      Review.find({ hotelId: { $in: hotelIds } }),
+    ]);
+
+    const totalRevenue = completedBookings.reduce(
+      (sum, b) => sum + (b.finalPrice || 0),
+      0,
+    );
+
+    let totalRoom = 0,
+      totalCleaning = 0,
+      totalService = 0;
+    for (const review of reviews) {
+      totalRoom += review.ratings.room;
+      totalCleaning += review.ratings.cleaning;
+      totalService += review.ratings.service;
+    }
+
+    const totalReviews = reviews.length;
+    let avgRoom = 0,
+      avgCleaning = 0,
+      avgService = 0,
+      overallRating = 0;
+
+    if (totalReviews > 0) {
+      avgRoom = totalRoom / totalReviews;
+      avgCleaning = totalCleaning / totalReviews;
+      avgService = totalService / totalReviews;
+      overallRating = (avgRoom + avgCleaning + avgService) / 3;
+    }
+
+    res.status(200).json({
+      message: "Vendor Master Dashboard DATA Fetched Successfully",
+      data: {
+        totalProperties: hotels.length,
+        newBookingsCount,
+        checkInsToday,
+        checkOutsToday,
+        totalRevenue,
+        recentBookings,
+        ratings: {
+          overall: overallRating.toFixed(1),
+          room: avgRoom.toFixed(1),
+          cleaning: avgCleaning.toFixed(1),
+          service: avgService.toFixed(1),
+          totalReviews,
+        },
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

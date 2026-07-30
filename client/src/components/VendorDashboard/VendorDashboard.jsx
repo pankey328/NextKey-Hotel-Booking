@@ -1,18 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import api from "../api";
-import FrontDesk from "./HotelDashboard/Reservations";
+import api from "../../api";
+
+import VendorDashboardOverview from "./VendorDashboardOverview";
+import Reservations from "../HotelDashboard/Reservations";
+import HotelDashboardOverview from "../HotelDashboard/HotelDashboardOverview";
+
+const SpecificHotelOverview = ({ hotelId, myHotels }) => {
+  const [rooms, setRooms] = useState([]);
+  const hotelInfo = myHotels.find((h) => h._id === hotelId);
+
+  useEffect(() => {
+    if (!hotelId) return;
+    api
+      .get(`/search/hotels/${hotelId}/rooms`)
+      .then((res) => setRooms(res.data.data || []))
+      .catch((err) => console.error(err));
+  }, [hotelId]);
+
+  if (!hotelInfo)
+    return <div className="p-8 text-gray-500">Hotel not found...</div>;
+
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
+          {hotelInfo.name}{" "}
+          <span className="text-sm font-medium text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+            Property Overview
+          </span>
+        </h2>
+      </div>
+      <HotelDashboardOverview hotelInfo={hotelInfo} rooms={rooms} />
+    </div>
+  );
+};
 
 const VendorDashboard = () => {
-  const [currentView, setCurrentView] = useState("properties");
-
+  const [currentView, setCurrentView] = useState("dashboard");
   const [selectedHotelId, setSelectedHotelId] = useState("");
 
   const [activeTab, setActiveTab] = useState("active");
   const [myHotels, setMyHotels] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal State
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null);
 
@@ -25,10 +56,16 @@ const VendorDashboard = () => {
       const isDeleted = activeTab === "inactive";
       const res = await api.get(`/hotels?isDeleted=${isDeleted}`, config);
 
-      setMyHotels(res.data.data || []);
+      const fetchedHotels = res.data.data || [];
+      setMyHotels(fetchedHotels);
 
-      if (res.data.data?.length > 0 && !selectedHotelId) {
-        setSelectedHotelId(res.data.data[0]._id);
+      if (fetchedHotels.length > 0 && !selectedHotelId) {
+        const firstApprovedHotel = fetchedHotels.find(
+          (h) => h.status === "approved",
+        );
+        if (firstApprovedHotel) {
+          setSelectedHotelId(firstApprovedHotel._id);
+        }
       }
     } catch (error) {
       console.error("Error fetching hotels", error);
@@ -57,7 +94,6 @@ const VendorDashboard = () => {
           return;
         await api.delete(`/hotels/${id}`, config);
       }
-
       fetchMyHotels();
     } catch (error) {
       alert(error.response?.data?.message || `Error performing ${action}`);
@@ -68,6 +104,37 @@ const VendorDashboard = () => {
     setSelectedHotel(hotel);
     setShowViewModal(true);
   };
+
+  const jumpToHotelOverview = (hotelId) => {
+    setSelectedHotelId(hotelId);
+    setCurrentView("hotel-overview");
+  };
+
+  const SidebarItem = ({ id, label, iconPath }) => (
+    <button
+      onClick={() => setCurrentView(id)}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
+        currentView === id
+          ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
+          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+      }`}
+    >
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d={iconPath}
+        ></path>
+      </svg>
+      {label}
+    </button>
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -83,51 +150,53 @@ const VendorDashboard = () => {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          <button
-            onClick={() => setCurrentView("properties")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
-              currentView === "properties"
-                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
-                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-            }`}
-          >
-            Manage Properties
-          </button>
-
-          <button
-            onClick={() => setCurrentView("front-desk")}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
-              currentView === "front-desk"
-                ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
-                : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-            }`}
-          >
-            Hotel Bookings
-          </button>
+          <SidebarItem
+            id="dashboard"
+            label="Master Dashboard"
+            iconPath="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+          />
+          <SidebarItem
+            id="properties"
+            label="Manage Properties"
+            iconPath="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+          />
+          <SidebarItem
+            id="hotel-overview"
+            label="Property Dashboard"
+            iconPath="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+          />
+          <SidebarItem
+            id="Reservations"
+            label="Hotel Bookings"
+            iconPath="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+          />
         </nav>
       </aside>
 
       {/* MAIN CONTENT AREA */}
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {/* MOBILE VIEW SWITCH */}
-        <div className="flex md:hidden gap-2 mb-6 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="flex md:hidden flex-wrap gap-2 mb-6 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+          <button
+            onClick={() => setCurrentView("dashboard")}
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "dashboard" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+          >
+            Dashboard
+          </button>
           <button
             onClick={() => setCurrentView("properties")}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              currentView === "properties"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 dark:text-gray-300"
-            }`}
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "properties" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
           >
             Properties
           </button>
           <button
-            onClick={() => setCurrentView("front-desk")}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-              currentView === "front-desk"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 dark:text-gray-300"
-            }`}
+            onClick={() => setCurrentView("hotel-overview")}
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "hotel-overview" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setCurrentView("Reservations")}
+            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "Reservations" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
           >
             Bookings
           </button>
@@ -137,9 +206,13 @@ const VendorDashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-              {currentView === "properties"
-                ? "Manage Properties"
-                : "Hotel Bookings"}
+              {currentView === "dashboard"
+                ? "Portfolio Overview"
+                : currentView === "properties"
+                  ? "Manage Properties"
+                  : currentView === "hotel-overview"
+                    ? "Hotel Overview"
+                    : "Hotel Bookings"}
             </h1>
           </div>
 
@@ -150,40 +223,64 @@ const VendorDashboard = () => {
             >
               + Add New Property
             </Link>
-          ) : (
-            myHotels.length > 0 && (
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">
-                  Select Hotel:
-                </label>
-                <select
-                  value={selectedHotelId}
-                  onChange={(e) => setSelectedHotelId(e.target.value)}
-                  className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none cursor-pointer"
-                >
-                  {myHotels.map((h) => (
+          ) : ["Reservations", "hotel-overview"].includes(currentView) &&
+            myHotels.some((h) => h.status === "approved") ? (
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase">
+                Select Hotel:
+              </label>
+              <select
+                value={selectedHotelId}
+                onChange={(e) => setSelectedHotelId(e.target.value)}
+                className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white outline-none cursor-pointer shadow-sm focus:ring-2 focus:ring-blue-500"
+              >
+                {myHotels
+                  .filter((h) => h.status === "approved")
+                  .map((h) => (
                     <option key={h._id} value={h._id}>
                       {h.name}
                     </option>
                   ))}
-                </select>
-              </div>
-            )
-          )}
+              </select>
+            </div>
+          ) : null}
         </div>
 
-        {/* DYNAMIC VIEW ROUTER */}
-        {currentView === "front-desk" ? (
-          /* FRONT DESK VIEW */
-          selectedHotelId ? (
-            <FrontDesk hotelId={selectedHotelId} />
+        {/* VENDOR DASHBOARD OVERVIEW */}
+        {currentView === "dashboard" && (
+          <VendorDashboardOverview
+            myHotels={myHotels}
+            jumpToHotelOverview={jumpToHotelOverview}
+          />
+        )}
+
+        {/* SPECIFIC HOTEL OVERVIEW */}
+        {currentView === "hotel-overview" &&
+          (selectedHotelId ? (
+            <SpecificHotelOverview
+              hotelId={selectedHotelId}
+              myHotels={myHotels}
+            />
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center text-gray-500 border border-gray-100 dark:border-gray-700">
-              Please register or select an approved property to manage bookings.
+              Please select a property from the dropdown above to view its
+              dashboard.
             </div>
-          )
-        ) : (
-          /* PROPERTIES MANAGEMENT VIEW */
+          ))}
+
+        {/* SPECIFIC HOTEL RESERVATIONS */}
+        {currentView === "Reservations" &&
+          (selectedHotelId ? (
+            <Reservations hotelId={selectedHotelId} />
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-12 text-center text-gray-500 border border-gray-100 dark:border-gray-700">
+              Please select a property from the dropdown above to manage
+              bookings.
+            </div>
+          ))}
+
+        {/* PROPERTIES LIST */}
+        {currentView === "properties" && (
           <div>
             {/* Tabs */}
             <div className="flex gap-4 sm:gap-6 border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base">
@@ -259,11 +356,9 @@ const VendorDashboard = () => {
                               {hotel.hotelType} • {hotel.starRating}★
                             </div>
                           </td>
-
                           <td className="py-4 px-6 text-sm text-gray-600 dark:text-gray-400">
                             {hotel.cityId?.name}, {hotel.stateId?.name}
                           </td>
-
                           <td className="py-4 px-6 text-right">
                             <div className="flex flex-col items-end gap-2">
                               <span
@@ -300,6 +395,14 @@ const VendorDashboard = () => {
                                   <>
                                     {hotel.status === "approved" && (
                                       <>
+                                        <button
+                                          onClick={() =>
+                                            jumpToHotelOverview(hotel._id)
+                                          }
+                                          className="text-xs px-3 py-1.5 rounded-md font-medium bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 transition-colors cursor-pointer"
+                                        >
+                                          Manage Dashboard
+                                        </button>
                                         <Link
                                           to={`/admin-dashboard/add-room/${hotel._id}`}
                                           className="text-xs px-3 py-1.5 rounded-md font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-400 transition-colors"
@@ -314,7 +417,6 @@ const VendorDashboard = () => {
                                         </Link>
                                       </>
                                     )}
-
                                     {(hotel.status === "pending" ||
                                       hotel.status === "rejected") && (
                                       <Link
@@ -382,7 +484,6 @@ const VendorDashboard = () => {
                 &times;
               </button>
             </div>
-
             <div className="px-6 py-5 flex flex-col md:flex-row gap-6 max-h-[70vh] overflow-y-auto">
               <div className="w-full md:w-1/2">
                 {selectedHotel.imageUrl ? (
@@ -397,7 +498,6 @@ const VendorDashboard = () => {
                   </div>
                 )}
               </div>
-
               <div className="w-full md:w-1/2 space-y-3 text-sm">
                 <div>
                   <span className="text-gray-500">Name:</span>{" "}

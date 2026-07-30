@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "../api";
+import api from "../../api";
 import { Link } from "react-router-dom";
 
 const hotelFeaturesList = [
@@ -17,7 +17,7 @@ const hotelFeaturesList = [
   "Laundry Service",
 ];
 
-const HotelRegistration = () => {
+const AddHotel = () => {
   const [formData, setFormData] = useState({
     name: "",
     hotelType: "Hotel",
@@ -414,4 +414,4 @@ const HotelRegistration = () => {
   );
 };
 
-export default HotelRegistration;
+export default AddHotel;

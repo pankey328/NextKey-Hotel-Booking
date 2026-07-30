@@ -36,11 +36,18 @@ router.post(
   bookingController.submitBookingReview,
 );
 
-// Get Hotel Dashboard Stats
+// Get Hotel Dashboard Stats (Hotel Dashboard)
 router.get(
   "/hotel-stats/:hotelId",
   authMiddleware,
   bookingController.getDashboardStats,
+);
+
+// Get Vendor Dashboard Stats (Vendor Dashboard)
+router.get(
+  "/vendor-stats",
+  authMiddleware,
+  bookingController.getVendorDashboardStats,
 );
 
 module.exports = router;

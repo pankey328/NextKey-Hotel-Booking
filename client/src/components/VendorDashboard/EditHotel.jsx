@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import api from "../api";
+import api from "../../api";
 import { useNavigate, useParams } from "react-router-dom";
 
-// NEW: Global list of features
 const hotelFeaturesList = [
   "Parking",
   "Elevator",
@@ -19,7 +18,7 @@ const hotelFeaturesList = [
 ];
 
 const EditHotel = () => {
-  const { id } = useParams(); // trackingId
+  const { id } = useParams(); 
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -31,7 +30,7 @@ const EditHotel = () => {
     address: "",
     locationLink: "",
     description: "",
-    features: [], // NEW: Added to state
+    features: [],
   });
   const [image, setImage] = useState(null);
   const [currentImageUrl, setCurrentImageUrl] = useState("");

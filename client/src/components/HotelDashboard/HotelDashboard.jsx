@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api";
 
-import DashboardOverview from "./DashboardOverview";
+import HotelDashboardOverview from "./HotelDashboardOverview";
 import ManageRooms from "./ManageRooms";
 import Reservations from "./Reservations";
 
@@ -89,7 +89,7 @@ const HotelDashboard = () => {
 
       {/* MAIN CONTENT CONTAINER */}
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {/* MOBILE VIEW SWITCHER */}
+        {/* MOBILE VIEW */}
         <div className="flex md:hidden flex-wrap gap-2 mb-6 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <button
             onClick={() => setCurrentView("dashboard")}
@@ -158,7 +158,7 @@ const HotelDashboard = () => {
         </div>
 
         {currentView === "dashboard" && (
-          <DashboardOverview hotelInfo={hotelInfo} rooms={rooms} />
+          <HotelDashboardOverview hotelInfo={hotelInfo} rooms={rooms} />
         )}
 
         {currentView === "Reservations" &&
