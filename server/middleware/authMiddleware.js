@@ -35,8 +35,6 @@ module.exports = async (req, res, next) => {
       return res.status(404).json({ message: "User not found in database" });
     }
 
-    console.log(">>>>> userDetails:", userDetails);
-
     req.user = userDetails;
 
     next();

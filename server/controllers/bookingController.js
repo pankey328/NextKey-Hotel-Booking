@@ -27,6 +27,10 @@ exports.createBooking = async (req, res) => {
         .json({ message: "Missing required booking details" });
     }
 
+    const platformFeePercentage = 10;
+    const platformFeeAmount = (finalPrice * platformFeePercentage) / 100;
+    const hotelEarningAmount = finalPrice - platformFeeAmount;
+
     const newBooking = new Booking({
       userId,
       hotelId,
@@ -37,6 +41,9 @@ exports.createBooking = async (req, res) => {
       totalDays,
       originalPrice,
       finalPrice,
+      platformFeePercentage,
+      platformFeeAmount,
+      hotelEarningAmount,
       status: "pending",
     });
 
@@ -85,6 +92,10 @@ exports.createBooking = async (req, res) => {
         .json({ message: "Missing required booking details" });
     }
 
+    const platformFeePercentage = 10;
+    const platformFeeAmount = (finalPrice * platformFeePercentage) / 100;
+    const hotelEarningAmount = finalPrice - platformFeeAmount;
+
     const newBooking = new Booking({
       userId,
       hotelId,
@@ -95,6 +106,9 @@ exports.createBooking = async (req, res) => {
       totalDays,
       originalPrice,
       finalPrice,
+      platformFeePercentage,
+      platformFeeAmount,
+      hotelEarningAmount,
       status: "pending",
     });
 
@@ -376,9 +390,11 @@ exports.getDashboardStats = async (req, res) => {
     });
 
     let totalRevenue = 0;
+    let netRevenue = 0; // 90% after platform fees
 
     for (const booking of completedBookings) {
-      totalRevenue += booking.finalPrice;
+      totalRevenue += booking.finalPrice || 0;
+      netRevenue += booking.hotelEarningAmount || 0;
     }
 
     const reviews = await Review.find({ hotelId });
@@ -415,6 +431,7 @@ exports.getDashboardStats = async (req, res) => {
         checkInsToday,
         checkOutsToday,
         totalRevenue,
+        netRevenue,
         recentBookings,
         ratings: {
           overall: overallRating.toFixed(1),
@@ -480,7 +497,7 @@ exports.getVendorDashboardStats = async (req, res) => {
       Booking.find({
         hotelId: { $in: hotelIds },
         status: { $in: ["confirmed", "checked-in", "checked-out"] },
-      }).select("finalPrice"),
+      }).select("finalPrice hotelEarningAmount"),
 
       Booking.find({ hotelId: { $in: hotelIds } })
         .sort({ createdAt: -1 })
@@ -492,10 +509,13 @@ exports.getVendorDashboardStats = async (req, res) => {
       Review.find({ hotelId: { $in: hotelIds } }),
     ]);
 
-    const totalRevenue = completedBookings.reduce(
-      (sum, b) => sum + (b.finalPrice || 0),
-      0,
-    );
+    let totalRevenue = 0; 
+    let netRevenue = 0; // 90% 
+
+    for (const booking of completedBookings) {
+      totalRevenue += booking.finalPrice || 0;
+      netRevenue += booking.hotelEarningAmount || 0;
+    }
 
     let totalRoom = 0,
       totalCleaning = 0,
@@ -527,6 +547,7 @@ exports.getVendorDashboardStats = async (req, res) => {
         checkInsToday,
         checkOutsToday,
         totalRevenue,
+        netRevenue,
         recentBookings,
         ratings: {
           overall: overallRating.toFixed(1),

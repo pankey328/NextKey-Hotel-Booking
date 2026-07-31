@@ -7,6 +7,7 @@ const HotelDashboardOverview = ({ hotelInfo, rooms }) => {
     checkInsToday: 0,
     checkOutsToday: 0,
     totalRevenue: 0,
+    netRevenue: 0,
     recentBookings: [],
     ratings: { overall: 0, room: 0, cleaning: 0, service: 0, totalReviews: 0 },
   });
@@ -138,30 +139,35 @@ const HotelDashboardOverview = ({ hotelInfo, rooms }) => {
           </div>
         </div>
 
-        {/* Total Revenue */}
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Total Revenue
-            </h3>
-            <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 rounded-lg">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 3h12 M6 8h12 M6 13l8.5 8 M6 13h3 M9 13c6.667 0 6.667-10 0-10"
-                ></path>
-              </svg>
+        {/* Hotel Earnings (Net Revenue) */}
+        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                Earnings
+              </h3>
+              <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 rounded-lg">
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 3h12 M6 8h12 M6 13l8.5 8 M6 13h3 M9 13c6.667 0 6.667-10 0-10"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              ₹{(stats.netRevenue || 0).toLocaleString("en-IN")}
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            ₹{stats.totalRevenue.toLocaleString("en-IN")}
+          <div className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-1">
+            Gross: ₹{(stats.totalRevenue || 0).toLocaleString("en-IN")}
           </div>
         </div>
       </div>

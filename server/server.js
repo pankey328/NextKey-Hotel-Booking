@@ -1,5 +1,5 @@
 require("dotenv").config();
-require('./utils/cronJobs')
+require("./utils/cronJobs");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -59,6 +59,10 @@ app.use("/api/search", searchRoutes);
 // BOOKING ROUTES
 const bookingRoutes = require("./routes/bookingRoutes");
 app.use("/api/bookings", bookingRoutes);
+
+// SUPERADMIN ROUTES
+const superadminRoutes = require("./routes/superadminRoutes");
+app.use("/api/superadmin", superadminRoutes);
 
 mongoose
   .connect(url)

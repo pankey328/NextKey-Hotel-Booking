@@ -246,8 +246,6 @@ exports.verifyOtp = async (req, res) => {
 
     const pendingUser = await Otp.findOne({ email });
 
-    console.log(`pendingUser`, pendingUser);
-
     if (!pendingUser) {
       return res.status(404).json({
         message: "OTP not found",

@@ -34,6 +34,7 @@ import SuperAdminAddVendor from "./SuperAdmin/pages/SuperAdminAddVendor";
 import SuperAdminAddHotel from "./SuperAdmin/pages/SuperAdminAddHotel";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
+import SuperAdminDashboardOverview from "./SuperAdmin/pages/SuperAdminDashboardOverview";
 
 function App() {
   return (
@@ -144,7 +145,8 @@ function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="states" replace />} />
+            <Route index element={<SuperAdminDashboardOverview />} />
+            <Route path="overview" element={<SuperAdminDashboardOverview />} />
             <Route path="states" element={<StateManager />} />
             <Route path="districts" element={<DistrictManager />} />
             <Route path="cities" element={<CityManager />} />
