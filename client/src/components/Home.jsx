@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api";
+import {
+  MapPinIcon,
+  MagnifyingGlassIcon,
+  ArrowRightIcon,
+  ShieldCheckIcon,
+  CurrencyRupeeIcon,
+  ClockIcon,
+} from "@heroicons/react/24/outline";
 
 const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,7 +18,9 @@ const Home = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/search`);
+    if (searchTerm.trim()) {
+      navigate(`/search?location=${searchTerm}`);
+    }
   };
 
   useEffect(() => {
@@ -29,137 +39,209 @@ const Home = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 font-sans">
-      {/* 1. HERO SECTION & SEARCH BAR */}
-      <section className="relative w-full h-[500px] flex items-center justify-center">
-        {/* Background Image/Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-700 to-indigo-800 dark:from-gray-800 dark:to-gray-900 overflow-hidden">
-          {/* Optional: Add a subtle background image here with low opacity */}
+    <div className="min-h-screen bg-[#fdfdfd] dark:bg-neutral-950 transition-colors duration-500 font-sans text-neutral-900 dark:text-neutral-100">
+      {/* HERO SECTION */}
+      <section className="relative w-full h-[75vh] min-h-[600px] flex flex-col items-center justify-center">
+        <div className="absolute inset-0 overflow-hidden bg-neutral-900">
           <img
-            src="https://media.istockphoto.com/id/2110310187/photo/luxury-tropical-pool-villa-at-dusk.jpg?s=612x612&w=0&k=20&c=r8UTpMnbLWD_DOKHAcu6dw-MJEcGg0CTqt0ICa84D84="
-            alt="Luxury Hotel"
-            className="w-full h-full object-cover opacity-20 mix-blend-overlay"
+            src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=3400&auto=format&fit=crop"
+            alt="Luxury Coastal Pool"
+            className="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]"
           />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[#fdfdfd] dark:to-neutral-950 transition-colors duration-500"></div>
         </div>
 
-        <div className="relative z-10 w-full max-w-4xl px-4 sm:px-6 text-center">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white mb-6 drop-shadow-md tracking-tight">
-            Find Your Perfect Stay
+        <div className="relative z-10 w-full max-w-6xl mx-auto px-6 text-center mt-[-10vh]">
+          <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl text-white mb-6 tracking-tight drop-shadow-lg leading-tight">
+            Find the perfect stay. <br />
+            <span className="italic font-light text-white/80">Anywhere.</span>
           </h1>
-          <p className="text-lg md:text-xl text-blue-100 dark:text-gray-300 mb-10 drop-shadow">
-            Discover luxury hotels, cozy villas, and resorts at the best prices.
+          <p className="text-lg md:text-xl text-white/90 font-light drop-shadow-md max-w-2xl mx-auto mb-10">
+            Exclusive access to a curated collection of luxury hotels, private
+            villas, and bespoke boutique experiences.
           </p>
-
-          {/* Search Form */}
-          <form
-            onSubmit={handleSearch}
-            className="flex flex-col sm:flex-row gap-3 bg-white/10 dark:bg-black/20 p-3 rounded-2xl backdrop-blur-md shadow-lg"
-          >
-            <div className="flex-1 relative">
-              <span className="absolute inset-y-0 left-4 flex items-center text-gray-500 text-xl">
-                📍
-              </span>
-              <input
-                type="text"
-                placeholder="e.g., Jaipur, Resort, or Hotel Name"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full h-14 pl-12 pr-4 rounded-xl text-gray-800 text-lg outline-none border-2 border-transparent focus:border-blue-500 transition-all shadow-inner"
-              />
-            </div>
-            <button
-              type="submit"
-              className="h-14 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-lg rounded-xl shadow-md transition-transform active:scale-95"
-            >
-              Search
-            </button>
-          </form>
         </div>
       </section>
 
-      {/* 2. FEATURED PROPERTIES SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16">
-        <div className="flex justify-between items-end mb-10">
+      {/* SEARCH */}
+      <section className="relative z-20 w-full max-w-4xl mx-auto px-4 sm:px-6 -mt-16 sm:-mt-24 mb-16">
+        <form
+          onSubmit={handleSearch}
+          className="w-full flex flex-col sm:flex-row items-center bg-white/30 dark:bg-neutral-900/30 backdrop-blur-2xl p-2 sm:p-3 rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/10 dark:shadow-black/40 border border-white/40 dark:border-neutral-700/50 gap-2 sm:gap-3 transition-all"
+        >
+          <div className="w-full flex-1 flex items-center bg-white/70 dark:bg-black/50 rounded-xl sm:rounded-2xl px-4 sm:px-6 py-3 sm:py-4 border border-white/50 dark:border-neutral-600/30 focus-within:bg-white/95 dark:focus-within:bg-black/70 transition-colors cursor-text shadow-sm">
+            <MapPinIcon className="w-6 h-6 text-neutral-600 dark:text-neutral-400 mr-3 sm:mr-4 flex-shrink-0" />
+            <div className="flex flex-col w-full text-left">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-600 dark:text-neutral-400 mb-0.5">
+                Destination
+              </label>
+              <input
+                type="text"
+                placeholder="Where do you want to go?"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent text-neutral-900 dark:text-white placeholder-neutral-500 dark:placeholder-neutral-400 focus:outline-none text-base sm:text-lg font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Search Button */}
+          <button
+            type="submit"
+            className="w-full sm:w-auto bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 px-8 py-4 sm:py-0 sm:h-full sm:min-h-[76px] rounded-xl sm:rounded-2xl font-semibold flex items-center justify-center gap-2 transition-transform active:scale-95 shadow-md flex-shrink-0"
+          >
+            <MagnifyingGlassIcon className="w-5 h-5" />
+            <span className="text-base sm:text-lg">Search Stays</span>
+          </button>
+        </form>
+      </section>
+
+      {/* TRUST INDICATORS*/}
+      <section className="w-full max-w-5xl mx-auto px-4 sm:px-6 mb-24">
+        <div className="flex flex-wrap items-center justify-center gap-8 sm:gap-16 opacity-70">
+          <div className="flex items-center gap-3">
+            <CurrencyRupeeIcon className="w-5 h-5" />
+            <span className="text-sm font-medium tracking-wide">
+              Best Price Guarantee
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <ShieldCheckIcon className="w-5 h-5" />
+            <span className="text-sm font-medium tracking-wide">
+              Flexible Booking
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <ClockIcon className="w-5 h-5" />
+            <span className="text-sm font-medium tracking-wide">
+              24/7 Concierge
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURED PROPERTIES */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-32">
+        <div className="flex items-end justify-between mb-10 border-b border-neutral-200 dark:border-neutral-800 pb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">
-              Featured Properties
+            <h2 className="text-3xl md:text-5xl font-serif tracking-tight mb-2">
+              The Collection
             </h2>
-            <p className="text-gray-500 dark:text-gray-400">
-              Top-rated stays highly recommended by our guests.
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm md:text-base">
+              Handpicked destinations for the discerning traveler.
             </p>
           </div>
           <Link
             to="/search"
-            className="hidden sm:inline-block text-blue-600 dark:text-blue-400 font-medium hover:underline"
+            className="hidden sm:flex items-center text-sm font-semibold uppercase tracking-widest group hover:opacity-70 transition-opacity"
           >
-            View All &rarr;
+            View All
+            <ArrowRightIcon className="w-4 h-4 ml-2 transform group-hover:translate-x-2 transition-transform" />
           </Link>
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-10">
-            <p className="text-gray-500 text-lg font-medium">
-              Loading amazing properties...
-            </p>
+          <div className="flex space-x-2 justify-center py-32">
+            <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+            <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+            <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce"></div>
           </div>
         ) : featuredHotels.length === 0 ? (
-          <div className="text-center py-10 text-gray-500">
+          <div className="text-center py-32 text-neutral-500 font-medium">
             No properties featured at the moment.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredHotels.map((hotel) => (
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            {/* LARGE LEFT CARD */}
+            {featuredHotels[0] && (
               <Link
-                to={`/hotel/${hotel._id}`}
-                key={hotel._id}
-                className="group bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden hover:shadow-xl transition-all duration-300 block"
+                to={`/hotel/${featuredHotels[0]._id}`}
+                className="col-span-1 md:col-span-8 group relative overflow-hidden rounded-2xl h-[500px] md:h-[600px] bg-neutral-100 dark:bg-neutral-900"
               >
-                {/* Image */}
-                <div className="h-56 bg-gray-200 overflow-hidden relative">
-                  <img
-                    src={
-                      hotel.imageUrl ||
-                      "https://via.placeholder.com/400x250?text=No+Image"
-                    }
-                    alt={hotel.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-4 right-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur text-gray-900 dark:text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                    {hotel.starRating} ★
+                <img
+                  src={
+                    featuredHotels[0].imageUrl ||
+                    "https://via.placeholder.com/1200x800"
+                  }
+                  alt={featuredHotels[0].name}
+                  className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                  <div className="text-xs font-bold uppercase tracking-widest text-white/80 mb-3">
+                    {featuredHotels[0].cityId?.name || "Featured Destination"}
                   </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-1 truncate">
-                    {hotel.name}
+                  <h3 className="text-white font-serif text-4xl md:text-5xl mb-4 leading-tight">
+                    {featuredHotels[0].name}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    📍 {hotel.cityId?.name || "City"},{" "}
-                    {hotel.stateId?.name || "State"}
-                  </p>
-
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 rounded-lg">
-                      {hotel.hotelType}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-800 dark:text-white group-hover:text-blue-600 transition-colors">
-                      View Details &rarr;
-                    </span>
+                  <div className="flex items-center gap-2 text-sm font-medium text-white group-hover:gap-4 transition-all duration-300">
+                    Explore Property <ArrowRightIcon className="w-4 h-4" />
                   </div>
                 </div>
               </Link>
-            ))}
+            )}
+
+            {/* SMALL CARDS CONTAINER */}
+            <div className="col-span-1 md:col-span-4 flex flex-col gap-6">
+              {/* TOP RIGHT CARD */}
+              {featuredHotels[1] && (
+                <Link
+                  to={`/hotel/${featuredHotels[1]._id}`}
+                  className="group relative overflow-hidden rounded-2xl h-[240px] md:h-[288px] bg-neutral-100 dark:bg-neutral-900 flex-1"
+                >
+                  <img
+                    src={
+                      featuredHotels[1].imageUrl ||
+                      "https://via.placeholder.com/800x600"
+                    }
+                    alt={featuredHotels[1].name}
+                    className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-1000 ease-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/80 mb-1">
+                      {featuredHotels[1].cityId?.name || "Featured"}
+                    </div>
+                    <h3 className="text-white font-serif text-2xl mb-2">
+                      {featuredHotels[1].name}
+                    </h3>
+                  </div>
+                </Link>
+              )}
+
+              {/* BOTTOM RIGHT CARD */}
+              {featuredHotels[2] && (
+                <Link
+                  to={`/hotel/${featuredHotels[2]._id}`}
+                  className="group relative overflow-hidden rounded-2xl h-[240px] md:h-[288px] bg-neutral-100 dark:bg-neutral-900 flex-1"
+                >
+                  <img
+                    src={
+                      featuredHotels[2].imageUrl ||
+                      "https://via.placeholder.com/800x600"
+                    }
+                    alt={featuredHotels[2].name}
+                    className="w-full h-full object-cover transform scale-100 group-hover:scale-110 transition-transform duration-1000 ease-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-6">
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/80 mb-1">
+                      {featuredHotels[2].cityId?.name || "Featured"}
+                    </div>
+                    <h3 className="text-white font-serif text-2xl mb-2">
+                      {featuredHotels[2].name}
+                    </h3>
+                  </div>
+                </Link>
+              )}
+            </div>
           </div>
         )}
 
         {/* Mobile View All Button */}
-        <div className="mt-8 text-center sm:hidden">
+        <div className="mt-10 text-center sm:hidden">
           <Link
             to="/search"
-            className="inline-block bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-white font-medium px-6 py-3 rounded-lg w-full"
+            className="inline-block bg-black dark:bg-white text-white dark:text-black font-semibold px-8 py-4 rounded-xl w-full shadow-lg active:scale-95 transition-transform"
           >
-            View All Properties
+            Explore All Properties
           </Link>
         </div>
       </section>
