@@ -29,7 +29,7 @@ const Home = () => {
         const res = await api.get("/search/hotels");
         setFeaturedHotels(res.data.data.slice(0, 3));
       } catch (error) {
-        console.error("Error fetching featured hotels", error);
+        console.log("Error fetching featured hotels", error);
       } finally {
         setLoading(false);
       }

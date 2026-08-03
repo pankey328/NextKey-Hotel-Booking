@@ -90,34 +90,63 @@ exports.getSingleHotel = async (req, res) => {
 exports.getAvailableRoomsByHotel = async (req, res) => {
   try {
     const { id } = req.params;
+    const {
+      search,
+      minPrice,
+      maxPrice,
+      bedType,
+      status,
+      cancellationPolicy,
+      minDiscount,
+      features,
+    } = req.query;
 
     if (!id) {
-      return res.status(400).json({
-        message: "Hotel ID is required",
-      });
+      return res.status(400).json({ message: "Hotel ID is required" });
     }
 
     const hotel = await Hotel.findById(id);
 
     if (!hotel || hotel.isDeleted || hotel.status !== "approved") {
-      return res.status(404).json({
-        message: "Hotel not found",
-      });
+      return res.status(404).json({ message: "Hotel not found" });
     }
 
-    const rooms = await Room.find({
+    let query = {
       hotelId: id,
-      status: "Available",
       isDeleted: false,
-    }).sort({ createdAt: -1 });
+    };
+
+    if (search) {
+      query.$or = [
+        { roomType: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (minPrice || maxPrice) {
+      query.pricePerNight = {};
+      if (minPrice) query.pricePerNight.$gte = Number(minPrice);
+      if (maxPrice) query.pricePerNight.$lte = Number(maxPrice);
+    }
+
+    if (bedType) query.bedType = bedType;
+    if (status) query.status = status;
+    if (cancellationPolicy) query.cancellationPolicy = cancellationPolicy;
+
+    if (minDiscount) query.discount = { $gte: Number(minDiscount) };
+
+    if (features) {
+      const featuresArray = features.split(",");
+      query.facilities = { $all: featuresArray };
+    }
+
+    const rooms = await Room.find(query).sort({ createdAt: -1 });
 
     return res.status(200).json({
-      message: "Available rooms fetched successfully",
+      message: "Rooms fetched successfully",
       data: rooms,
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
+    return res.status(500).json({ message: error.message });
   }
 };

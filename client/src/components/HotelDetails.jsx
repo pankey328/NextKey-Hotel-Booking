@@ -3,6 +3,14 @@ import { useParams, Link } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import api from "../api";
+import {
+  MapPinIcon,
+  FunnelIcon,
+  XMarkIcon,
+  CheckIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
+import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 
 const roomFacilitiesList = [
   "Wi-Fi",
@@ -21,9 +29,13 @@ const HotelDetails = () => {
   const { id } = useParams();
   const [hotel, setHotel] = useState(null);
   const [rooms, setRooms] = useState([]);
+
+  const [allBlocks, setAllBlocks] = useState([]);
   const [roomBookings, setRoomBookings] = useState({});
 
   const [loading, setLoading] = useState(true);
+  const [fetchingRooms, setFetchingRooms] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -39,6 +51,7 @@ const HotelDetails = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
 
   const [roomFilters, setRoomFilters] = useState({
+    search: "",
     minPrice: "",
     maxPrice: "",
     bedType: "",
@@ -48,39 +61,75 @@ const HotelDetails = () => {
     facilities: [],
   });
 
+  // fetch hotel details, calender dates
   useEffect(() => {
-    const fetchHotelAndRooms = async () => {
+    const fetchInitialData = async () => {
       try {
         const hotelRes = await api.get(`/search/hotels/${id}`);
         setHotel(hotelRes.data.data);
 
-        const roomRes = await api.get(`/search/hotels/${id}/rooms`);
-        const roomData = roomRes.data.data || [];
-        setRooms(roomData);
-
         const availabilityRes = await api.get(`/bookings/availability/${id}`);
-        const allBlocks = availabilityRes.data.data || [];
-
-        const bookingMap = {};
-        for (const room of roomData) {
-          bookingMap[room._id] = allBlocks.filter(
-            (b) => b.roomId?.toString() === room._id.toString(),
-          );
-        }
-        setRoomBookings(bookingMap);
+        setAllBlocks(availabilityRes.data.data || []);
       } catch (error) {
-        console.error("Error fetching availability data", error);
+        console.error("Error fetching initial data", error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (id) {
-      fetchHotelAndRooms();
-    }
+    if (id) fetchInitialData();
   }, [id]);
 
-  // Lock Dates and Fetch Coupons only when both dates are selected
+  // connect rooms to calender dates
+  useEffect(() => {
+    const bookingMap = {};
+    for (const room of rooms) {
+      bookingMap[room._id] = allBlocks.filter(
+        (b) => b.roomId?.toString() === room._id.toString(),
+      );
+    }
+    setRoomBookings(bookingMap);
+  }, [rooms, allBlocks]);
+
+  // fetch rooms
+  const fetchRooms = async (currentFilters = roomFilters) => {
+    setFetchingRooms(true);
+    try {
+      let url = `/search/hotels/${id}/rooms?`;
+
+      if (currentFilters.search) url += `search=${currentFilters.search}&`;
+      if (currentFilters.minPrice)
+        url += `minPrice=${currentFilters.minPrice}&`;
+      if (currentFilters.maxPrice)
+        url += `maxPrice=${currentFilters.maxPrice}&`;
+      if (currentFilters.bedType) url += `bedType=${currentFilters.bedType}&`;
+      if (currentFilters.status) url += `status=${currentFilters.status}&`;
+      if (currentFilters.cancellationPolicy)
+        url += `cancellationPolicy=${currentFilters.cancellationPolicy}&`;
+      if (currentFilters.minDiscount)
+        url += `minDiscount=${currentFilters.minDiscount}&`;
+
+      if (currentFilters.facilities && currentFilters.facilities.length > 0) {
+        url += `features=${currentFilters.facilities.join(",")}&`;
+      }
+
+      const roomRes = await api.get(url);
+      setRooms(roomRes.data.data || []);
+    } catch (error) {
+      console.error("Error fetching rooms", error);
+    } finally {
+      setFetchingRooms(false);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchRooms();
+    }, 1000);
+    return () => clearTimeout(delayDebounceFn);
+  }, [roomFilters.search]);
+
+  // date, price, coupon
   useEffect(() => {
     const fetchData = async () => {
       if (!checkIn || !checkOut || !roomToBook) {
@@ -93,7 +142,6 @@ const HotelDetails = () => {
         0,
         Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)),
       );
-
       setTotalDays(days);
       setAppliedCoupon(null);
 
@@ -110,9 +158,7 @@ const HotelDetails = () => {
             checkInDate: formatDate(checkIn),
             checkOutDate: formatDate(checkOut),
           },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
+          { headers: { Authorization: `Bearer ${token}` } },
         );
 
         const { data } = await api.get(`/coupons/${hotel._id}`, {
@@ -120,7 +166,6 @@ const HotelDetails = () => {
         });
 
         const now = new Date();
-
         const validCoupons = (data.data || []).filter(
           (coupon) =>
             coupon.status === "active" &&
@@ -133,7 +178,6 @@ const HotelDetails = () => {
         alert(
           err.response?.data?.message || "These dates just became unavailable.",
         );
-
         setCheckIn(null);
         setCheckOut(null);
         setTotalDays(0);
@@ -159,8 +203,15 @@ const HotelDetails = () => {
     setRoomFilters({ ...roomFilters, facilities });
   };
 
+  const handleApplyFilters = (e) => {
+    e.preventDefault();
+    fetchRooms();
+    if (window.innerWidth < 1024) setShowMobileFilters(false);
+  };
+
   const clearRoomFilters = () => {
-    setRoomFilters({
+    const emptyFilters = {
+      search: "",
       minPrice: "",
       maxPrice: "",
       bedType: "",
@@ -168,46 +219,15 @@ const HotelDetails = () => {
       cancellationPolicy: "",
       minDiscount: "",
       facilities: [],
-    });
+    };
+    setRoomFilters(emptyFilters);
+    fetchRooms(emptyFilters);
   };
-
-  const filteredRooms = rooms.filter((room) => {
-    if (
-      roomFilters.minPrice &&
-      room.pricePerNight < Number(roomFilters.minPrice)
-    )
-      return false;
-    if (
-      roomFilters.maxPrice &&
-      room.pricePerNight > Number(roomFilters.maxPrice)
-    )
-      return false;
-    if (roomFilters.bedType && room.bedType !== roomFilters.bedType)
-      return false;
-    if (roomFilters.status && room.status !== roomFilters.status) return false;
-    if (
-      roomFilters.cancellationPolicy &&
-      room.cancellationPolicy !== roomFilters.cancellationPolicy
-    )
-      return false;
-    if (
-      roomFilters.minDiscount &&
-      room.discount < Number(roomFilters.minDiscount)
-    )
-      return false;
-    if (roomFilters.facilities.length > 0) {
-      const hasAll = roomFilters.facilities.every((f) =>
-        room.facilities?.includes(f),
-      );
-      if (!hasAll) return false;
-    }
-    return true;
-  });
 
   const handleViewRoom = (room) => {
     setSelectedRoom(room);
     setActiveModalImage(
-      room.images?.[0] || "https://via.placeholder.com/400x300",
+      room.images?.[0] || "https://via.placeholder.com/800x600",
     );
     setShowRoomModal(true);
   };
@@ -219,14 +239,7 @@ const HotelDetails = () => {
     setBookingLoading(true);
     try {
       const availabilityRes = await api.get(`/bookings/availability/${id}`);
-      const allBlocks = availabilityRes.data.data || [];
-
-      setRoomBookings((prev) => ({
-        ...prev,
-        [room._id]: allBlocks.filter(
-          (b) => b.roomId?.toString() === room._id.toString(),
-        ),
-      }));
+      setAllBlocks(availabilityRes.data.data || []);
 
       setRoomToBook(room);
       setCheckIn(null);
@@ -293,9 +306,9 @@ const HotelDetails = () => {
 
   const getBlockedDateRanges = (roomId) => {
     const blocks = roomBookings[roomId] || [];
-    const bookedDates = []; // Red
-    const pendingDates = []; // Yellow
-    const tempDates = []; // Grey
+    const bookedDates = [];
+    const pendingDates = [];
+    const tempDates = [];
 
     for (const b of blocks) {
       if (!b.checkInDate || !b.checkOutDate) continue;
@@ -315,302 +328,334 @@ const HotelDetails = () => {
         } else if (b.status === "temp-locked") {
           tempDates.push(dateStr);
         } else {
-          bookedDates.push(dateStr); // confirmed, checked-in
+          bookedDates.push(dateStr);
         }
         currentDate.setDate(currentDate.getDate() + 1);
       }
     }
-
     return { bookedDates, pendingDates, tempDates };
   };
 
   if (loading)
     return (
-      <div className="text-center p-20 text-xl font-bold dark:text-white transition-colors duration-300">
-        Loading Property...
+      <div className="min-h-screen bg-[#fdfdfd] dark:bg-neutral-950 flex space-x-2 justify-center items-center">
+        <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce"></div>
       </div>
     );
+
   if (!hotel)
     return (
-      <div className="text-center p-20 text-xl font-bold text-red-500 dark:text-red-400 transition-colors duration-300">
-        Hotel not found.
+      <div className="min-h-screen bg-[#fdfdfd] dark:bg-neutral-950 flex justify-center items-center text-xl font-serif text-neutral-500">
+        Property not found.
       </div>
     );
 
   const today = new Date();
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 transition-colors duration-300 min-h-screen pb-12">
+    <div className="bg-[#fdfdfd] dark:bg-neutral-950 transition-colors duration-500 min-h-screen pb-24 font-sans text-neutral-900 dark:text-neutral-100">
       <style>{`
-        .react-datepicker__day--booked-disabled {
-          background-color: #ef4444 !important;
-          color: white !important;
-          border-radius: 0.3rem;
-          cursor: not-allowed !important;
-        }
-        .react-datepicker__day--pending-disabled {
-          background-color: #facc15 !important;
-          color: black !important;
-          border-radius: 0.3rem;
-          cursor: not-allowed !important;
-        }
-        .react-datepicker__day--temp-disabled {
-          background-color: #9ca3af !important;
-          color: white !important;
-          border-radius: 0.3rem;
-          cursor: not-allowed !important;
-        }
+        .react-datepicker__day--booked-disabled { background-color: #ef4444 !important; color: white !important; border-radius: 0.5rem; cursor: not-allowed !important; opacity: 0.7;}
+        .react-datepicker__day--pending-disabled { background-color: #facc15 !important; color: black !important; border-radius: 0.5rem; cursor: not-allowed !important; opacity: 0.7;}
+        .react-datepicker__day--temp-disabled { background-color: #9ca3af !important; color: white !important; border-radius: 0.5rem; cursor: not-allowed !important; opacity: 0.7;}
+        .react-datepicker-wrapper { display: block; width: 100%; }
+        .react-datepicker__input-container input { width: 100%; outline: none; }
       `}</style>
 
-      {/* Hero Header */}
-      <div className="w-full h-80 bg-gray-800 dark:bg-gray-950 relative">
+      {/* HERO HEADER */}
+      <div className="relative w-full h-[55vh] min-h-[450px] bg-neutral-900 flex items-end pb-16">
         <img
-          src={hotel.imageUrl || "https://via.placeholder.com/1200x400"}
+          src={hotel.imageUrl || "https://via.placeholder.com/1600x800"}
           alt={hotel.name}
-          className="w-full h-full object-cover opacity-60"
+          className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-2">
+        <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-[#fdfdfd]/20 to-transparent dark:from-neutral-950 dark:via-neutral-950/40"></div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="inline-flex items-center gap-1.5 bg-white/80 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-neutral-900 dark:text-white mb-4 border border-white/20">
+            {hotel.starRating}{" "}
+            <StarSolid className="w-3.5 h-3.5 text-yellow-500" />
+            <span className="mx-1 opacity-50">•</span> {hotel.hotelType}
+          </div>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif tracking-tight text-neutral-900 dark:text-white mb-2 leading-tight">
             {hotel.name}
           </h1>
-          <p className="text-lg md:text-xl font-medium">
+          <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 font-medium text-lg">
+            <MapPinIcon className="w-5 h-5" />
             {hotel.cityId?.name}, {hotel.stateId?.name}
-          </p>
-          <div className="mt-4 bg-yellow-400 text-black px-4 py-1 rounded-full font-bold">
-            {hotel.starRating} Star {hotel.hotelType}
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 -mt-10 relative z-10 flex flex-col md:flex-row gap-6">
-        {/* ROOM FILTERS SIDEBAR */}
-        <aside className="w-full md:w-1/4 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-5 border border-gray-100 dark:border-gray-700 h-fit transition-colors duration-300">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">
-              Filter Rooms
-            </h2>
-            <button
-              onClick={clearRoomFilters}
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              Clear All
-            </button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 relative z-20 flex flex-col lg:flex-row gap-8 lg:gap-12">
+        {/* MOBILE FILTER */}
+        <button
+          onClick={() => setShowMobileFilters(!showMobileFilters)}
+          className="lg:hidden w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 py-4 px-6 rounded-2xl flex items-center justify-between text-neutral-900 dark:text-white font-medium shadow-sm transition-active active:scale-95"
+        >
+          <div className="flex items-center gap-3">
+            <FunnelIcon className="w-5 h-5" />
+            <span>{showMobileFilters ? "Hide Filters" : "Filter Rooms"}</span>
           </div>
+          <div className="text-xs font-bold uppercase tracking-widest text-neutral-400">
+            {rooms.length} Available
+          </div>
+        </button>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Price Range (₹)
-              </label>
-              <div className="flex gap-2">
+        {/* ROOM FILTERS SIDEBAR */}
+        <aside
+          className={`${
+            showMobileFilters ? "block" : "hidden"
+          } lg:block w-full lg:w-[320px] flex-shrink-0`}
+        >
+          <div className="bg-white dark:bg-neutral-900/50 p-6 sm:p-8 rounded-3xl shadow-2xl shadow-black/5 dark:shadow-black/20 border border-neutral-100 dark:border-neutral-800 lg:sticky lg:top-28 transition-colors duration-500">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="hidden lg:block text-xs font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                Refine Search
+              </h2>
+              <button
+                onClick={clearRoomFilters}
+                className="text-xs font-bold uppercase tracking-widest text-neutral-900 dark:text-white opacity-50 hover:opacity-100 transition-opacity"
+              >
+                Clear All
+              </button>
+            </div>
+
+            <form onSubmit={handleApplyFilters} className="space-y-6">
+              {/* Search Box */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2">
+                  Room Name
+                </label>
                 <input
-                  type="number"
-                  name="minPrice"
-                  placeholder="Min"
-                  value={roomFilters.minPrice}
+                  type="text"
+                  name="search"
+                  placeholder="e.g. Suite, Deluxe"
+                  value={roomFilters.search}
                   onChange={handleRoomFilterChange}
-                  className="w-1/2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
-                />
-                <input
-                  type="number"
-                  name="maxPrice"
-                  placeholder="Max"
-                  value={roomFilters.maxPrice}
-                  onChange={handleRoomFilterChange}
-                  className="w-1/2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                  className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white placeholder-neutral-400"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Bed Size
-              </label>
-              <select
-                name="bedType"
-                value={roomFilters.bedType}
-                onChange={handleRoomFilterChange}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm transition-colors"
-              >
-                <option value="">Any Bed</option>
-                <option value="Single Bed">Single Bed</option>
-                <option value="Double Bed">Double Bed</option>
-                <option value="Queen Bed">Queen Bed</option>
-                <option value="King Bed">King Bed</option>
-                <option value="Twin Beds">Twin Beds</option>
-                <option value="Sofa Bed">Sofa Bed</option>
-                <option value="Bunk Bed">Bunk Bed</option>
-              </select>
-            </div>
+              {/* Price Range */}
+              <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2">
+                  Price Range (₹)
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    name="minPrice"
+                    placeholder="Min"
+                    value={roomFilters.minPrice}
+                    onChange={handleRoomFilterChange}
+                    className="w-1/2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                  />
+                  <input
+                    type="number"
+                    name="maxPrice"
+                    placeholder="Max"
+                    value={roomFilters.maxPrice}
+                    onChange={handleRoomFilterChange}
+                    className="w-1/2 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Availability
-              </label>
-              <select
-                name="status"
-                value={roomFilters.status}
-                onChange={handleRoomFilterChange}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm transition-colors"
-              >
-                <option value="">Any Status</option>
-                <option value="Available">Available</option>
-                <option value="Occupied">Occupied</option>
-                <option value="Reserved">Reserved</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Cancellation
-              </label>
-              <select
-                name="cancellationPolicy"
-                value={roomFilters.cancellationPolicy}
-                onChange={handleRoomFilterChange}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm transition-colors"
-              >
-                <option value="">Any Policy</option>
-                <option value="Free Cancellation">Free Cancellation</option>
-                <option value="Non-Refundable">Non-Refundable</option>
-                <option value="Cancellation Before 24 Hours">
-                  Before 24 Hours
-                </option>
-                <option value="Cancellation Before 48 Hours">
-                  Before 48 Hours
-                </option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Min Discount (%)
-              </label>
-              <input
-                type="number"
-                name="minDiscount"
-                placeholder="e.g. 10"
-                value={roomFilters.minDiscount}
-                onChange={handleRoomFilterChange}
-                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2 text-sm outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Room Facilities
-              </label>
-              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
-                {roomFacilitiesList.map((facility) => (
-                  <label
-                    key={facility}
-                    className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={roomFilters.facilities.includes(facility)}
-                      onChange={() => handleRoomFacilityChange(facility)}
-                      className="w-3.5 h-3.5 rounded text-blue-600 border-gray-300 dark:border-gray-600 dark:bg-gray-700"
-                    />
-                    {facility}
+              {/* Attributes */}
+              <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2">
+                    Bed Size
                   </label>
-                ))}
+                  <select
+                    name="bedType"
+                    value={roomFilters.bedType}
+                    onChange={handleRoomFilterChange}
+                    className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="">Any Bed</option>
+                    <option value="Single Bed">Single Bed</option>
+                    <option value="Double Bed">Double Bed</option>
+                    <option value="Queen Bed">Queen Bed</option>
+                    <option value="King Bed">King Bed</option>
+                    <option value="Twin Beds">Twin Beds</option>
+                    <option value="Sofa Bed">Sofa Bed</option>
+                    <option value="Bunk Bed">Bunk Bed</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2">
+                    Cancellation
+                  </label>
+                  <select
+                    name="cancellationPolicy"
+                    value={roomFilters.cancellationPolicy}
+                    onChange={handleRoomFilterChange}
+                    className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors appearance-none cursor-pointer"
+                  >
+                    <option value="">Any Policy</option>
+                    <option value="Free Cancellation">Free Cancellation</option>
+                    <option value="Non-Refundable">Non-Refundable</option>
+                    <option value="Cancellation Before 24 Hours">
+                      Before 24 Hours
+                    </option>
+                    <option value="Cancellation Before 48 Hours">
+                      Before 48 Hours
+                    </option>
+                  </select>
+                </div>
               </div>
-            </div>
+
+              {/* Room Facilities */}
+              <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-4">
+                  Amenities
+                </label>
+                <div className="space-y-3 max-h-56 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700">
+                  {roomFacilitiesList.map((facility) => (
+                    <label
+                      key={facility}
+                      className="flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-300 cursor-pointer group"
+                    >
+                      <div className="relative flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={roomFilters.facilities.includes(facility)}
+                          onChange={() => handleRoomFacilityChange(facility)}
+                          className="peer appearance-none w-5 h-5 border border-neutral-300 dark:border-neutral-700 rounded-md bg-neutral-50 dark:bg-neutral-900 checked:bg-black dark:checked:bg-white checked:border-black dark:checked:border-white transition-colors cursor-pointer"
+                        />
+                        <CheckIcon className="absolute w-3 h-3 text-white dark:text-black opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity stroke-[3]" />
+                      </div>
+                      <span className="group-hover:text-black dark:group-hover:text-white transition-colors">
+                        {facility}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 flex flex-col gap-3">
+                <button
+                  type="submit"
+                  className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl transition-transform active:scale-95 shadow-lg"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </form>
           </div>
         </aside>
 
-        {/* ROOM LISTING */}
-        <main className="w-full md:w-3/4 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 mb-8 border border-gray-100 dark:border-gray-700 transition-colors duration-300">
-          <div className="flex justify-between items-end border-b dark:border-gray-700 pb-4 mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-              Available Rooms
+        {/* MAIN CONTENT */}
+        <main className="w-full lg:flex-1">
+          <div className="hidden lg:flex items-center justify-between mb-8">
+            <h2 className="text-2xl font-serif text-neutral-900 dark:text-white">
+              The Collection
             </h2>
-            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-              {filteredRooms.length} results
-            </span>
           </div>
 
-          {filteredRooms.length === 0 ? (
-            <div className="text-center text-gray-500 dark:text-gray-400 py-12 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-dashed border-gray-300 dark:border-gray-600">
-              No rooms match your current filters.
-              <br />
+          {fetchingRooms ? (
+            <div className="flex space-x-2 justify-center items-center py-32">
+              <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+              <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+              <div className="w-3 h-3 bg-neutral-300 dark:bg-neutral-700 rounded-full animate-bounce"></div>
+            </div>
+          ) : rooms.length === 0 ? (
+            <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm p-16 text-center rounded-3xl border border-neutral-100 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400 transition-colors duration-300 mt-8">
+              <p className="text-2xl font-serif text-neutral-900 dark:text-white mb-2">
+                No rooms available
+              </p>
+              <p className="font-light text-sm mb-6">
+                Try adjusting your filters to find available spaces.
+              </p>
               <button
                 onClick={clearRoomFilters}
-                className="text-blue-600 dark:text-blue-400 hover:underline mt-2 text-sm"
+                className="inline-block border border-neutral-200 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 font-semibold px-6 py-3 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
               >
                 Clear Filters
               </button>
             </div>
           ) : (
-            <div className="space-y-6">
-              {filteredRooms.map((room) => (
+            <div className="space-y-8">
+              {rooms.map((room) => (
                 <div
                   key={room._id}
-                  className="flex flex-col md:flex-row border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden hover:shadow-md transition-shadow"
+                  className="group flex flex-col lg:flex-row bg-white dark:bg-neutral-900 rounded-[2rem] border border-neutral-100 dark:border-neutral-800 overflow-hidden hover:shadow-2xl hover:shadow-black/5 dark:hover:shadow-black/40 transition-all duration-500"
                 >
+                  {/* Room Image */}
                   <div
-                    className="w-full md:w-1/3 h-48 md:h-auto bg-gray-200 dark:bg-gray-700 relative cursor-pointer group overflow-hidden"
+                    className="w-full lg:w-2/5 h-64 lg:h-auto relative cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800"
                     onClick={() => handleViewRoom(room)}
                   >
                     <img
                       src={
                         room.images?.[0] ||
-                        "https://via.placeholder.com/300x200"
+                        "https://via.placeholder.com/800x600"
                       }
                       alt={room.roomType}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex flex-col items-center justify-center opacity-0 group-hover:opacity-100">
-                      <span className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-bold px-3 py-1.5 rounded shadow-lg flex items-center gap-2">
-                        View Details
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300">
+                      <span className="bg-white/90 dark:bg-black/80 backdrop-blur text-neutral-900 dark:text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg">
+                        View Gallery
                       </span>
                     </div>
                   </div>
 
-                  <div className="w-full md:w-2/3 p-6 flex flex-col justify-between">
+                  {/* Room Details */}
+                  <div className="w-full lg:w-3/5 p-6 lg:p-8 flex flex-col justify-between">
                     <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-xl font-bold text-gray-800 dark:text-white">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4 gap-4">
+                        <h3 className="text-2xl font-serif text-neutral-900 dark:text-white leading-tight">
                           {room.roomType}
                         </h3>
-                        <div className="text-right">
-                          <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        <div className="sm:text-right">
+                          <span className="text-2xl font-medium text-neutral-900 dark:text-white">
                             ₹{room.pricePerNight}
                           </span>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 block">
-                            / night
+                          <span className="text-sm text-neutral-500 block">
+                            per night
                           </span>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-4">
+
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400 line-clamp-2 mb-6 font-light leading-relaxed">
                         {room.description}
                       </p>
 
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded border dark:border-gray-600">
-                          🛏️ {room.bedType}
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        <span className="text-[10px] font-bold uppercase tracking-widest bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 px-2.5 py-1.5 rounded-md">
+                          {room.bedType}
                         </span>
-                        <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded border dark:border-gray-600">
-                          👥 Max: {room.maxAdults} Adults
+                        <span className="text-[10px] font-bold uppercase tracking-widest bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 px-2.5 py-1.5 rounded-md">
+                          Max: {room.maxAdults} Guests
                         </span>
-                        {room.facilities?.slice(0, 3).map((fac, idx) => (
+                        {room.facilities?.slice(0, 2).map((fac, idx) => (
                           <span
                             key={idx}
-                            className="text-xs bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded border border-green-100 dark:border-green-800"
+                            className="text-[10px] font-bold uppercase tracking-widest bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-2.5 py-1.5 rounded-md flex items-center gap-1"
                           >
-                            ✓ {fac}
+                            <CheckCircleIcon className="w-3 h-3" /> {fac}
                           </span>
                         ))}
+                        {room.facilities?.length > 2 && (
+                          <span className="text-[10px] font-bold uppercase tracking-widest bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-600 dark:text-neutral-300 px-2.5 py-1.5 rounded-md">
+                            +{room.facilities.length - 2} More
+                          </span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="text-right mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <div className="mt-auto pt-6 border-t border-neutral-100 dark:border-neutral-800">
                       <button
                         onClick={() => handleOpenBooking(room)}
-                        className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium px-8 py-2.5 rounded-lg shadow-sm transition-colors cursor-pointer"
+                        className="w-full sm:w-auto sm:px-10 bg-black dark:bg-white text-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-200 font-semibold py-3.5 rounded-xl shadow-md transition-transform active:scale-95"
                       >
-                        Book Now
+                        Reserve Room
                       </button>
                     </div>
                   </div>
@@ -623,102 +668,119 @@ const HotelDetails = () => {
 
       {/* VIEW ROOM MODAL */}
       {showRoomModal && selectedRoom && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Room Profile
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+          <div className="bg-white dark:bg-neutral-900 rounded-[2rem] w-full max-w-4xl shadow-2xl border border-white/20 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center px-8 py-6 border-b border-neutral-100 dark:border-neutral-800">
+              <h2 className="text-2xl font-serif text-neutral-900 dark:text-white">
+                {selectedRoom.roomType}
               </h2>
               <button
                 onClick={() => setShowRoomModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer text-2xl"
+                className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
               >
-                &times;
+                <XMarkIcon className="w-6 h-6" />
               </button>
             </div>
-            <div className="px-6 py-5 flex flex-col md:flex-row gap-6 overflow-y-auto">
-              <div className="w-full md:w-1/2 flex flex-col gap-3">
-                <img
-                  src={activeModalImage}
-                  alt={selectedRoom.roomType}
-                  className="w-full h-64 object-cover rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-300"
-                />
+
+            <div className="px-8 py-6 flex flex-col lg:flex-row gap-8 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700">
+              {/* Image Gallery */}
+              <div className="w-full lg:w-1/2 flex flex-col gap-4">
+                <div className="w-full h-72 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                  <img
+                    src={activeModalImage}
+                    alt={selectedRoom.roomType}
+                    className="w-full h-full object-cover transition-opacity duration-300"
+                  />
+                </div>
                 {selectedRoom.images && selectedRoom.images.length > 1 && (
-                  <div className="grid grid-cols-4 gap-2">
+                  <div className="grid grid-cols-4 gap-3">
                     {selectedRoom.images.map((img, index) => (
-                      <img
+                      <div
                         key={index}
-                        src={img}
                         onClick={() => setActiveModalImage(img)}
-                        alt={`view ${index + 1}`}
-                        className={`w-full h-16 object-cover rounded-lg shadow-sm border-2 cursor-pointer transition-all duration-200 ${activeModalImage === img ? "border-blue-500 opacity-100" : "border-transparent opacity-60 hover:opacity-100 hover:border-gray-300 dark:hover:border-gray-500"}`}
-                      />
+                        className={`w-full h-20 rounded-xl overflow-hidden cursor-pointer border-2 transition-all ${
+                          activeModalImage === img
+                            ? "border-black dark:border-white opacity-100"
+                            : "border-transparent opacity-50 hover:opacity-100"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`view ${index}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
               </div>
-              <div className="w-full md:w-1/2 space-y-3 text-sm">
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Room Type:
-                  </span>{" "}
-                  <span className="font-semibold text-lg dark:text-white">
-                    {selectedRoom.roomType}
+
+              {/* Room Details Block */}
+              <div className="w-full lg:w-1/2 space-y-6 flex flex-col">
+                <div className="flex justify-between items-end pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                    Rate
                   </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Price:
-                  </span>{" "}
-                  <span className="font-bold text-blue-600 dark:text-blue-400">
-                    ₹{selectedRoom.pricePerNight} / night
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Bed Size:
-                  </span>{" "}
-                  <span className="dark:text-white">
-                    {selectedRoom.bedType}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500 dark:text-gray-400">
-                    Capacity:
-                  </span>{" "}
-                  <span className="dark:text-white">
-                    Up to {selectedRoom.maxAdults} Adults
+                  <span className="font-serif text-3xl text-neutral-900 dark:text-white">
+                    ₹{selectedRoom.pricePerNight}{" "}
+                    <span className="text-sm font-sans font-light text-neutral-500">
+                      / night
+                    </span>
                   </span>
                 </div>
 
+                <div className="grid grid-cols-2 gap-y-4 text-sm">
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">
+                      Bed Type
+                    </span>
+                    <span className="font-medium dark:text-white">
+                      {selectedRoom.bedType}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-1">
+                      Capacity
+                    </span>
+                    <span className="font-medium dark:text-white">
+                      Up to {selectedRoom.maxAdults} Adults
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-sm text-neutral-600 dark:text-neutral-400 font-light leading-relaxed">
+                  {selectedRoom.description}
+                </p>
+
                 {selectedRoom.facilities &&
                   selectedRoom.facilities.length > 0 && (
-                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                      <span className="text-gray-500 dark:text-gray-400 block mb-2">
-                        Facilities:
+                    <div className="pt-2">
+                      <span className="block text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-3">
+                        Amenities Included
                       </span>
                       <div className="flex flex-wrap gap-2">
                         {selectedRoom.facilities.map((facility, index) => (
                           <span
                             key={index}
-                            className="px-2.5 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs border border-green-100 dark:border-green-800"
+                            className="px-3 py-1.5 bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded-lg text-[11px] font-medium tracking-wide uppercase border border-neutral-200 dark:border-neutral-700 flex items-center gap-1.5"
                           >
-                            ✓ {facility}
+                            <CheckIcon className="w-3.5 h-3.5 text-neutral-400" />{" "}
+                            {facility}
                           </span>
                         ))}
                       </div>
                     </div>
                   )}
 
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                <div className="mt-auto pt-6 border-t border-neutral-100 dark:border-neutral-800">
                   <button
                     onClick={() => {
                       setShowRoomModal(false);
                       handleOpenBooking(selectedRoom);
                     }}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg shadow-sm transition-colors"
+                    className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg transition-transform active:scale-95"
                   >
-                    Book This Room
+                    Proceed to Booking
                   </button>
                 </div>
               </div>
@@ -729,182 +791,187 @@ const HotelDetails = () => {
 
       {/* BOOKING MODAL */}
       {showBookingModal && roomToBook && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Complete Booking
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+          <div className="bg-white dark:bg-neutral-900 rounded-[2rem] w-full max-w-lg shadow-2xl border border-white/20 dark:border-neutral-800 overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center px-8 py-6 border-b border-neutral-100 dark:border-neutral-800">
+              <h2 className="text-xl font-serif text-neutral-900 dark:text-white">
+                Reservation Details
               </h2>
               <button
                 onClick={() => setShowBookingModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer text-2xl"
+                className="text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
               >
-                &times;
+                <XMarkIcon className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="px-6 py-5 overflow-y-auto space-y-6">
-              {/* Room Summary */}
-              <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl flex justify-between items-center border border-gray-100 dark:border-gray-600">
-                <div>
-                  <h3 className="font-bold text-gray-800 dark:text-white">
-                    {roomToBook.roomType}
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    ₹{roomToBook.pricePerNight} / night
-                  </p>
-                </div>
-                <div className="w-16 h-12 bg-gray-200 rounded overflow-hidden">
+            <div className="px-8 py-6 overflow-y-auto space-y-8 scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700">
+              {/* Room Summary Header */}
+              <div className="flex gap-4 items-center">
+                <div className="w-20 h-20 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200 dark:border-neutral-700 flex-shrink-0">
                   <img
                     src={roomToBook.images?.[0]}
                     alt="room"
                     className="w-full h-full object-cover"
                   />
                 </div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">
+                    Selected Room
+                  </div>
+                  <h3 className="font-serif text-lg text-neutral-900 dark:text-white leading-tight">
+                    {roomToBook.roomType}
+                  </h3>
+                  <p className="text-sm font-medium text-neutral-500 mt-1">
+                    ₹{roomToBook.pricePerNight}{" "}
+                    <span className="font-light">/ night</span>
+                  </p>
+                </div>
               </div>
 
               {/* Date Pickers */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-neutral-100 dark:border-neutral-800">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Check-in Date
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                    Check-in
                   </label>
-                  <DatePicker
-                    selected={checkIn}
-                    onChange={(date) => {
-                      setCheckIn(date);
-                      if (checkOut && date >= checkOut) setCheckOut(null);
-                    }}
-                    selectsStart
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    minDate={today}
-                    filterDate={(date) => {
-                      const { bookedDates, pendingDates, tempDates } =
-                        getBlockedDateRanges(roomToBook._id);
-                      const dStr = date.toDateString();
-                      return (
-                        !bookedDates.includes(dStr) &&
-                        !pendingDates.includes(dStr) &&
-                        !tempDates.includes(dStr)
-                      );
-                    }}
-                    dayClassName={(date) => {
-                      const { bookedDates, pendingDates, tempDates } =
-                        getBlockedDateRanges(roomToBook._id);
-                      const dStr = date.toDateString();
-                      if (pendingDates.includes(dStr))
-                        return "react-datepicker__day--pending-disabled";
-                      if (tempDates.includes(dStr))
-                        return "react-datepicker__day--temp-disabled";
-                      if (bookedDates.includes(dStr))
-                        return "react-datepicker__day--booked-disabled";
-                      return undefined;
-                    }}
-                    placeholderText="Select Check-in"
-                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <DatePicker
+                      selected={checkIn}
+                      onChange={(date) => {
+                        setCheckIn(date);
+                        if (checkOut && date >= checkOut) setCheckOut(null);
+                      }}
+                      selectsStart
+                      startDate={checkIn}
+                      endDate={checkOut}
+                      minDate={today}
+                      filterDate={(date) => {
+                        const { bookedDates, pendingDates, tempDates } =
+                          getBlockedDateRanges(roomToBook._id);
+                        const dStr = date.toDateString();
+                        return (
+                          !bookedDates.includes(dStr) &&
+                          !pendingDates.includes(dStr) &&
+                          !tempDates.includes(dStr)
+                        );
+                      }}
+                      dayClassName={(date) => {
+                        const { bookedDates, pendingDates, tempDates } =
+                          getBlockedDateRanges(roomToBook._id);
+                        const dStr = date.toDateString();
+                        if (pendingDates.includes(dStr))
+                          return "react-datepicker__day--pending-disabled";
+                        if (tempDates.includes(dStr))
+                          return "react-datepicker__day--temp-disabled";
+                        if (bookedDates.includes(dStr))
+                          return "react-datepicker__day--booked-disabled";
+                        return undefined;
+                      }}
+                      placeholderText="Select Date"
+                      className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Check-out Date
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-2">
+                    Check-out
                   </label>
-                  <DatePicker
-                    selected={checkOut}
-                    onChange={(date) => setCheckOut(date)}
-                    selectsEnd
-                    startDate={checkIn}
-                    endDate={checkOut}
-                    minDate={
-                      checkIn ? new Date(checkIn.getTime() + 86400000) : today
-                    }
-                    filterDate={(date) => {
-                      const { bookedDates, pendingDates, tempDates } =
-                        getBlockedDateRanges(roomToBook._id);
-                      const dStr = date.toDateString();
-
-                      if (
-                        bookedDates.includes(dStr) ||
-                        pendingDates.includes(dStr) ||
-                        tempDates.includes(dStr)
-                      )
-                        return false;
-                      if (!checkIn) return true;
-
-                      return !bookedDates
-                        .concat(pendingDates, tempDates)
-                        .some((bStr) => {
-                          const bDate = new Date(bStr);
-                          return bDate > checkIn && bDate <= date;
-                        });
-                    }}
-                    dayClassName={(date) => {
-                      const { bookedDates, pendingDates, tempDates } =
-                        getBlockedDateRanges(roomToBook._id);
-                      const dStr = date.toDateString();
-                      if (pendingDates.includes(dStr))
-                        return "react-datepicker__day--pending-disabled";
-                      if (tempDates.includes(dStr))
-                        return "react-datepicker__day--temp-disabled";
-                      if (bookedDates.includes(dStr))
-                        return "react-datepicker__day--booked-disabled";
-                      return undefined;
-                    }}
-                    placeholderText="Select Check-out"
-                    className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded p-2.5 outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <div className="relative">
+                    <DatePicker
+                      selected={checkOut}
+                      onChange={(date) => setCheckOut(date)}
+                      selectsEnd
+                      startDate={checkIn}
+                      endDate={checkOut}
+                      minDate={
+                        checkIn ? new Date(checkIn.getTime() + 86400000) : today
+                      }
+                      filterDate={(date) => {
+                        const { bookedDates, pendingDates, tempDates } =
+                          getBlockedDateRanges(roomToBook._id);
+                        const dStr = date.toDateString();
+                        if (
+                          bookedDates.includes(dStr) ||
+                          pendingDates.includes(dStr) ||
+                          tempDates.includes(dStr)
+                        )
+                          return false;
+                        if (!checkIn) return true;
+                        return !bookedDates
+                          .concat(pendingDates, tempDates)
+                          .some((bStr) => {
+                            const bDate = new Date(bStr);
+                            return bDate > checkIn && bDate <= date;
+                          });
+                      }}
+                      dayClassName={(date) => {
+                        const { bookedDates, pendingDates, tempDates } =
+                          getBlockedDateRanges(roomToBook._id);
+                        const dStr = date.toDateString();
+                        if (pendingDates.includes(dStr))
+                          return "react-datepicker__day--pending-disabled";
+                        if (tempDates.includes(dStr))
+                          return "react-datepicker__day--temp-disabled";
+                        if (bookedDates.includes(dStr))
+                          return "react-datepicker__day--booked-disabled";
+                        return undefined;
+                      }}
+                      placeholderText="Select Date"
+                      className="w-full bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3.5 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Coupon Section */}
               {totalDays > 0 && (
-                <div className="space-y-3">
-                  <label className="block text-sm font-bold text-gray-800 dark:text-white">
-                    Available Coupons
+                <div className="pt-6 border-t border-neutral-100 dark:border-neutral-800">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-3">
+                    Offers & Promos
                   </label>
                   {coupons.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-                      No coupons available.
+                    <p className="text-sm font-light text-neutral-400 italic">
+                      No promotions available for these dates.
                     </p>
                   ) : (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                    <div className="space-y-3 max-h-40 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-200">
                       {coupons.map((coupon) => {
                         const isEligible =
                           Number(basePrice) >= Number(coupon.minPrice);
                         return (
                           <div
                             key={coupon._id}
-                            className={`flex justify-between items-center p-3 border rounded-lg ${
+                            className={`flex justify-between items-center p-4 rounded-xl border ${
                               isEligible
-                                ? "border-green-300 bg-green-50 dark:bg-green-900/20"
-                                : "border-gray-200 bg-gray-50 opacity-60"
+                                ? "border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900"
+                                : "border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950 opacity-60"
                             }`}
                           >
                             <div>
-                              <span className="font-bold text-gray-800 dark:text-white">
+                              <span className="font-bold font-mono text-sm tracking-wide text-neutral-900 dark:text-white">
                                 {coupon.code}
                               </span>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                              <p className="text-[11px] font-medium text-neutral-500 mt-0.5">
                                 {coupon.discount}% OFF (Min spend: ₹
                                 {coupon.minPrice})
                               </p>
                             </div>
-
                             <button
                               onClick={() => setAppliedCoupon(coupon)}
                               disabled={
                                 !isEligible || appliedCoupon?._id === coupon._id
                               }
-                              className={`text-xs px-3 py-1.5 rounded font-medium transition-colors ${
+                              className={`text-xs px-4 py-2 rounded-lg font-bold uppercase tracking-wider transition-colors ${
                                 !isEligible
-                                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                  ? "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 cursor-not-allowed"
                                   : appliedCoupon?._id === coupon._id
-                                    ? "bg-green-600 text-white"
-                                    : "bg-blue-600 text-white hover:bg-blue-700"
+                                    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                    : "bg-neutral-900 text-white dark:bg-white dark:text-black hover:opacity-80"
                               }`}
                             >
                               {!isEligible
-                                ? "Min ₹" + coupon.minPrice
+                                ? "Locked"
                                 : appliedCoupon?._id === coupon._id
                                   ? "Applied"
                                   : "Apply"}
@@ -919,38 +986,49 @@ const HotelDetails = () => {
 
               {/* Price Calculation */}
               {totalDays > 0 && (
-                <div className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700 space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                    <span>
-                      ₹{roomToBook.pricePerNight} x {totalDays} nights
+                <div className="bg-neutral-50 dark:bg-neutral-950 p-6 rounded-2xl border border-neutral-100 dark:border-neutral-800 space-y-4">
+                  <div className="flex justify-between text-sm text-neutral-600 dark:text-neutral-400">
+                    <span className="font-light">
+                      Base Rate ({totalDays} nights)
                     </span>
-                    <span>₹{basePrice}</span>
+                    <span className="font-medium text-neutral-900 dark:text-white">
+                      ₹{basePrice}
+                    </span>
                   </div>
 
                   {appliedCoupon && (
-                    <div className="flex justify-between text-sm text-green-600 font-medium">
-                      <span>Coupon Discount ({appliedCoupon.code})</span>
+                    <div className="flex justify-between text-sm text-green-600 dark:text-green-400 font-medium">
+                      <span>Promo Discount</span>
                       <span>- ₹{discountAmount}</span>
                     </div>
                   )}
 
-                  <div className="border-t border-gray-200 dark:border-gray-600 pt-2 flex justify-between font-bold text-lg text-gray-800 dark:text-white">
-                    <span>Total Amount</span>
-                    <span>₹{finalPrice}</span>
+                  <div className="border-t border-neutral-200 dark:border-neutral-800 pt-4 flex justify-between items-end">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+                      Total Payable
+                    </span>
+                    <span className="font-serif text-2xl text-neutral-900 dark:text-white">
+                      ₹{finalPrice}
+                    </span>
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+            <div className="p-6 lg:px-8 border-t border-neutral-100 dark:border-neutral-800">
               <button
                 onClick={handleConfirmBooking}
                 disabled={totalDays <= 0 || bookingLoading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
               >
-                {bookingLoading
-                  ? "Processing..."
-                  : `Confirm Booking • ₹${finalPrice || 0}`}
+                {bookingLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 dark:border-black/20 border-t-white dark:border-t-black rounded-full animate-spin"></div>
+                    Processing...
+                  </>
+                ) : (
+                  "Confirm Reservation"
+                )}
               </button>
             </div>
           </div>
