@@ -62,6 +62,7 @@ exports.createRoom = async (req, res) => {
 exports.getMyRooms = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
+    const { search } = req.query;
 
     const hotel = await Hotel.findOne({ email: req.user.email });
 
@@ -69,10 +70,21 @@ exports.getMyRooms = async (req, res) => {
       return res.status(404).json({ message: "Hotel profile not found" });
     }
 
-    const rooms = await Room.find({
+    let query = {
       hotelId: hotel._id,
       isDeleted,
-    }).sort({ createdAt: -1 });
+    };
+
+    if (search) {
+      query.$or = [
+        { roomType: { $regex: search, $options: "i" } },
+        { roomName: { $regex: search, $options: "i" } },
+        { roomNumber: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const rooms = await Room.find(query).sort({ createdAt: -1 });
 
     return res.status(200).json({
       hotelInfo: hotel,

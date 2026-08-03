@@ -163,15 +163,27 @@ exports.getUserBookings = async (req, res) => {
 exports.getHotelBookings = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { status } = req.query;
+    const { status, search } = req.query; 
 
     let query = { hotelId };
     if (status) query.status = status;
 
-    const bookings = await Booking.find(query)
+    let bookings = await Booking.find(query)
       .populate("userId", "name email phone")
       .populate("roomId", "roomType roomNumber")
       .sort({ checkInDate: 1 });
+
+    if (search) {
+      const searchTerm = search.toLowerCase();
+      
+      bookings = bookings.filter((booking) => {
+        const matchesName = String(booking.userId?.name || "").toLowerCase().includes(searchTerm);
+        const matchesEmail = String(booking.userId?.email || "").toLowerCase().includes(searchTerm);
+        const matchesRoom = String(booking.roomId?.roomType || "").toLowerCase().includes(searchTerm);
+
+        return matchesName || matchesEmail || matchesRoom;
+      });
+    }
 
     return res.status(200).json({
       message: "All Bookings for specific hotel fetched",

@@ -7,24 +7,43 @@ const Reservations = ({ hotelId }) => {
 
   const [filterView, setFilterView] = useState("pending");
 
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  const fetchBookings = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get(`/bookings/hotel/${hotelId}`, config);
-      setBookings(res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching bookings", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
-    if (hotelId) fetchBookings();
-  }, [hotelId]);
+    const fetchBookings = async () => {
+      setLoading(true);
+      try {
+        let url = `/bookings/hotel/${hotelId}`;
+        if (debouncedSearch) {
+          url += `?search=${debouncedSearch}`;
+        }
+
+        const res = await api.get(url, config);
+        setBookings(res.data.data || []);
+      } catch (error) {
+        console.error("Error fetching bookings", error);
+        setBookings([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (hotelId) {
+      fetchBookings();
+    }
+  }, [hotelId, debouncedSearch]);
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
@@ -55,60 +74,77 @@ const Reservations = ({ hotelId }) => {
     if (filterView === "arriving")
       return b.status === "confirmed" && checkInStr === today;
     if (filterView === "checked_in") return b.status === "checked-in";
-    return true;
+
+    return true; // For "all" tab
   });
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4 border-b border-gray-200 dark:border-gray-700 px-2 overflow-x-auto whitespace-nowrap">
-        <button
-          onClick={() => setFilterView("pending")}
-          className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
-            filterView === "pending"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Pending
-          <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 py-0.5 px-2 rounded-full text-xs font-bold">
-            {bookings.filter((b) => b.status === "pending").length}
-          </span>
-        </button>
+      {/* TABS + SEARCH ROW */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 pb-2 sm:pb-0">
+        {/* TABS (LEFT) */}
+        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full sm:w-auto">
+          <button
+            onClick={() => setFilterView("pending")}
+            className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
+              filterView === "pending"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            Pending
+            <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 py-0.5 px-2 rounded-full text-xs font-bold">
+              {bookings.filter((b) => b.status === "pending").length}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setFilterView("arriving")}
-          className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
-            filterView === "arriving"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Arriving
-        </button>
+          <button
+            onClick={() => setFilterView("arriving")}
+            className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
+              filterView === "arriving"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            Arriving
+          </button>
 
-        <button
-          onClick={() => setFilterView("checked_in")}
-          className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
-            filterView === "checked_in"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Checked In
-        </button>
+          <button
+            onClick={() => setFilterView("checked_in")}
+            className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
+              filterView === "checked_in"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            Checked In
+          </button>
 
-        <button
-          onClick={() => setFilterView("all")}
-          className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
-            filterView === "all"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          All
-        </button>
+          <button
+            onClick={() => setFilterView("all")}
+            className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
+              filterView === "all"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            All
+          </button>
+        </div>
+
+        {/* SEARCH INPUT (RIGHT) */}
+        <div className="w-full sm:w-80 mb-2">
+          <input
+            type="text"
+            placeholder="Search name, email, room..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          />
+        </div>
       </div>
 
+      {/* DATA TABLE */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -124,11 +160,24 @@ const Reservations = ({ hotelId }) => {
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700/60 text-sm">
               {loading ? (
                 <tr>
-                  <td
-                    colSpan="5"
-                    className="p-12 text-center text-gray-500 dark:text-gray-400"
-                  >
-                    Loading reservations...
+                  <td colSpan="5" className="p-16 text-center">
+                    {/* LOADER */}
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "-0.3s" }}
+                        ></div>
+                        <div
+                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "-0.15s" }}
+                        ></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                      </div>
+                      <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
+                        Finding reservations...
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : filteredBookings.length === 0 ? (
@@ -137,7 +186,7 @@ const Reservations = ({ hotelId }) => {
                     colSpan="5"
                     className="p-12 text-center text-gray-500 dark:text-gray-400"
                   >
-                    No bookings found for this category.
+                    No bookings found for this category or search.
                   </td>
                 </tr>
               ) : (
