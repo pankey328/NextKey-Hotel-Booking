@@ -36,8 +36,18 @@ exports.createState = async (req, res) => {
 exports.getAllStates = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
+    const { search } = req.query;
 
-    const states = await State.find({ isDeleted }).sort({
+    let query = { isDeleted };
+
+    if (search) {
+      query.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    const states = await State.find(query).sort({
       createdAt: -1,
     });
 

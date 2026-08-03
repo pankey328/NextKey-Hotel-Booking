@@ -114,14 +114,23 @@ exports.registerHotel = async (req, res) => {
   }
 };
 
-// Get Hotels (status/isDeleted)
+// Get All Hotels (status/isDeleted) VENDOR
 exports.getHotels = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
     const status = req.query.status;
+    const search = req.query.search; 
 
     let query = { isDeleted };
     if (status) query.status = status;
+
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { hotelType: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
 
     if (req.user && req.user.role === "vendor") {
       const vendorCompany = await VendorRequest.findOne({

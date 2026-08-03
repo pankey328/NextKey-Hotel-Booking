@@ -69,7 +69,7 @@ exports.createCity = async (req, res) => {
 // Get All Cities
 exports.getAllCities = async (req, res) => {
   try {
-    const { stateId, districtId } = req.query;
+    const { stateId, districtId, search } = req.query;
     const isDeleted = req.query.isDeleted === "true";
 
     let filter = {
@@ -83,6 +83,13 @@ exports.getAllCities = async (req, res) => {
     if (stateId) {
       filter.stateId = stateId;
     }
+
+   if (search) {
+     filter.name = {
+       $regex: search,
+       $options: "i",
+     };
+   }
 
     const cities = await City.find(filter)
       .populate("stateId", "name")

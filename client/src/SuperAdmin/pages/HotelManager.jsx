@@ -9,7 +9,9 @@ const HotelManager = () => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Modals
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -17,13 +19,30 @@ const HotelManager = () => {
 
   const token = localStorage.getItem("token");
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setSearchInput("");
+    setDebouncedSearch("");
+  }, [activeTab]);
+
   const fetchHotels = async () => {
     setLoading(true);
     try {
-      const url =
+      let url =
         activeTab === "bin"
           ? `/hotels?isDeleted=true`
           : `/hotels?isDeleted=false&status=${activeTab}`;
+
+      if (debouncedSearch) {
+        url += `&search=${debouncedSearch}`;
+      }
 
       const res = await api.get(url, {
         headers: {
@@ -33,6 +52,7 @@ const HotelManager = () => {
       setHotels(res.data.data);
     } catch (error) {
       console.error(error);
+      setHotels([]); 
     } finally {
       setLoading(false);
     }
@@ -40,7 +60,7 @@ const HotelManager = () => {
 
   useEffect(() => {
     fetchHotels();
-  }, [activeTab]);
+  }, [activeTab, debouncedSearch]);
 
   const handleApprove = async (id) => {
     if (!window.confirm("Approve this hotel and generate credentials?")) return;
@@ -154,21 +174,43 @@ const HotelManager = () => {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 sm:gap-6 border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base">
-        {["pending", "approved", "rejected", "bin"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer capitalize ${
-              activeTab === tab
-                ? "border-blue-600 text-blue-600 dark:text-blue-400"
-                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-            }`}
-          >
-            {tab === "bin" ? "Deleted Bin" : `${tab} Requests`}
-          </button>
-        ))}
+      {/* TABS & SEARCH ROW */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+        {/* TABS (LEFT) */}
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base w-full sm:w-auto">
+          {["pending", "approved", "rejected", "bin"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer capitalize ${
+                activeTab === tab
+                  ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                  : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+              }`}
+            >
+              {tab === "bin" ? "Deleted Bin" : `${tab} Requests`}
+            </button>
+          ))}
+        </div>
+
+        {/* SEARCH INPUT (RIGHT) */}
+        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by Hotel Name, Email, Type..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+            {/* Loading spinner */}
+            {searchInput !== debouncedSearch && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -196,17 +238,32 @@ const HotelManager = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="5" className="py-12 text-center text-gray-500">
-                  <div className="flex justify-center items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
+                <td colSpan="5" className="py-16 text-center">
+                  {/* LOADER */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "-0.3s" }}
+                      ></div>
+                      <div
+                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "-0.15s" }}
+                      ></div>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
+                      Loading hotels...
+                    </p>
                   </div>
                 </td>
               </tr>
             ) : hotels.length === 0 ? (
               <tr>
                 <td colSpan="5" className="py-12 text-center text-gray-500">
-                  No {activeTab} hotels found.
+                  {debouncedSearch
+                    ? `No matching hotels found for "${debouncedSearch}".`
+                    : `No ${activeTab === "bin" ? "deleted" : activeTab} hotels found.`}
                 </td>
               </tr>
             ) : (

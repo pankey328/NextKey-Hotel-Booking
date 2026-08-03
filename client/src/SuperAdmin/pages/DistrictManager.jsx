@@ -11,9 +11,24 @@ const DistrictManager = () => {
 
   const [loading, setLoading] = useState(false);
 
-  // View Modal
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setSearchInput("");
+    setDebouncedSearch("");
+  }, [activeTab, selectedStateId]);
 
   const fetchStates = async () => {
     try {
@@ -34,10 +49,15 @@ const DistrictManager = () => {
         url += `&stateId=${stateId}`;
       }
 
+      if (debouncedSearch) {
+        url += `&search=${debouncedSearch}`;
+      }
+
       const res = await api.get(url);
       setDistricts(res.data.data);
     } catch (error) {
       console.error("Error fetching districts:", error);
+      setDistricts([]);
     } finally {
       setLoading(false);
     }
@@ -46,11 +66,12 @@ const DistrictManager = () => {
   useEffect(() => {
     fetchStates();
     fetchDistricts();
-  }, [activeTab]);
+  }, [activeTab, debouncedSearch]);
 
   const handleStateChange = (e) => {
     const stateId = e.target.value;
     setSelectedStateId(stateId);
+
     fetchDistricts(stateId);
   };
 
@@ -147,29 +168,51 @@ const DistrictManager = () => {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 sm:gap-6 border-b border-gray-200 dark:border-gray-700 mb-6 text-sm sm:text-base">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
-            activeTab === "active"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 dark:text-gray-400"
-          }`}
-        >
-          Active Districts
-        </button>
+      {/* TABS & SEARCH ROW */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+        {/* TABS (LEFT) */}
+        <div className="flex gap-4 sm:gap-6 text-sm sm:text-base w-full sm:w-auto overflow-x-auto whitespace-nowrap">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
+              activeTab === "active"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 dark:text-gray-400"
+            }`}
+          >
+            Active Districts
+          </button>
 
-        <button
-          onClick={() => setActiveTab("inactive")}
-          className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
-            activeTab === "inactive"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 dark:text-gray-400"
-          }`}
-        >
-          Inactive Districts
-        </button>
+          <button
+            onClick={() => setActiveTab("inactive")}
+            className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
+              activeTab === "inactive"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 dark:text-gray-400"
+            }`}
+          >
+            Inactive Districts
+          </button>
+        </div>
+
+        {/* SEARCH INPUT (RIGHT) */}
+        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search district name..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+            {/* Loading spinner */}
+            {searchInput !== debouncedSearch && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -192,10 +235,23 @@ const DistrictManager = () => {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="3" className="py-12 text-center text-gray-500">
-                  <div className="flex justify-center items-center gap-2">
-                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                    Loading...
+                <td colSpan="3" className="py-16 text-center">
+                  {/* LOADER */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="flex items-center space-x-2">
+                      <div
+                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "-0.3s" }}
+                      ></div>
+                      <div
+                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                        style={{ animationDelay: "-0.15s" }}
+                      ></div>
+                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                    </div>
+                    <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
+                      Loading districts...
+                    </p>
                   </div>
                 </td>
               </tr>
@@ -205,7 +261,9 @@ const DistrictManager = () => {
                   colSpan="3"
                   className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base"
                 >
-                  {`No ${activeTab} districts found.`}
+                  {debouncedSearch
+                    ? `No matching districts found for "${debouncedSearch}".`
+                    : `No ${activeTab} districts found.`}
                 </td>
               </tr>
             ) : (

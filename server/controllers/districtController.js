@@ -57,7 +57,7 @@ exports.createDistrict = async (req, res) => {
 // Get All Districts
 exports.getAllDistricts = async (req, res) => {
   try {
-    const { stateId } = req.query;
+    const { stateId, search } = req.query;
     const isDeleted = req.query.isDeleted === "true";
 
     let filter = {
@@ -66,6 +66,13 @@ exports.getAllDistricts = async (req, res) => {
 
     if (stateId) {
       filter.stateId = stateId;
+    }
+
+    if (search) {
+      filter.name = {
+        $regex: search,
+        $options: "i",
+      };
     }
 
     const districts = await District.find(filter)

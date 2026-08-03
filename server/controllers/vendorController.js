@@ -61,8 +61,18 @@ exports.registerVendor = async (req, res) => {
 exports.getVendorRequests = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
+    const { status, search } = req.query;
+
     let query = { isDeleted };
-    if (req.query.status) query.status = req.query.status;
+    if (status) query.status = status;
+
+    if (search) {
+      query.$or = [
+        { companyName: { $regex: search, $options: "i" } },
+        { applicantName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
 
     const requests = await VendorRequest.find(query).sort({ createdAt: -1 });
 
