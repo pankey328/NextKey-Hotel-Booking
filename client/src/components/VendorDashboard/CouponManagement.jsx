@@ -12,6 +12,8 @@ const CouponManagement = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -27,10 +29,9 @@ const CouponManagement = () => {
 
   const token = localStorage.getItem("token");
 
-  const debouncedSearch = useDebounce(searchInput, 1000);
-
   useEffect(() => {
     setSearchInput("");
+    setSortBy("newest");
   }, [activeTab]);
 
   const fetchCoupons = async () => {
@@ -41,6 +42,10 @@ const CouponManagement = () => {
 
       if (debouncedSearch) {
         url += `&search=${debouncedSearch}`;
+      }
+
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
       }
 
       const res = await api.get(url, {
@@ -57,7 +62,7 @@ const CouponManagement = () => {
 
   useEffect(() => {
     fetchCoupons();
-  }, [hotelId, activeTab, debouncedSearch]);
+  }, [hotelId, activeTab, debouncedSearch, sortBy]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,7 +123,7 @@ const CouponManagement = () => {
         <div>
           <button
             onClick={() => navigate(-1)}
-            className="text-blue-600 hover:underline text-sm font-medium mb-2 block"
+            className="text-blue-600 hover:underline text-sm font-medium mb-2 block cursor-pointer"
           >
             &larr; Back to Dashboard
           </button>
@@ -141,16 +146,16 @@ const CouponManagement = () => {
             setIsEdit(false);
             setShowModal(true);
           }}
-          className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-5 py-2.5 rounded-lg shadow-sm font-medium"
+          className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-5 py-2.5 rounded-lg shadow-sm font-medium cursor-pointer"
         >
           + Add Coupon
         </button>
       </div>
 
-      {/* TABS & SEARCH ROW */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+      {/* TABS & CONTROLS ROW */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 lg:pb-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 sm:gap-6 text-sm sm:text-base w-full sm:w-auto overflow-x-auto whitespace-nowrap">
+        <div className="flex gap-4 sm:gap-6 text-sm sm:text-base w-full lg:w-auto overflow-x-auto whitespace-nowrap">
           <button
             onClick={() => setActiveTab("active")}
             className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
@@ -173,9 +178,24 @@ const CouponManagement = () => {
           </button>
         </div>
 
-        {/* SEARCH INPUT (RIGHT) */}
-        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
-          <div className="relative">
+        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 lg:px-0">
+          {/* SORT DROPDOWN */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="discount_desc">Discount: High to Low</option>
+            <option value="discount_asc">Discount: Low to High</option>
+            <option value="expiry_asc">Expiry: Expiring Soon</option>
+            <option value="expiry_desc">Expiry: Expiring Later</option>
+          </select>
+
+          {/* SEARCH INPUT */}
+          <div className="relative w-full sm:w-64">
             <input
               type="text"
               placeholder="Search by code..."
@@ -196,7 +216,7 @@ const CouponManagement = () => {
       {/* Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="w-full text-left min-w-[700px]">
             <thead className="bg-gray-100 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
               <tr>
                 <th className="p-4 font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs tracking-wider">
@@ -263,7 +283,11 @@ const CouponManagement = () => {
                       </span>
                     </td>
                     <td className="p-4 text-gray-600 dark:text-gray-300">
-                      {new Date(c.expiryDate).toLocaleDateString()}
+                      {new Date(c.expiryDate).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </td>
                     <td className="p-4">
                       {c.isDeleted ? (
@@ -272,11 +296,7 @@ const CouponManagement = () => {
                         </span>
                       ) : (
                         <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            c.status === "active"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${c.status === "active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
                         >
                           {c.status}
                         </span>
@@ -291,13 +311,13 @@ const CouponManagement = () => {
                               setIsEdit(true);
                               setShowModal(true);
                             }}
-                            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                            className="text-blue-600 hover:text-blue-800 font-medium text-sm cursor-pointer active:scale-95"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleAction("softDelete", c._id)}
-                            className="text-orange-500 hover:text-orange-700 font-medium text-sm"
+                            className="text-orange-500 hover:text-orange-700 font-medium text-sm cursor-pointer active:scale-95"
                           >
                             Delete
                           </button>
@@ -306,13 +326,13 @@ const CouponManagement = () => {
                         <>
                           <button
                             onClick={() => handleAction("restore", c._id)}
-                            className="text-green-600 hover:text-green-800 font-medium text-sm"
+                            className="text-green-600 hover:text-green-800 font-medium text-sm cursor-pointer active:scale-95"
                           >
                             Restore
                           </button>
                           <button
                             onClick={() => handleAction("hardDelete", c._id)}
-                            className="text-red-500 hover:text-red-700 font-medium text-sm"
+                            className="text-red-500 hover:text-red-700 font-medium text-sm cursor-pointer active:scale-95"
                           >
                             Hard Delete
                           </button>

@@ -76,7 +76,7 @@ exports.createCoupon = async (req, res) => {
 exports.getHotelCoupons = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { search } = req.query;
+    const { search, sortBy } = req.query;
 
     if (!hotelId) {
       return res.status(400).json({ message: "Hotel ID is required" });
@@ -100,9 +100,15 @@ exports.getHotelCoupons = async (req, res) => {
       };
     }
 
-    const coupons = await Coupon.find(filter).sort({
-      createdAt: -1,
-    });
+    let sortObj = { createdAt: -1 }; // default newest first
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "discount_desc") sortObj = { discount: -1 };
+    if (sortBy === "discount_asc") sortObj = { discount: 1 };
+    if (sortBy === "expiry_asc") sortObj = { expiryDate: 1 };
+    if (sortBy === "expiry_desc") sortObj = { expiryDate: -1 };
+
+    const coupons = await Coupon.find(filter).sort(sortObj);
 
     return res.status(200).json({ data: coupons });
   } catch (error) {

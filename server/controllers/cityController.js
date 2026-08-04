@@ -69,7 +69,7 @@ exports.createCity = async (req, res) => {
 // Get All Cities
 exports.getAllCities = async (req, res) => {
   try {
-    const { stateId, districtId, search } = req.query;
+    const { stateId, districtId, search, sortBy } = req.query;
     const isDeleted = req.query.isDeleted === "true";
 
     let filter = {
@@ -84,19 +84,23 @@ exports.getAllCities = async (req, res) => {
       filter.stateId = stateId;
     }
 
-   if (search) {
-     filter.name = {
-       $regex: search,
-       $options: "i",
-     };
-   }
+    if (search) {
+      filter.name = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    let sortObj = { createdAt: -1 };
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
+    if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
 
     const cities = await City.find(filter)
       .populate("stateId", "name")
       .populate("districtId", "name")
-      .sort({
-        createdAt: -1,
-      });
+      .sort(sortObj);
 
     return res.status(200).json({
       data: cities,

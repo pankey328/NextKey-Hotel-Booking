@@ -11,6 +11,8 @@ const HotelManager = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 1000);
+  const [sortBy, setSortBy] = useState("newest");
 
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -19,10 +21,9 @@ const HotelManager = () => {
 
   const token = localStorage.getItem("token");
 
-  const debouncedSearch = useDebounce(searchInput, 1000);
-
   useEffect(() => {
     setSearchInput("");
+    setSortBy("newest");
   }, [activeTab]);
 
   const fetchHotels = async () => {
@@ -35,6 +36,9 @@ const HotelManager = () => {
 
       if (debouncedSearch) {
         url += `&search=${debouncedSearch}`;
+      }
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
       }
 
       const res = await api.get(url, {
@@ -53,7 +57,7 @@ const HotelManager = () => {
 
   useEffect(() => {
     fetchHotels();
-  }, [activeTab, debouncedSearch]);
+  }, [activeTab, debouncedSearch, sortBy]);
 
   const handleApprove = async (id) => {
     if (!window.confirm("Approve this hotel and generate credentials?")) return;
@@ -167,10 +171,10 @@ const HotelManager = () => {
         </button>
       </div>
 
-      {/* TABS & SEARCH ROW */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+      {/* TABS & CONTROLS ROW */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 xl:pb-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base w-full sm:w-auto">
+        <div className="flex gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base w-full xl:w-auto border-b-0">
           {["pending", "approved", "rejected", "bin"].map((tab) => (
             <button
               key={tab}
@@ -186,9 +190,22 @@ const HotelManager = () => {
           ))}
         </div>
 
-        {/* SEARCH INPUT (RIGHT) */}
-        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
-          <div className="relative">
+        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto mb-2 px-2 sm:px-0">
+          {/* SORT DROPDOWN */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name_asc">Name: A to Z</option>
+            <option value="name_desc">Name: Z to A</option>
+          </select>
+
+          {/* SEARCH INPUT */}
+          <div className="relative w-full sm:w-64">
             <input
               type="text"
               placeholder="Search by Hotel Name, Email, Type..."

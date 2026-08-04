@@ -163,7 +163,7 @@ exports.getUserBookings = async (req, res) => {
 exports.getHotelBookings = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { status, search } = req.query; 
+    const { status, search, sortBy } = req.query; 
 
     let query = { hotelId };
     if (status) query.status = status;
@@ -171,7 +171,6 @@ exports.getHotelBookings = async (req, res) => {
     let bookings = await Booking.find(query)
       .populate("userId", "name email phone")
       .populate("roomId", "roomType roomNumber")
-      .sort({ checkInDate: 1 });
 
     if (search) {
       const searchTerm = search.toLowerCase();
@@ -183,6 +182,39 @@ exports.getHotelBookings = async (req, res) => {
 
         return matchesName || matchesEmail || matchesRoom;
       });
+    }
+
+    if (sortBy) {
+      bookings.sort((a, b) => {
+        if (sortBy === "price_desc")
+          return (b.finalPrice || 0) - (a.finalPrice || 0);
+        if (sortBy === "price_asc")
+          return (a.finalPrice || 0) - (b.finalPrice || 0);
+
+        if (sortBy === "name_asc") {
+          const nameA = a.userId?.name || "";
+          const nameB = b.userId?.name || "";
+          return nameA.localeCompare(nameB);
+        }
+        if (sortBy === "name_desc") {
+          const nameA = a.userId?.name || "";
+          const nameB = b.userId?.name || "";
+          return nameB.localeCompare(nameA);
+        }
+
+        if (sortBy === "oldest") {
+          return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        }
+        if (sortBy === "newest") {
+          return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        }
+
+        return 0;
+      });
+    } else {
+      bookings.sort(
+        (a, b) => new Date(a.checkInDate || 0) - new Date(b.checkInDate || 0),
+      );
     }
 
     return res.status(200).json({

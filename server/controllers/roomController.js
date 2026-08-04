@@ -62,7 +62,7 @@ exports.createRoom = async (req, res) => {
 exports.getMyRooms = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { search } = req.query;
+    const { search, sortBy } = req.query;
 
     const hotel = await Hotel.findOne({ email: req.user.email });
 
@@ -84,7 +84,13 @@ exports.getMyRooms = async (req, res) => {
       ];
     }
 
-    const rooms = await Room.find(query).sort({ createdAt: -1 });
+    let sortObj = { createdAt: -1 }; // BY DEFAULT ON NEWEST
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "price_desc") sortObj = { pricePerNight: -1 }; // High to Low
+    if (sortBy === "price_asc") sortObj = { pricePerNight: 1 }; // Low to High
+
+    const rooms = await Room.find(query).sort(sortObj);
 
     return res.status(200).json({
       hotelInfo: hotel,

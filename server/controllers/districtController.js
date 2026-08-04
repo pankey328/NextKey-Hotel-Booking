@@ -57,7 +57,7 @@ exports.createDistrict = async (req, res) => {
 // Get All Districts
 exports.getAllDistricts = async (req, res) => {
   try {
-    const { stateId, search } = req.query;
+    const { stateId, search, sortBy } = req.query;
     const isDeleted = req.query.isDeleted === "true";
 
     let filter = {
@@ -75,9 +75,15 @@ exports.getAllDistricts = async (req, res) => {
       };
     }
 
+    let sortObj = { createdAt: -1 };
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
+    if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
+
     const districts = await District.find(filter)
       .populate("stateId", "name")
-      .sort({ createdAt: -1 });
+      .sort(sortObj);
 
     return res.status(200).json({
       data: districts,

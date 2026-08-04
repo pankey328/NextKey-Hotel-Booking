@@ -9,6 +9,8 @@ const ManageRooms = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 1000);
+  const [sortBy, setSortBy] = useState("newest");
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -17,7 +19,10 @@ const ManageRooms = () => {
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  const debouncedSearch = useDebounce(searchInput, 1000);
+  useEffect(() => {
+    setSearchInput("");
+    setSortBy("newest");
+  }, [activeTab]);
 
   const fetchRooms = async () => {
     setLoading(true);
@@ -27,6 +32,9 @@ const ManageRooms = () => {
       let url = `/rooms/my-rooms?isDeleted=${isDeleted}`;
       if (debouncedSearch) {
         url += `&search=${debouncedSearch}`;
+      }
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
       }
 
       const res = await api.get(url, config);
@@ -41,7 +49,7 @@ const ManageRooms = () => {
 
   useEffect(() => {
     fetchRooms();
-  }, [activeTab, debouncedSearch]);
+  }, [activeTab, debouncedSearch, sortBy]);
 
   const handleAction = async (action, id) => {
     try {
@@ -82,10 +90,10 @@ const ManageRooms = () => {
 
   return (
     <div>
-      {/* TABS & SEARCH ROW */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+      {/* TABS & CONTROLS ROW */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 lg:pb-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full sm:w-auto">
+        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full lg:w-auto border-b-0">
           <button
             onClick={() => setActiveTab("active")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
@@ -108,12 +116,25 @@ const ManageRooms = () => {
           </button>
         </div>
 
-        {/* SEARCH BAR (RIGHT) */}
-        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
-          <div className="relative">
+        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 sm:px-0">
+          {/* SORT DROPDOWN */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="price_asc">Price: Low to High</option>
+          </select>
+
+          {/* SEARCH INPUT */}
+          <div className="relative w-full sm:w-64">
             <input
               type="text"
-              placeholder="Search by Room Type, Number, Name, Des..."
+              placeholder="Search Room Type, No., Name..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"

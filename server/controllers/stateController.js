@@ -36,7 +36,7 @@ exports.createState = async (req, res) => {
 exports.getAllStates = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { search } = req.query;
+    const { search, sortBy } = req.query;
 
     let query = { isDeleted };
 
@@ -47,9 +47,13 @@ exports.getAllStates = async (req, res) => {
       };
     }
 
-    const states = await State.find(query).sort({
-      createdAt: -1,
-    });
+    let sortObj = { createdAt: -1 }; 
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
+    if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
+
+    const states = await State.find(query).sort(sortObj);
 
     return res.status(200).json({
       data: states,

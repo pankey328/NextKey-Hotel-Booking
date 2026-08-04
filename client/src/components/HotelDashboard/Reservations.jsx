@@ -9,19 +9,28 @@ const Reservations = ({ hotelId }) => {
   const [filterView, setFilterView] = useState("pending");
 
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 1000);
+  const [sortBy, setSortBy] = useState("newest");
 
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  const debouncedSearch = useDebounce(searchInput, 1000);
+  useEffect(() => {
+    setSearchInput("");
+    setSortBy("newest");
+  }, [filterView]);
 
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        let url = `/bookings/hotel/${hotelId}`;
+        let url = `/bookings/hotel/${hotelId}?`;
+
         if (debouncedSearch) {
-          url += `?search=${debouncedSearch}`;
+          url += `search=${debouncedSearch}&`;
+        }
+        if (sortBy) {
+          url += `sortBy=${sortBy}&`;
         }
 
         const res = await api.get(url, config);
@@ -37,7 +46,7 @@ const Reservations = ({ hotelId }) => {
     if (hotelId) {
       fetchBookings();
     }
-  }, [hotelId, debouncedSearch]);
+  }, [hotelId, debouncedSearch, sortBy]);
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
@@ -74,10 +83,10 @@ const Reservations = ({ hotelId }) => {
 
   return (
     <div className="space-y-6">
-      {/* TABS + SEARCH ROW */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 pb-2 sm:pb-0">
+      {/* TABS & CONTROLS ROW */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 pb-2 lg:pb-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full sm:w-auto">
+        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full lg:w-auto border-b-0">
           <button
             onClick={() => setFilterView("pending")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
@@ -126,22 +135,45 @@ const Reservations = ({ hotelId }) => {
           </button>
         </div>
 
-        {/* SEARCH INPUT (RIGHT) */}
-        <div className="w-full sm:w-80 mb-2">
-          <input
-            type="text"
-            placeholder="Search name, email, room..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          />
+        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 sm:px-0">
+          {/* SORT DROPDOWN */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name_asc">Guest Name: A to Z</option>
+            <option value="name_desc">Guest Name: Z to A</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="price_asc">Price: Low to High</option>
+          </select>
+
+          {/* SEARCH INPUT */}
+          <div className="relative w-full sm:w-64">
+            <input
+              type="text"
+              placeholder="Search status, email, or room..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+            {/* Loading spinner */}
+            {searchInput !== debouncedSearch && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* DATA TABLE */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                 <th className="p-5 font-semibold">Guest</th>
@@ -245,7 +277,7 @@ const Reservations = ({ hotelId }) => {
                               onClick={() =>
                                 handleStatusUpdate(booking._id, "confirmed")
                               }
-                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 transition-colors"
+                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 transition-colors cursor-pointer active:scale-95"
                             >
                               Accept
                             </button>
@@ -253,7 +285,7 @@ const Reservations = ({ hotelId }) => {
                               onClick={() =>
                                 handleStatusUpdate(booking._id, "rejected")
                               }
-                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 transition-colors"
+                              className="px-3 py-1.5 text-xs font-medium rounded-md bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/30 dark:text-red-400 transition-colors cursor-pointer active:scale-95"
                             >
                               Reject
                             </button>
@@ -264,7 +296,7 @@ const Reservations = ({ hotelId }) => {
                             onClick={() =>
                               handleStatusUpdate(booking._id, "checked-in")
                             }
-                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 transition-colors"
+                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400 transition-colors cursor-pointer active:scale-95"
                           >
                             Check In
                           </button>
@@ -274,7 +306,7 @@ const Reservations = ({ hotelId }) => {
                             onClick={() =>
                               handleStatusUpdate(booking._id, "checked-out")
                             }
-                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 transition-colors"
+                            className="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 transition-colors cursor-pointer active:scale-95"
                           >
                             Check Out
                           </button>

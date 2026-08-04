@@ -13,14 +13,15 @@ const DistrictManager = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebounce(searchInput, 1000);
+  const [sortBy, setSortBy] = useState("newest");
 
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
-  const debouncedSearch = useDebounce(searchInput, 1000);
-
   useEffect(() => {
     setSearchInput("");
+    setSortBy("newest");
   }, [activeTab, selectedStateId]);
 
   const fetchStates = async () => {
@@ -41,9 +42,11 @@ const DistrictManager = () => {
       if (stateId) {
         url += `&stateId=${stateId}`;
       }
-
       if (debouncedSearch) {
         url += `&search=${debouncedSearch}`;
+      }
+      if (sortBy) {
+        url += `&sortBy=${sortBy}`;
       }
 
       const res = await api.get(url);
@@ -58,13 +61,15 @@ const DistrictManager = () => {
 
   useEffect(() => {
     fetchStates();
+  }, []);
+
+  useEffect(() => {
     fetchDistricts();
-  }, [activeTab, debouncedSearch]);
+  }, [activeTab, debouncedSearch, sortBy]);
 
   const handleStateChange = (e) => {
     const stateId = e.target.value;
     setSelectedStateId(stateId);
-
     fetchDistricts(stateId);
   };
 
@@ -161,15 +166,15 @@ const DistrictManager = () => {
         </div>
       </div>
 
-      {/* TABS & SEARCH ROW */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+      {/* TABS & CONTROLS ROW */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 lg:pb-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 sm:gap-6 text-sm sm:text-base w-full sm:w-auto overflow-x-auto whitespace-nowrap">
+        <div className="flex gap-4 sm:gap-6 text-sm sm:text-base w-full lg:w-auto overflow-x-auto whitespace-nowrap border-b-0">
           <button
             onClick={() => setActiveTab("active")}
             className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
               activeTab === "active"
-                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
                 : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 dark:text-gray-400"
             }`}
           >
@@ -180,7 +185,7 @@ const DistrictManager = () => {
             onClick={() => setActiveTab("inactive")}
             className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
               activeTab === "inactive"
-                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
                 : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300 dark:text-gray-400"
             }`}
           >
@@ -188,9 +193,22 @@ const DistrictManager = () => {
           </button>
         </div>
 
-        {/* SEARCH INPUT (RIGHT) */}
-        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
-          <div className="relative">
+        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 sm:px-0">
+          {/* SORT DROPDOWN */}
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="name_asc">Name: A to Z</option>
+            <option value="name_desc">Name: Z to A</option>
+          </select>
+
+          {/* SEARCH INPUT */}
+          <div className="relative w-full sm:w-64">
             <input
               type="text"
               placeholder="Search district name..."

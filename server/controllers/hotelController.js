@@ -118,8 +118,7 @@ exports.registerHotel = async (req, res) => {
 exports.getHotels = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const status = req.query.status;
-    const search = req.query.search; 
+    const { status, search, sortBy } = req.query;
 
     let query = { isDeleted };
     if (status) query.status = status;
@@ -145,12 +144,18 @@ exports.getHotels = async (req, res) => {
       query.vendorId = vendorCompany._id;
     }
 
+    let sortObj = { createdAt: -1 }; // default newest
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
+    if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
+
     const hotels = await Hotel.find(query)
       .populate("stateId", "name")
       .populate("districtId", "name")
       .populate("cityId", "name")
       .populate("vendorId", "companyName applicantName email phone")
-      .sort({ createdAt: -1 });
+      .sort(sortObj);
 
     return res.status(200).json({
       message: "All related Hotels Info fetched",

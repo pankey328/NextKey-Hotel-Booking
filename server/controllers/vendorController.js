@@ -61,7 +61,7 @@ exports.registerVendor = async (req, res) => {
 exports.getVendorRequests = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { status, search } = req.query;
+    const { status, search, sortBy } = req.query;
 
     let query = { isDeleted };
     if (status) query.status = status;
@@ -74,7 +74,15 @@ exports.getVendorRequests = async (req, res) => {
       ];
     }
 
-    const requests = await VendorRequest.find(query).sort({ createdAt: -1 });
+    let sortObj = { createdAt: -1 };
+
+    if (sortBy === "oldest") sortObj = { createdAt: 1 };
+    if (sortBy === "company_asc") sortObj = { companyName: 1 };
+    if (sortBy === "company_desc") sortObj = { companyName: -1 };
+    if (sortBy === "applicant_asc") sortObj = { applicantName: 1 };
+    if (sortBy === "applicant_desc") sortObj = { applicantName: -1 };
+
+    const requests = await VendorRequest.find(query).sort(sortObj);
 
     return res
       .status(200)
