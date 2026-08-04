@@ -16,7 +16,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError({}); // Clear errors
+    setError({});
 
     try {
       let obj = {};
@@ -63,7 +63,6 @@ const Login = () => {
       }
     } catch (error) {
       console.log(error.response?.data?.message || error.message);
-      alert("Login Failed");
       setError({
         form: error.response?.data?.message || "Login Failed",
       });
@@ -75,16 +74,12 @@ const Login = () => {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
-      console.log("Google User:", user);
-
       const res = await api.post("/auth/google-login", {
         name: user.displayName,
         email: user.email,
         photo: user.photoURL,
         uid: user.uid,
       });
-
-      alert("Google Login Successful");
 
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
@@ -108,7 +103,6 @@ const Login = () => {
       }
     } catch (error) {
       console.log(error);
-      alert("Google Login Failed");
       setError({
         form: error.response?.data?.message || "Google Login Failed",
       });
@@ -116,72 +110,114 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-colors duration-300">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-transparent dark:border-gray-700 transition-colors duration-300">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6 transition-colors">
-          Welcome Back
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-neutral-950 p-4 transition-colors duration-500 font-sans">
+      <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-[2rem] shadow-2xl shadow-black/5 dark:shadow-black/40 p-8 sm:p-10 border border-neutral-100 dark:border-neutral-800 transition-colors duration-500">
+        {/* Brand & Heading */}
+        <div className="text-center mb-8">
+          <Link
+            to="/"
+            className="inline-block font-serif text-2xl tracking-tight text-neutral-900 dark:text-white mb-6 hover:opacity-80 transition-opacity"
+          >
+            MyApp<span className="text-neutral-400">.</span>
+          </Link>
+          <h2 className="text-3xl font-serif text-neutral-900 dark:text-white tracking-tight">
+            Welcome Back
+          </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 font-light">
+            Enter your details to access your account.
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          {/* Email Input */}
           <div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+              Email Address
+            </label>
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="name@example.com"
               value={loginForm.email}
               onChange={(e) =>
                 setLoginForm({ ...loginForm, email: e.target.value })
               }
-              className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-4 transition duration-200 ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.email
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
-                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-200 dark:focus:ring-blue-800"
+                  ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
               }`}
             />
             {error.email && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
                 {error.email}
               </p>
             )}
           </div>
 
+          {/* Password Input */}
           <div>
+            <div className="flex justify-between items-center mb-2 mx-1">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                Password
+              </label>
+              <Link
+                to="/forget-password"
+                className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+              >
+                Forgot?
+              </Link>
+            </div>
             <input
               type="password"
-              placeholder="Enter your password"
+              placeholder="••••••••"
               value={loginForm.password}
               onChange={(e) =>
                 setLoginForm({ ...loginForm, password: e.target.value })
               }
-              className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-4 transition duration-200 ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.password
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
-                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-200 dark:focus:ring-blue-800"
+                  ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
               }`}
             />
             {error.password && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
                 {error.password}
               </p>
             )}
           </div>
 
+          {/* Global Form Error */}
           {error.form && (
-            <p className="text-red-500 dark:text-red-400 text-sm text-center mt-2">
-              {error.form}
-            </p>
+            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 text-center">
+              <p className="text-red-600 dark:text-red-400 text-sm font-medium">
+                {error.form}
+              </p>
+            </div>
           )}
 
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition duration-200"
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 mt-2"
           >
-            Login
+            Sign In
           </button>
 
+          {/* Divider */}
+          <div className="flex items-center gap-3 py-2">
+            <div className="h-px w-full bg-neutral-200 dark:bg-neutral-800"></div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 whitespace-nowrap">
+              Or continue with
+            </span>
+            <div className="h-px w-full bg-neutral-200 dark:bg-neutral-800"></div>
+          </div>
+
+          {/* Google Login Button */}
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition duration-200 mt-3"
+            className="w-full bg-transparent border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold py-3.5 rounded-xl flex items-center justify-center gap-3 transition-colors"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -201,22 +237,20 @@ const Login = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            Google
           </button>
 
-          <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm transition-colors">
-            <Link
-              to="/forget-password"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
-            >
-              Forgot Password?
-            </Link>
-            <Link
-              to="/signup"
-              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
-            >
-              Sign Up
-            </Link>
+          {/* Footer Link */}
+          <div className="text-center pt-2">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+              Don't have an account?{" "}
+              <Link
+                to="/signup"
+                className="font-semibold text-neutral-900 dark:text-white hover:underline transition-all"
+              >
+                Sign Up
+              </Link>
+            </p>
           </div>
         </form>
       </div>

@@ -16,7 +16,7 @@ const ResetPassword = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError({}); 
+    setError({});
 
     let obj = {};
     if (!form.email.trim()) obj.email = "Email is required";
@@ -55,37 +55,51 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4 transition-colors duration-300">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 border border-transparent dark:border-gray-700 transition-colors duration-300">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white text-center mb-6 transition-colors">
-          Reset Password
-        </h2>
+    <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-neutral-950 p-4 transition-colors duration-500 font-sans">
+      <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-[2rem] shadow-2xl shadow-black/5 dark:shadow-black/40 p-8 sm:p-10 border border-neutral-100 dark:border-neutral-800 transition-colors duration-500">
+        {/* Brand & Heading */}
+        <div className="text-center mb-8">
+          <Link
+            to="/"
+            className="inline-block font-serif text-2xl tracking-tight text-neutral-900 dark:text-white mb-6 hover:opacity-80 transition-opacity"
+          >
+            MyApp<span className="text-neutral-400">.</span>
+          </Link>
+          <h2 className="text-3xl font-serif text-neutral-900 dark:text-white tracking-tight">
+            Update Password
+          </h2>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 font-light">
+            Secure your account with a new password.
+          </p>
+        </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+          {/* Email Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1 transition-colors">
-              Email
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+              Email Address
             </label>
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="name@example.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-4 transition duration-200 ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.email
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
-                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-200 dark:focus:ring-blue-800"
+                  ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
               }`}
             />
             {error.email && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
                 {error.email}
               </p>
             )}
           </div>
 
+          {/* Current Password Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1 transition-colors">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
               Current Password
             </label>
             <input
@@ -93,21 +107,22 @@ const ResetPassword = () => {
               placeholder="Enter current password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-4 transition duration-200 ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.password
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
-                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-200 dark:focus:ring-blue-800"
+                  ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
               }`}
             />
             {error.password && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
                 {error.password}
               </p>
             )}
           </div>
 
+          {/* New Password Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1 transition-colors">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
               New Password
             </label>
             <input
@@ -117,22 +132,23 @@ const ResetPassword = () => {
               onChange={(e) =>
                 setForm({ ...form, newpassword: e.target.value })
               }
-              className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-4 transition duration-200 ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.newpassword
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
-                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-200 dark:focus:ring-blue-800"
+                  ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
               }`}
             />
             {error.newpassword && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
                 {error.newpassword}
               </p>
             )}
           </div>
 
+          {/* Confirm Password Input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 ml-1 transition-colors">
-              Confirm Password
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+              Confirm New Password
             </label>
             <input
               type="password"
@@ -144,14 +160,14 @@ const ResetPassword = () => {
                   confirmpassword: e.target.value,
                 })
               }
-              className={`w-full px-4 py-3 rounded-lg border bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-4 transition duration-200 ${
+              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.confirmpassword
-                  ? "border-red-500 dark:border-red-500 focus:ring-red-200 dark:focus:ring-red-800"
-                  : "border-gray-300 dark:border-gray-600 focus:ring-blue-200 dark:focus:ring-blue-800"
+                  ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
               }`}
             />
             {error.confirmpassword && (
-              <p className="text-red-500 dark:text-red-400 text-sm mt-1 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
                 {error.confirmpassword}
               </p>
             )}
@@ -159,16 +175,29 @@ const ResetPassword = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold py-3 rounded-lg transition duration-200 mt-6"
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 mt-6"
           >
-            Reset Password
+            Save Password
           </button>
 
-          <div className="text-center mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 text-sm transition-colors">
+          <div className="text-center mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800 text-sm">
             <Link
-              to="/home"
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 font-medium transition-colors"
+              to="/"
+              className="inline-flex items-center justify-center gap-2 text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
             >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
               Cancel and return
             </Link>
           </div>
