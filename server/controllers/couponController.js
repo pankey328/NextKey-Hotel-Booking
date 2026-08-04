@@ -76,6 +76,7 @@ exports.createCoupon = async (req, res) => {
 exports.getHotelCoupons = async (req, res) => {
   try {
     const { hotelId } = req.params;
+    const { search } = req.query;
 
     if (!hotelId) {
       return res.status(400).json({ message: "Hotel ID is required" });
@@ -90,8 +91,16 @@ exports.getHotelCoupons = async (req, res) => {
     }
 
     const isDeleted = req.query.isDeleted === "true";
+    let filter = { hotelId, isDeleted };
 
-    const coupons = await Coupon.find({ hotelId, isDeleted }).sort({
+    if (search) {
+      filter.code = {
+        $regex: search,
+        $options: "i",
+      };
+    }
+
+    const coupons = await Coupon.find(filter).sort({
       createdAt: -1,
     });
 

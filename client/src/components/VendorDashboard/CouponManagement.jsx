@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const CouponManagement = () => {
   const { hotelId } = useParams();
@@ -9,6 +10,8 @@ const CouponManagement = () => {
   const [activeTab, setActiveTab] = useState("active");
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [searchInput, setSearchInput] = useState("");
 
   const [showModal, setShowModal] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -24,16 +27,29 @@ const CouponManagement = () => {
 
   const token = localStorage.getItem("token");
 
+  const debouncedSearch = useDebounce(searchInput, 1000);
+
+  useEffect(() => {
+    setSearchInput("");
+  }, [activeTab]);
+
   const fetchCoupons = async () => {
     setLoading(true);
     try {
       const isDeleted = activeTab === "trash";
-      const res = await api.get(`/coupons/${hotelId}?isDeleted=${isDeleted}`, {
+      let url = `/coupons/${hotelId}?isDeleted=${isDeleted}`;
+
+      if (debouncedSearch) {
+        url += `&search=${debouncedSearch}`;
+      }
+
+      const res = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCoupons(res.data.data);
     } catch (err) {
       alert(err.response?.data?.message || "Error fetching coupons");
+      setCoupons([]);
     } finally {
       setLoading(false);
     }
@@ -41,7 +57,7 @@ const CouponManagement = () => {
 
   useEffect(() => {
     fetchCoupons();
-  }, [hotelId, activeTab]);
+  }, [hotelId, activeTab, debouncedSearch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -131,28 +147,50 @@ const CouponManagement = () => {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-4 sm:gap-6 border-b border-gray-200 dark:border-gray-700 mb-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
-            activeTab === "active"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Active Coupons
-        </button>
-        <button
-          onClick={() => setActiveTab("trash")}
-          className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
-            activeTab === "trash"
-              ? "border-blue-600 text-blue-600 dark:text-blue-400"
-              : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-          }`}
-        >
-          Trash (Deleted)
-        </button>
+      {/* TABS & SEARCH ROW */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 sm:pb-0">
+        {/* TABS (LEFT) */}
+        <div className="flex gap-4 sm:gap-6 text-sm sm:text-base w-full sm:w-auto overflow-x-auto whitespace-nowrap">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
+              activeTab === "active"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            Active Coupons
+          </button>
+          <button
+            onClick={() => setActiveTab("trash")}
+            className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer ${
+              activeTab === "trash"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            Trash (Deleted)
+          </button>
+        </div>
+
+        {/* SEARCH INPUT (RIGHT) */}
+        <div className="w-full sm:w-80 mb-2 px-2 sm:px-0">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by code..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+            />
+            {/* Loading spinner */}
+            {searchInput !== debouncedSearch && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -181,21 +219,39 @@ const CouponManagement = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
-                    Loading coupons...
+                  <td colSpan="5" className="p-16 text-center">
+                    {/* LOADER */}
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "-0.3s" }}
+                        ></div>
+                        <div
+                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "-0.15s" }}
+                        ></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                      </div>
+                      <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
+                        Loading coupons...
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : coupons.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-gray-500">
-                    No {activeTab} coupons found.
+                  <td colSpan="5" className="p-12 text-center text-gray-500">
+                    {debouncedSearch
+                      ? `No matching coupons found for "${debouncedSearch}".`
+                      : `No ${activeTab} coupons found.`}
                   </td>
                 </tr>
               ) : (
                 coupons.map((c) => (
                   <tr
                     key={c._id}
-                    className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750"
+                    className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
                   >
                     <td className="p-4 font-bold text-gray-800 dark:text-white uppercase tracking-wide">
                       {c.code}
@@ -216,7 +272,11 @@ const CouponManagement = () => {
                         </span>
                       ) : (
                         <span
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${c.status === "active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                            c.status === "active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
                         >
                           {c.status}
                         </span>
@@ -420,13 +480,13 @@ const CouponManagement = () => {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium"
+                className="px-5 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors font-medium cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-sm cursor-pointer"
               >
                 {isEdit ? "Update Coupon" : "Save Coupon"}
               </button>
