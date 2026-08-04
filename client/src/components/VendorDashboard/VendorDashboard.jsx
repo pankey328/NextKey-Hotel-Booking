@@ -5,6 +5,7 @@ import api from "../../api";
 import VendorDashboardOverview from "./VendorDashboardOverview";
 import Reservations from "../HotelDashboard/Reservations";
 import HotelDashboardOverview from "../HotelDashboard/HotelDashboardOverview";
+import useDebounce from "../../hooks/useDebounce";
 
 const SpecificHotelOverview = ({ hotelId, myHotels }) => {
   const [rooms, setRooms] = useState([]);
@@ -45,7 +46,6 @@ const VendorDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null);
@@ -53,17 +53,10 @@ const VendorDashboard = () => {
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   useEffect(() => {
     setSearchInput("");
-    setDebouncedSearch("");
   }, [activeTab]);
 
   const fetchMyHotels = async () => {

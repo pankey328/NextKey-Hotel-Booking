@@ -11,6 +11,7 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import useDebounce from "../hooks/useDebounce";
 
 const roomFacilitiesList = [
   "Wi-Fi",
@@ -122,12 +123,11 @@ const HotelDetails = () => {
     }
   };
 
+  const debouncedSearch = useDebounce(roomFilters.search, 1000);
+
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchRooms();
-    }, 1000);
-    return () => clearTimeout(delayDebounceFn);
-  }, [roomFilters.search]);
+    fetchRooms();
+  }, [debouncedSearch]);
 
   // date, price, coupon
   useEffect(() => {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const Reservations = ({ hotelId }) => {
   const [bookings, setBookings] = useState([]);
@@ -8,18 +9,11 @@ const Reservations = ({ hotelId }) => {
   const [filterView, setFilterView] = useState("pending");
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   useEffect(() => {
     const fetchBookings = async () => {

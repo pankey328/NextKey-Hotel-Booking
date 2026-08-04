@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const HotelManager = () => {
   const navigate = useNavigate();
@@ -10,7 +11,6 @@ const HotelManager = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -19,17 +19,10 @@ const HotelManager = () => {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   useEffect(() => {
     setSearchInput("");
-    setDebouncedSearch("");
   }, [activeTab]);
 
   const fetchHotels = async () => {
@@ -52,7 +45,7 @@ const HotelManager = () => {
       setHotels(res.data.data);
     } catch (error) {
       console.error(error);
-      setHotels([]); 
+      setHotels([]);
     } finally {
       setLoading(false);
     }

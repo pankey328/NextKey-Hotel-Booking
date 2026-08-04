@@ -7,6 +7,7 @@ import {
   StarIcon as StarOutline,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
+import useDebounce from "../hooks/useDebounce";
 
 const hotelFeaturesList = [
   "Parking",
@@ -120,13 +121,11 @@ const SearchHotels = () => {
     }
   };
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      fetchHotels();
-    }, 1000);
+  const debouncedSearch = useDebounce(filters.search, 1000);
 
-    return () => clearTimeout(delayDebounceFn);
-  }, [filters.search]);
+  useEffect(() => {
+    fetchHotels();
+  }, [debouncedSearch]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;

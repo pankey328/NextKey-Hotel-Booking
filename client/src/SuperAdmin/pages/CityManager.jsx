@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const CityManager = () => {
   const [activeTab, setActiveTab] = useState("active");
@@ -15,22 +16,14 @@ const CityManager = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [selectedCity, setSelectedCity] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   useEffect(() => {
     setSearchInput("");
-    setDebouncedSearch("");
   }, [activeTab, selectedStateId, selectedDistrictId]);
 
   const fetchStates = async () => {

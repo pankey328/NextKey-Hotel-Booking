@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const ManageRooms = () => {
   const [activeTab, setActiveTab] = useState("active");
@@ -8,7 +9,6 @@ const ManageRooms = () => {
   const [loading, setLoading] = useState(true);
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -17,13 +17,7 @@ const ManageRooms = () => {
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   const fetchRooms = async () => {
     setLoading(true);

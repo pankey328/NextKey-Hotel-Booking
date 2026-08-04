@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const StateManager = () => {
   const [activeTab, setActiveTab] = useState("active");
@@ -8,22 +9,14 @@ const StateManager = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [selectedState, setSelectedState] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   useEffect(() => {
     setSearchInput("");
-    setDebouncedSearch("");
   }, [activeTab]);
 
   const fetchStates = async () => {
@@ -40,7 +33,7 @@ const StateManager = () => {
       setStates(res.data.data);
     } catch (error) {
       alert(error.response?.data?.message || "Failed to fetch states.");
-      setStates([]); 
+      setStates([]);
     } finally {
       setLoading(false);
     }

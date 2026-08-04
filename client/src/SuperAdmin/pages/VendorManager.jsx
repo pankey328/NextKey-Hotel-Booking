@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api";
+import useDebounce from "../../hooks/useDebounce";
 
 const VendorManager = () => {
   const navigate = useNavigate();
@@ -10,7 +11,6 @@ const VendorManager = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -19,17 +19,10 @@ const VendorManager = () => {
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+  const debouncedSearch = useDebounce(searchInput, 1000);
 
   useEffect(() => {
     setSearchInput("");
-    setDebouncedSearch("");
   }, [activeTab]);
 
   const fetchVendors = async () => {
