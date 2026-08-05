@@ -6,13 +6,21 @@ import useDebounce from "../../hooks/useDebounce";
 const VendorManager = () => {
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState("pending");
+  const [activeTab, setActiveTab] = useState("approved");
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 1000);
   const [sortBy, setSortBy] = useState("newest");
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [dateRange, setDateRange] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -22,8 +30,32 @@ const VendorManager = () => {
   const token = localStorage.getItem("token");
 
   useEffect(() => {
+    if (dateRange === "all") {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    const end = new Date();
+    let start = new Date();
+
+    if (dateRange === "7days") start.setDate(end.getDate() - 7);
+    if (dateRange === "30days") start.setDate(end.getDate() - 30);
+    if (dateRange === "year") start.setFullYear(end.getFullYear() - 1);
+
+    setStartDate(start.toISOString());
+    setEndDate(end.toISOString());
+  }, [dateRange]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, sortBy, limit, dateRange]);
+
+  useEffect(() => {
     setSearchInput("");
     setSortBy("newest");
+    setDateRange("all");
+    setPage(1);
   }, [activeTab]);
 
   const fetchVendors = async () => {
@@ -34,17 +66,25 @@ const VendorManager = () => {
           ? `/vendors?isDeleted=true`
           : `/vendors?isDeleted=false&status=${activeTab}`;
 
-      if (debouncedSearch) {
-        url += `&search=${debouncedSearch}`;
-      }
-      if (sortBy) {
-        url += `&sortBy=${sortBy}`;
-      }
+      url += `&page=${page}&limit=${limit}`;
+
+      if (debouncedSearch) url += `&search=${debouncedSearch}`;
+      if (sortBy) url += `&sortBy=${sortBy}`;
+      if (startDate && endDate)
+        url += `&startDate=${startDate}&endDate=${endDate}`;
 
       const res = await api.get(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setVendors(res.data.data || res.data);
+      
+      const newTotalPages = res.data.totalPages || 1;
+      setTotalPages(newTotalPages);
+
+      // Auto-navigate to the previous page if we delete the last item on the current page
+      if (page > newTotalPages && page > 1) {
+        setPage(newTotalPages);
+      }
     } catch (error) {
       console.log(error);
       setVendors([]);
@@ -55,7 +95,7 @@ const VendorManager = () => {
 
   useEffect(() => {
     fetchVendors();
-  }, [activeTab, debouncedSearch, sortBy]);
+  }, [activeTab, debouncedSearch, sortBy, page, limit, startDate, endDate]);
 
   const handleApprove = async (id) => {
     try {
@@ -136,7 +176,7 @@ const VendorManager = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 transition-colors duration-300">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 transition-colors duration-300 flex flex-col h-full">
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
@@ -172,7 +212,7 @@ const VendorManager = () => {
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 lg:pb-0">
         {/* TABS (LEFT) */}
         <div className="flex gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base w-full lg:w-auto border-b-0">
-          {["pending", "approved", "rejected", "bin"].map((tab) => (
+          {["approved", "pending", "rejected", "bin"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -187,8 +227,20 @@ const VendorManager = () => {
           ))}
         </div>
 
-        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
+        {/* CONTROLS (DATE, SORT, SEARCH) - RIGHT */}
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 sm:px-0">
+          {/* DATE RANGE DROPDOWN */}
+          <select
+            value={dateRange}
+            onChange={(e) => setDateRange(e.target.value)}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="year">Last Year</option>
+          </select>
+
           {/* SORT DROPDOWN */}
           <select
             value={sortBy}
@@ -204,7 +256,7 @@ const VendorManager = () => {
           </select>
 
           {/* SEARCH INPUT */}
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full sm:w-64">
             <input
               type="text"
               placeholder="Search company, applicant, email..."
@@ -222,141 +274,195 @@ const VendorManager = () => {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-700/60">
-        <table className="w-full text-left border-collapse min-w-[900px]">
-          <thead>
-            <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-              <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                Company Info
-              </th>
-              <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                Applicant
-              </th>
-              <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                Contact
-              </th>
-              <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold text-right">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="4" className="py-16 text-center">
-                  {/* LOADER */}
-                  <div className="flex flex-col items-center justify-center">
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "-0.3s" }}
-                      ></div>
-                      <div
-                        className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
-                        style={{ animationDelay: "-0.15s" }}
-                      ></div>
-                      <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
-                      Loading vendors...
-                    </p>
-                  </div>
-                </td>
+      {/* Table Container */}
+      <div className="overflow-hidden rounded-lg border border-gray-100 dark:border-gray-700/60 flex flex-col flex-1">
+        <div className="overflow-x-auto flex-1">
+          <table className="w-full text-left border-collapse min-w-[900px]">
+            <thead>
+              <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
+                  Company Info
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
+                  Applicant
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
+                  Contact
+                </th>
+                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold text-right">
+                  Actions
+                </th>
               </tr>
-            ) : vendors.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="py-12 text-center text-gray-500">
-                  {debouncedSearch
-                    ? `No matching vendors found for "${debouncedSearch}".`
-                    : `No ${activeTab === "bin" ? "deleted" : activeTab} vendor requests found.`}
-                </td>
-              </tr>
-            ) : (
-              vendors.map((vendor) => (
-                <tr
-                  key={vendor._id}
-                  className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                >
-                  <td className="py-3 px-4">
-                    <div className="font-medium text-gray-800 dark:text-gray-200">
-                      {vendor.companyName}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="py-16 text-center">
+                    {/* 3 DOTS LOADER */}
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="flex items-center space-x-2">
+                        <div
+                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "-0.3s" }}
+                        ></div>
+                        <div
+                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          style={{ animationDelay: "-0.15s" }}
+                        ></div>
+                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                      </div>
+                      <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
+                        Loading vendors...
+                      </p>
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      Tracking ID: {vendor.trackingId || "N/A"}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                    {vendor.applicantName}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                    <div>{vendor.email}</div>
-                    <div className="text-xs">{vendor.phone}</div>
-                  </td>
-                  <td className="py-3 px-4 text-right space-x-2 whitespace-nowrap">
-                    <button
-                      onClick={() => handleView(vendor)}
-                      className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all cursor-pointer active:scale-95"
-                    >
-                      View
-                    </button>
-
-                    {/* Pending actions */}
-                    {activeTab === "pending" && (
-                      <>
-                        <button
-                          onClick={() => handleApprove(vendor._id)}
-                          className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30 transition-all cursor-pointer active:scale-95"
-                        >
-                          Approve
-                        </button>
-                        <button
-                          onClick={() => openRejectModal(vendor)}
-                          className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
-                        >
-                          Reject
-                        </button>
-                      </>
-                    )}
-
-                    {/* Soft Delete, Restore, Hard Delete */}
-                    {activeTab !== "bin" ? (
-                      <>
-                        <button
-                          onClick={() => handleAction("softDelete", vendor._id)}
-                          className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-orange-500 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30 transition-all cursor-pointer active:scale-95"
-                        >
-                          Soft Delete
-                        </button>
-                        <button
-                          onClick={() => handleAction("hardDelete", vendor._id)}
-                          className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
-                        >
-                          Hard Delete
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleAction("restore", vendor._id)}
-                          className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30 transition-all cursor-pointer active:scale-95"
-                        >
-                          Restore
-                        </button>
-                        <button
-                          onClick={() => handleAction("hardDelete", vendor._id)}
-                          className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
-                        >
-                          Hard Delete
-                        </button>
-                      </>
-                    )}
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : vendors.length === 0 ? (
+                <tr>
+                  <td colSpan="4" className="py-12 text-center text-gray-500">
+                    {debouncedSearch
+                      ? `No matching vendors found for "${debouncedSearch}".`
+                      : `No ${activeTab === "bin" ? "deleted" : activeTab} vendor requests found.`}
+                  </td>
+                </tr>
+              ) : (
+                vendors.map((vendor) => (
+                  <tr
+                    key={vendor._id}
+                    className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="font-medium text-gray-800 dark:text-gray-200">
+                        {vendor.companyName}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Tracking ID: {vendor.trackingId || "N/A"}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                      {vendor.applicantName}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                      <div>{vendor.email}</div>
+                      <div className="text-xs">{vendor.phone}</div>
+                    </td>
+                    <td className="py-3 px-4 text-right space-x-2 whitespace-nowrap">
+                      <button
+                        onClick={() => handleView(vendor)}
+                        className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all cursor-pointer active:scale-95"
+                      >
+                        View
+                      </button>
+
+                      {/* Pending actions */}
+                      {activeTab === "pending" && (
+                        <>
+                          <button
+                            onClick={() => handleApprove(vendor._id)}
+                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30 transition-all cursor-pointer active:scale-95"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => openRejectModal(vendor)}
+                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+
+                      {/* Soft Delete, Restore, Hard Delete */}
+                      {activeTab !== "bin" ? (
+                        <>
+                          <button
+                            onClick={() =>
+                              handleAction("softDelete", vendor._id)
+                            }
+                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-orange-500 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30 transition-all cursor-pointer active:scale-95"
+                          >
+                            Soft Delete
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleAction("hardDelete", vendor._id)
+                            }
+                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
+                          >
+                            Hard Delete
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleAction("restore", vendor._id)}
+                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30 transition-all cursor-pointer active:scale-95"
+                          >
+                            Restore
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleAction("hardDelete", vendor._id)
+                            }
+                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
+                          >
+                            Hard Delete
+                          </button>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* PAGINATION FOOTER */}
+        {!loading && vendors.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Rows per page:
+              </span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-white outline-none cursor-pointer focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+              <span className="font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex gap-1.5">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                >
+                  Prev
+                </button>
+                <button
+                  disabled={page === totalPages || totalPages === 0}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* VIEW MODAL */}

@@ -61,11 +61,28 @@ exports.registerVendor = async (req, res) => {
 exports.getVendorRequests = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { status, search, sortBy } = req.query;
+    const {
+      status,
+      search,
+      sortBy,
+      page = 1,
+      limit = 10,
+      startDate,
+      endDate,
+    } = req.query;
 
     let query = { isDeleted };
     if (status) query.status = status;
 
+    // date filter
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    // Searching
     if (search) {
       query.$or = [
         { companyName: { $regex: search, $options: "i" } },
@@ -74,6 +91,7 @@ exports.getVendorRequests = async (req, res) => {
       ];
     }
 
+    // Sorting
     let sortObj = { createdAt: -1 };
 
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
@@ -82,11 +100,25 @@ exports.getVendorRequests = async (req, res) => {
     if (sortBy === "applicant_asc") sortObj = { applicantName: 1 };
     if (sortBy === "applicant_desc") sortObj = { applicantName: -1 };
 
-    const requests = await VendorRequest.find(query).sort(sortObj);
+    // Pagination
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skipNum = (pageNum - 1) * limitNum;
 
-    return res
-      .status(200)
-      .json({ message: "All vendor requests fetched", data: requests });
+    const requests = await VendorRequest.find(query)
+      .sort(sortObj)
+      .skip(skipNum)
+      .limit(limitNum);
+
+    const totalItems = await VendorRequest.countDocuments(query);
+
+    return res.status(200).json({
+      message: "All vendor requests fetched",
+      data: requests,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limitNum),
+      currentPage: pageNum,
+    });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

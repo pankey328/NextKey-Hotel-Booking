@@ -6,35 +6,61 @@ const Reservations = ({ hotelId }) => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [filterView, setFilterView] = useState("pending");
-
+  const [filterView, setFilterView] = useState("all");
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 1000);
   const [sortBy, setSortBy] = useState("newest");
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [dateRange, setDateRange] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
-    setSearchInput("");
-    setSortBy("newest");
-  }, [filterView]);
+    setPage(1);
+  }, [debouncedSearch, hotelId]);
+
+  useEffect(() => {
+    if (dateRange === "all") {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    const end = new Date();
+    let start = new Date();
+
+    if (dateRange === "7days") start.setDate(end.getDate() - 7);
+    if (dateRange === "30days") start.setDate(end.getDate() - 30);
+    if (dateRange === "year") start.setFullYear(end.getFullYear() - 1);
+
+    setStartDate(start.toISOString());
+    setEndDate(end.toISOString());
+  }, [dateRange]);
 
   useEffect(() => {
     const fetchBookings = async () => {
       setLoading(true);
       try {
-        let url = `/bookings/hotel/${hotelId}?`;
+        let url = `/bookings/hotel/${hotelId}?page=${page}&limit=${limit}&filterView=${filterView}`;
 
-        if (debouncedSearch) {
-          url += `search=${debouncedSearch}&`;
-        }
-        if (sortBy) {
-          url += `sortBy=${sortBy}&`;
-        }
+        if (debouncedSearch) url += `&search=${debouncedSearch}`;
+        if (sortBy) url += `&sortBy=${sortBy}`;
+        if (startDate && endDate)
+          url += `&startDate=${startDate}&endDate=${endDate}`;
 
         const res = await api.get(url, config);
+
         setBookings(res.data.data || []);
+        setTotalPages(res.data.totalPages || 1);
+        setPendingCount(res.data.pendingCount || 0);
       } catch (error) {
         console.error("Error fetching bookings", error);
         setBookings([]);
@@ -46,7 +72,16 @@ const Reservations = ({ hotelId }) => {
     if (hotelId) {
       fetchBookings();
     }
-  }, [hotelId, debouncedSearch, sortBy]);
+  }, [
+    hotelId,
+    page,
+    limit,
+    filterView,
+    debouncedSearch,
+    sortBy,
+    startDate,
+    endDate,
+  ]);
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
@@ -61,34 +96,49 @@ const Reservations = ({ hotelId }) => {
           b._id === bookingId ? { ...b, status: newStatus } : b,
         ),
       );
+
+      if (newStatus !== "pending") {
+        setPendingCount((prev) => Math.max(0, prev - 1));
+      }
     } catch (error) {
       alert(error.response?.data?.message || "Failed to update status");
     }
   };
 
-  const today = new Date().toISOString().split("T")[0];
+  const handleFilterViewChange = (view) => {
+    setFilterView(view);
+    setPage(1);
+  };
 
-  const filteredBookings = bookings.filter((b) => {
-    const checkInStr = b.checkInDate
-      ? new Date(b.checkInDate).toISOString().split("T")[0]
-      : "";
+  const handleDateRangeChange = (e) => {
+    setDateRange(e.target.value);
+    setPage(1);
+  };
 
-    if (filterView === "pending") return b.status === "pending";
-    if (filterView === "arriving")
-      return b.status === "confirmed" && checkInStr === today;
-    if (filterView === "checked_in") return b.status === "checked-in";
-
-    return true; // For "all" tab
-  });
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+    setPage(1);
+  };
 
   return (
     <div className="space-y-6">
-      {/* TABS & CONTROLS ROW */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 pb-2 lg:pb-0">
+      {/* TABS & FILTERS ROW */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-gray-200 dark:border-gray-700 pb-2 xl:pb-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full lg:w-auto border-b-0">
+        <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full xl:w-auto border-b-0">
           <button
-            onClick={() => setFilterView("pending")}
+            onClick={() => handleFilterViewChange("all")}
+            className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
+              filterView === "all"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
+                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
+            }`}
+          >
+            All Bookings
+          </button>
+
+          <button
+            onClick={() => handleFilterViewChange("pending")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer flex items-center gap-2 ${
               filterView === "pending"
                 ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
@@ -97,23 +147,23 @@ const Reservations = ({ hotelId }) => {
           >
             Pending
             <span className="bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 py-0.5 px-2 rounded-full text-xs font-bold">
-              {bookings.filter((b) => b.status === "pending").length}
+              {pendingCount}
             </span>
           </button>
 
           <button
-            onClick={() => setFilterView("arriving")}
+            onClick={() => handleFilterViewChange("arriving")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
               filterView === "arriving"
                 ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
                 : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
             }`}
           >
-            Arriving
+            Arriving Today
           </button>
 
           <button
-            onClick={() => setFilterView("checked_in")}
+            onClick={() => handleFilterViewChange("checked_in")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
               filterView === "checked_in"
                 ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
@@ -122,25 +172,26 @@ const Reservations = ({ hotelId }) => {
           >
             Checked In
           </button>
-
-          <button
-            onClick={() => setFilterView("all")}
-            className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
-              filterView === "all"
-                ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
-                : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
-            }`}
-          >
-            All
-          </button>
         </div>
 
-        {/* CONTROLS (SEARCH & SORT) - RIGHT */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 sm:px-0">
+        {/* CONTROLS (DATE, SORT, SEARCH) - RIGHT */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto mb-2 px-2 sm:px-0">
+          {/* DATE DROPDOWN */}
+          <select
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+          >
+            <option value="all">All Time</option>
+            <option value="7days">Last 7 Days</option>
+            <option value="30days">Last 30 Days</option>
+            <option value="year">Last Year</option>
+          </select>
+
           {/* SORT DROPDOWN */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleSortChange}
             className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
           >
             <option value="newest">Newest First</option>
@@ -152,10 +203,10 @@ const Reservations = ({ hotelId }) => {
           </select>
 
           {/* SEARCH INPUT */}
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-60">
             <input
               type="text"
-              placeholder="Search status, email, or room..."
+              placeholder="Search status, email, room..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
@@ -171,7 +222,7 @@ const Reservations = ({ hotelId }) => {
       </div>
 
       {/* DATA TABLE */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
@@ -187,7 +238,7 @@ const Reservations = ({ hotelId }) => {
               {loading ? (
                 <tr>
                   <td colSpan="5" className="p-16 text-center">
-                    {/* LOADER */}
+                    {/* 3 DOTS LOADER */}
                     <div className="flex flex-col items-center justify-center">
                       <div className="flex items-center space-x-2">
                         <div
@@ -206,7 +257,7 @@ const Reservations = ({ hotelId }) => {
                     </div>
                   </td>
                 </tr>
-              ) : filteredBookings.length === 0 ? (
+              ) : bookings.length === 0 ? (
                 <tr>
                   <td
                     colSpan="5"
@@ -216,7 +267,7 @@ const Reservations = ({ hotelId }) => {
                   </td>
                 </tr>
               ) : (
-                filteredBookings.map((booking) => (
+                bookings.map((booking) => (
                   <tr
                     key={booking._id}
                     className="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors"
@@ -326,6 +377,52 @@ const Reservations = ({ hotelId }) => {
             </tbody>
           </table>
         </div>
+
+        {/* PAGINATION FOOTER */}
+        {!loading && bookings.length > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Rows per page:
+              </span>
+              <select
+                value={limit}
+                onChange={(e) => {
+                  setLimit(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-white outline-none cursor-pointer focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+              <span className="font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex gap-1.5">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage((p) => p - 1)}
+                  className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                >
+                  Prev
+                </button>
+                <button
+                  disabled={page === totalPages || totalPages === 0}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

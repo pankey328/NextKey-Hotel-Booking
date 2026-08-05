@@ -163,52 +163,79 @@ exports.getUserBookings = async (req, res) => {
 exports.getHotelBookings = async (req, res) => {
   try {
     const { hotelId } = req.params;
-    const { status, search, sortBy } = req.query; 
+    const {
+      search,
+      sortBy,
+      filterView,
+      page = 1,
+      limit = 5,
+      startDate,
+      endDate,
+    } = req.query;
 
     let query = { hotelId };
-    if (status) query.status = status;
+
+    // Tabs filter
+    if (filterView === "pending") query.status = "pending";
+    if (filterView === "checked_in") query.status = "checked-in";
+    if (filterView === "arriving") {
+      query.status = "confirmed";
+      // Check-In's for today
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      query.checkInDate = { $gte: todayStart, $lte: todayEnd };
+    }
+
+    // Date filter
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
 
     let bookings = await Booking.find(query)
       .populate("userId", "name email phone")
       .populate("roomId", "roomType roomNumber")
 
+    // Searching
     if (search) {
       const searchTerm = search.toLowerCase();
-      
       bookings = bookings.filter((booking) => {
-        const matchesName = String(booking.userId?.name || "").toLowerCase().includes(searchTerm);
-        const matchesEmail = String(booking.userId?.email || "").toLowerCase().includes(searchTerm);
-        const matchesRoom = String(booking.roomId?.roomType || "").toLowerCase().includes(searchTerm);
-
+        const matchesName = String(booking.userId?.name || "")
+          .toLowerCase()
+          .includes(searchTerm);
+        const matchesEmail = String(booking.userId?.email || "")
+          .toLowerCase()
+          .includes(searchTerm);
+        const matchesRoom = String(booking.roomId?.roomType || "")
+          .toLowerCase()
+          .includes(searchTerm);
         return matchesName || matchesEmail || matchesRoom;
       });
     }
 
+    // Sorting
     if (sortBy) {
       bookings.sort((a, b) => {
         if (sortBy === "price_desc")
           return (b.finalPrice || 0) - (a.finalPrice || 0);
         if (sortBy === "price_asc")
           return (a.finalPrice || 0) - (b.finalPrice || 0);
-
-        if (sortBy === "name_asc") {
-          const nameA = a.userId?.name || "";
-          const nameB = b.userId?.name || "";
-          return nameA.localeCompare(nameB);
-        }
-        if (sortBy === "name_desc") {
-          const nameA = a.userId?.name || "";
-          const nameB = b.userId?.name || "";
-          return nameB.localeCompare(nameA);
-        }
-
-        if (sortBy === "oldest") {
+        if (sortBy === "name_asc")
+          return String(a.userId?.name || "").localeCompare(
+            String(b.userId?.name || ""),
+          );
+        if (sortBy === "name_desc")
+          return String(b.userId?.name || "").localeCompare(
+            String(a.userId?.name || ""),
+          );
+        if (sortBy === "oldest")
           return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
-        }
-        if (sortBy === "newest") {
+        if (sortBy === "newest")
           return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-        }
-
         return 0;
       });
     } else {
@@ -217,9 +244,27 @@ exports.getHotelBookings = async (req, res) => {
       );
     }
 
+    // Pagination
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = pageNum * limitNum;
+
+    const totalItems = bookings.length;
+    const paginatedBookings = bookings.slice(startIndex, endIndex);
+
+    const pendingCount = await Booking.countDocuments({
+      hotelId,
+      status: "pending",
+    });
+
     return res.status(200).json({
-      message: "All Bookings for specific hotel fetched",
-      data: bookings,
+      message: "Bookings fetched",
+      data: paginatedBookings,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limitNum),
+      currentPage: pageNum,
+      pendingCount,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

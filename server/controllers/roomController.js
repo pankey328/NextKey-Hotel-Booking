@@ -62,7 +62,7 @@ exports.createRoom = async (req, res) => {
 exports.getMyRooms = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { search, sortBy } = req.query;
+    const { search, sortBy, page = 1, limit = 10 } = req.query;
 
     const hotel = await Hotel.findOne({ email: req.user.email });
 
@@ -75,6 +75,7 @@ exports.getMyRooms = async (req, res) => {
       isDeleted,
     };
 
+    // Searching
     if (search) {
       query.$or = [
         { roomType: { $regex: search, $options: "i" } },
@@ -84,17 +85,31 @@ exports.getMyRooms = async (req, res) => {
       ];
     }
 
-    let sortObj = { createdAt: -1 }; // BY DEFAULT ON NEWEST
+    // Sorting
+    let sortObj = { createdAt: -1 }; 
 
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
     if (sortBy === "price_desc") sortObj = { pricePerNight: -1 }; // High to Low
     if (sortBy === "price_asc") sortObj = { pricePerNight: 1 }; // Low to High
 
-    const rooms = await Room.find(query).sort(sortObj);
+    // Pagination
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skipNum = (pageNum - 1) * limitNum;
+
+    const rooms = await Room.find(query)
+      .sort(sortObj)
+      .skip(skipNum)
+      .limit(limitNum);
+
+    const totalItems = await Room.countDocuments(query);
 
     return res.status(200).json({
       hotelInfo: hotel,
       data: rooms,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limitNum),
+      currentPage: pageNum,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

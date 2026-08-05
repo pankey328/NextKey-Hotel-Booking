@@ -114,15 +114,32 @@ exports.registerHotel = async (req, res) => {
   }
 };
 
-// Get All Hotels (status/isDeleted) VENDOR
+// Get All Hotels (status/isDeleted) VENDOR/SUPERADMIN
 exports.getHotels = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { status, search, sortBy } = req.query;
+    const {
+      status,
+      search,
+      sortBy,
+      page = 1,
+      limit = 20,
+      startDate,
+      endDate,
+    } = req.query;
 
     let query = { isDeleted };
     if (status) query.status = status;
 
+    // Date filter
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    // Seaching
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -144,22 +161,35 @@ exports.getHotels = async (req, res) => {
       query.vendorId = vendorCompany._id;
     }
 
-    let sortObj = { createdAt: -1 }; // default newest
+    // Sorting
+    let sortObj = { createdAt: -1 };
 
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
-    if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
-    if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
+    if (sortBy === "name_asc") sortObj = { name: 1 }; 
+    if (sortBy === "name_desc") sortObj = { name: -1 };
+
+    // Pagination
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+    const skipNum = (pageNum - 1) * limitNum;
 
     const hotels = await Hotel.find(query)
       .populate("stateId", "name")
       .populate("districtId", "name")
       .populate("cityId", "name")
       .populate("vendorId", "companyName applicantName email phone")
-      .sort(sortObj);
+      .sort(sortObj)
+      .skip(skipNum)
+      .limit(limitNum);
+
+    const totalItems = await Hotel.countDocuments(query);
 
     return res.status(200).json({
       message: "All related Hotels Info fetched",
       data: hotels,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limitNum),
+      currentPage: pageNum,
     });
   } catch (error) {
     return res.status(500).json({ message: error.message });

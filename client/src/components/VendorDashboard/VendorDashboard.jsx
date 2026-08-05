@@ -49,6 +49,14 @@ const VendorDashboard = () => {
   const debouncedSearch = useDebounce(searchInput, 1000);
   const [sortBy, setSortBy] = useState("newest");
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [dateRange, setDateRange] = useState("all");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState(null);
 
@@ -56,8 +64,31 @@ const VendorDashboard = () => {
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
+    if (dateRange === "all") {
+      setStartDate("");
+      setEndDate("");
+      return;
+    }
+
+    const end = new Date();
+    let start = new Date();
+
+    if (dateRange === "7days") start.setDate(end.getDate() - 7);
+    if (dateRange === "30days") start.setDate(end.getDate() - 30);
+    if (dateRange === "year") start.setFullYear(end.getFullYear() - 1);
+
+    setStartDate(start.toISOString());
+    setEndDate(end.toISOString());
+  }, [dateRange]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, debouncedSearch, sortBy, limit, dateRange]);
+
+  useEffect(() => {
     setSearchInput("");
     setSortBy("newest");
+    setDateRange("all");
   }, [activeTab]);
 
   const fetchMyHotels = async () => {
@@ -65,18 +96,25 @@ const VendorDashboard = () => {
     try {
       const isDeleted = activeTab === "inactive";
 
-      let url = `/hotels?isDeleted=${isDeleted}`;
-      if (debouncedSearch) {
-        url += `&search=${debouncedSearch}`;
-      }
-      if (sortBy) {
-        url += `&sortBy=${sortBy}`;
-      }
+      let url = `/hotels?isDeleted=${isDeleted}&page=${page}&limit=${limit}`;
+
+      if (debouncedSearch) url += `&search=${debouncedSearch}`;
+      if (sortBy) url += `&sortBy=${sortBy}`;
+      if (startDate && endDate)
+        url += `&startDate=${startDate}&endDate=${endDate}`;
 
       const res = await api.get(url, config);
 
       const fetchedHotels = res.data.data || [];
       setMyHotels(fetchedHotels);
+      
+      const newTotalPages = res.data.totalPages || 1;
+      setTotalPages(newTotalPages);
+
+      // Auto-navigate to the previous page if we delete the last item on the current page
+      if (page > newTotalPages && page > 1) {
+        setPage(newTotalPages);
+      }
 
       if (fetchedHotels.length > 0 && !selectedHotelId && !debouncedSearch) {
         const firstApprovedHotel = fetchedHotels.find(
@@ -96,7 +134,7 @@ const VendorDashboard = () => {
 
   useEffect(() => {
     fetchMyHotels();
-  }, [activeTab, debouncedSearch, sortBy]);
+  }, [activeTab, debouncedSearch, sortBy, page, limit, startDate, endDate]);
 
   const handleAction = async (action, id) => {
     try {
@@ -301,7 +339,7 @@ const VendorDashboard = () => {
 
         {/* PROPERTIES LIST */}
         {currentView === "properties" && (
-          <div>
+          <div className="flex flex-col h-full">
             {/* TABS & SEARCH ROW */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 lg:pb-0">
               {/* TABS (LEFT) */}
@@ -328,8 +366,20 @@ const VendorDashboard = () => {
                 </button>
               </div>
 
-              {/* CONTROLS (SORT & SEARCH) - RIGHT */}
+              {/* CONTROLS (DATE, SORT, SEARCH) - RIGHT */}
               <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto mb-2 px-2 lg:px-0">
+                {/* DATE RANGE DROPDOWN */}
+                <select
+                  value={dateRange}
+                  onChange={(e) => setDateRange(e.target.value)}
+                  className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                >
+                  <option value="all">All Time</option>
+                  <option value="7days">Last 7 Days</option>
+                  <option value="30days">Last 30 Days</option>
+                  <option value="year">Last Year</option>
+                </select>
+
                 {/* SORT DROPDOWN */}
                 <select
                   value={sortBy}
@@ -343,7 +393,7 @@ const VendorDashboard = () => {
                 </select>
 
                 {/* SEARCH INPUT */}
-                <div className="relative w-full sm:w-64">
+                <div className="relative w-full sm:w-56">
                   <input
                     type="text"
                     placeholder="Search property or type..."
@@ -361,9 +411,9 @@ const VendorDashboard = () => {
               </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-              <div className="overflow-x-auto">
+            {/* Table Container */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden">
+              <div className="overflow-x-auto flex-1">
                 <table className="w-full text-left border-collapse min-w-[700px]">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
@@ -382,7 +432,6 @@ const VendorDashboard = () => {
                     {loading ? (
                       <tr>
                         <td colSpan="3" className="py-16 text-center">
-                          {/* LOADER */}
                           <div className="flex flex-col items-center justify-center">
                             <div className="flex items-center space-x-2">
                               <div
@@ -534,6 +583,52 @@ const VendorDashboard = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* PAGINATION FOOTER */}
+              {!loading && myHotels.length > 0 && (
+                <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      Rows per page:
+                    </span>
+                    <select
+                      value={limit}
+                      onChange={(e) => {
+                        setLimit(Number(e.target.value));
+                        setPage(1);
+                      }}
+                      className="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-white outline-none cursor-pointer focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="15">15</option>
+                      <option value="20">20</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                    <span className="font-medium">
+                      Page {page} of {totalPages}
+                    </span>
+                    <div className="flex gap-1.5">
+                      <button
+                        disabled={page === 1}
+                        onClick={() => setPage((p) => p - 1)}
+                        className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                      >
+                        Prev
+                      </button>
+                      <button
+                        disabled={page === totalPages || totalPages === 0}
+                        onClick={() => setPage((p) => p + 1)}
+                        className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

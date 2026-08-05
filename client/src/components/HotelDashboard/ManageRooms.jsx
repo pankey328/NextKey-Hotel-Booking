@@ -12,6 +12,10 @@ const ManageRooms = () => {
   const debouncedSearch = useDebounce(searchInput, 1000);
   const [sortBy, setSortBy] = useState("newest");
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [activeModalImage, setActiveModalImage] = useState(0);
@@ -20,16 +24,15 @@ const ManageRooms = () => {
   const config = { headers: { Authorization: `Bearer ${token}` } };
 
   useEffect(() => {
-    setSearchInput("");
-    setSortBy("newest");
-  }, [activeTab]);
+    setPage(1);
+  }, [debouncedSearch]);
 
   const fetchRooms = async () => {
     setLoading(true);
     try {
       const isDeleted = activeTab === "inactive";
 
-      let url = `/rooms/my-rooms?isDeleted=${isDeleted}`;
+      let url = `/rooms/my-rooms?isDeleted=${isDeleted}&page=${page}&limit=${limit}`;
       if (debouncedSearch) {
         url += `&search=${debouncedSearch}`;
       }
@@ -39,6 +42,14 @@ const ManageRooms = () => {
 
       const res = await api.get(url, config);
       setRooms(res.data.data || []);
+
+      const newTotalPages = res.data.totalPages || 1;
+      setTotalPages(newTotalPages);
+
+      // Auto-navigate to the previous page if we delete the last item on the current page
+      if (page > newTotalPages && page > 1) {
+        setPage(newTotalPages);
+      }
     } catch (error) {
       console.error("Error fetching rooms", error);
       setRooms([]);
@@ -49,7 +60,19 @@ const ManageRooms = () => {
 
   useEffect(() => {
     fetchRooms();
-  }, [activeTab, debouncedSearch, sortBy]);
+  }, [activeTab, debouncedSearch, sortBy, page, limit]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchInput("");
+    setSortBy("newest");
+    setPage(1);
+  };
+
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+    setPage(1);
+  };
 
   const handleAction = async (action, id) => {
     try {
@@ -95,7 +118,7 @@ const ManageRooms = () => {
         {/* TABS (LEFT) */}
         <div className="flex gap-4 px-2 overflow-x-auto whitespace-nowrap w-full lg:w-auto border-b-0">
           <button
-            onClick={() => setActiveTab("active")}
+            onClick={() => handleTabChange("active")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
               activeTab === "active"
                 ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
@@ -105,7 +128,7 @@ const ManageRooms = () => {
             Active Rooms
           </button>
           <button
-            onClick={() => setActiveTab("inactive")}
+            onClick={() => handleTabChange("inactive")}
             className={`pb-3 px-1 font-medium border-b-2 transition-all cursor-pointer ${
               activeTab === "inactive"
                 ? "border-blue-600 text-blue-600 dark:text-blue-400 font-bold"
@@ -121,7 +144,7 @@ const ManageRooms = () => {
           {/* SORT DROPDOWN */}
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            onChange={handleSortChange}
             className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
           >
             <option value="newest">Newest First</option>
@@ -152,6 +175,7 @@ const ManageRooms = () => {
       {/* ROOM CARDS GRID */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+          {/* LOADER */}
           <div className="flex items-center space-x-2">
             <div
               className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
@@ -301,6 +325,51 @@ const ManageRooms = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* PAGINATION FOOTER */}
+      {!loading && rooms.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-center p-4 mt-6 border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Cards per page:
+            </span>
+            <select
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              className="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-white outline-none cursor-pointer focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="6">6</option>
+              <option value="12">12</option>
+              <option value="24">24</option>
+            </select>
+          </div>
+
+          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+            <span className="font-medium">
+              Page {page} of {totalPages}
+            </span>
+            <div className="flex gap-1.5">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+                className="px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+              >
+                Prev
+              </button>
+              <button
+                disabled={page === totalPages || totalPages === 0}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-3 py-1.5 rounded-md bg-gray-50 border border-gray-200 hover:bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

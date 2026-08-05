@@ -57,8 +57,9 @@ exports.createDistrict = async (req, res) => {
 // Get All Districts
 exports.getAllDistricts = async (req, res) => {
   try {
-    const { stateId, search, sortBy } = req.query;
     const isDeleted = req.query.isDeleted === "true";
+
+    const { stateId, search, sortBy, page = 1, limit } = req.query;
 
     let filter = {
       isDeleted,
@@ -68,6 +69,7 @@ exports.getAllDistricts = async (req, res) => {
       filter.stateId = stateId;
     }
 
+    // Search
     if (search) {
       filter.name = {
         $regex: search,
@@ -75,18 +77,38 @@ exports.getAllDistricts = async (req, res) => {
       };
     }
 
+    // Sort
     let sortObj = { createdAt: -1 };
-
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
     if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
     if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
 
-    const districts = await District.find(filter)
+    // query
+    let queryExec = District.find(filter)
       .populate("stateId", "name")
       .sort(sortObj);
 
+    // pagination
+    if (limit) {
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      const skipNum = (pageNum - 1) * limitNum;
+
+      queryExec = queryExec.skip(skipNum).limit(limitNum);
+    }
+
+    const districts = await queryExec;
+    const totalItems = await District.countDocuments(filter);
+
+    const currentLimit = limit ? parseInt(limit, 10) : totalItems;
+    const totalPages =
+      currentLimit > 0 ? Math.ceil(totalItems / currentLimit) : 1;
+
     return res.status(200).json({
       data: districts,
+      totalItems,
+      totalPages,
+      currentPage: parseInt(page, 10),
     });
   } catch (error) {
     return res.status(500).json({

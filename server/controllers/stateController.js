@@ -36,27 +36,49 @@ exports.createState = async (req, res) => {
 exports.getAllStates = async (req, res) => {
   try {
     const isDeleted = req.query.isDeleted === "true";
-    const { search, sortBy } = req.query;
 
-    let query = { isDeleted };
+    const { search, sortBy, page = 1, limit } = req.query;
 
+    let filter = { isDeleted };
+
+    // Search
     if (search) {
-      query.name = {
+      filter.name = {
         $regex: search,
         $options: "i",
       };
     }
 
-    let sortObj = { createdAt: -1 }; 
-
+    // Sort
+    let sortObj = { createdAt: -1 };
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
     if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
     if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
 
-    const states = await State.find(query).sort(sortObj);
+    // query
+    let queryExec = State.find(filter).sort(sortObj);
+
+    // pagination
+    if (limit) {
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      const skipNum = (pageNum - 1) * limitNum;
+
+      queryExec = queryExec.skip(skipNum).limit(limitNum);
+    }
+
+    const states = await queryExec;
+    const totalItems = await State.countDocuments(filter);
+
+    const currentLimit = limit ? parseInt(limit, 10) : totalItems;
+    const totalPages =
+      currentLimit > 0 ? Math.ceil(totalItems / currentLimit) : 1;
 
     return res.status(200).json({
       data: states,
+      totalItems,
+      totalPages,
+      currentPage: parseInt(page, 10),
     });
   } catch (error) {
     return res.status(500).json({

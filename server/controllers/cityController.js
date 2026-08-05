@@ -69,46 +69,56 @@ exports.createCity = async (req, res) => {
 // Get All Cities
 exports.getAllCities = async (req, res) => {
   try {
-    const { stateId, districtId, search, sortBy } = req.query;
     const isDeleted = req.query.isDeleted === "true";
 
-    let filter = {
-      isDeleted,
-    };
+    const { stateId, districtId, search, sortBy, page = 1, limit } = req.query;
 
-    if (districtId) {
-      filter.districtId = districtId;
-    }
+    let filter = { isDeleted };
 
-    if (stateId) {
-      filter.stateId = stateId;
-    }
+    if (districtId) filter.districtId = districtId;
+    if (stateId) filter.stateId = stateId;
 
+    // Search
     if (search) {
-      filter.name = {
-        $regex: search,
-        $options: "i",
-      };
+      filter.name = { $regex: search, $options: "i" };
     }
 
+    // Sort
     let sortObj = { createdAt: -1 };
-
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
-    if (sortBy === "name_asc") sortObj = { name: 1 }; // A to Z
-    if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
+    if (sortBy === "name_asc") sortObj = { name: 1 };
+    if (sortBy === "name_desc") sortObj = { name: -1 };
 
-    const cities = await City.find(filter)
+    let queryExec = City.find(filter)
       .populate("stateId", "name")
       .populate("districtId", "name")
       .sort(sortObj);
 
+    // pagination
+    if (limit) {
+      const pageNum = parseInt(page, 10);
+      const limitNum = parseInt(limit, 10);
+      const skipNum = (pageNum - 1) * limitNum;
+
+      queryExec = queryExec.skip(skipNum).limit(limitNum);
+    }
+
+    // query
+    const cities = await queryExec;
+    const totalItems = await City.countDocuments(filter);
+
+    const currentLimit = limit ? parseInt(limit, 10) : totalItems;
+    const totalPages =
+      currentLimit > 0 ? Math.ceil(totalItems / currentLimit) : 1;
+
     return res.status(200).json({
       data: cities,
+      totalItems,
+      totalPages,
+      currentPage: parseInt(page, 10),
     });
   } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
+    return res.status(500).json({ message: error.message });
   }
 };
 
