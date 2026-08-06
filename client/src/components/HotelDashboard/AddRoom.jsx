@@ -90,7 +90,8 @@ const AddRoom = () => {
     facilities: [],
   });
 
-  const [images, setImages] = useState(null);
+  const [images, setImages] = useState([]);
+  const [imageError, setImageError] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -124,7 +125,37 @@ const AddRoom = () => {
   };
 
   const handleImageChange = (e) => {
-    setImages(e.target.files);
+    let files = Array.from(e.target.files);
+    const maxSize = 5 * 1024 * 1024; // 5MB 
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const MAX_IMAGES = 8;
+
+    let errorMsg = "";
+
+    if (files.length > MAX_IMAGES) {
+      errorMsg += `Maximum ${MAX_IMAGES} images allowed. Extra files were removed.\n`;
+      files = files.slice(0, MAX_IMAGES);
+    }
+
+    const validFiles = [];
+
+    files.forEach((file) => {
+      if (!allowedTypes.includes(file.type)) {
+        errorMsg += `${file.name} is an invalid format. `;
+      } else if (file.size > maxSize) {
+        errorMsg += `${file.name} exceeds 5MB limit. `;
+      } else {
+        validFiles.push(file);
+      }
+    });
+
+    if (errorMsg) {
+      setImageError(errorMsg);
+    } else {
+      setImageError("");
+    }
+
+    setImages(validFiles);
   };
 
   const handleSubmit = async (e) => {
@@ -143,10 +174,10 @@ const AddRoom = () => {
         }
       });
 
-      if (images) {
-        for (let i = 0; i < images.length; i++) {
-          data.append("images", images[i]);
-        }
+      if (images.length > 0) {
+        images.forEach((file) => {
+          data.append("images", file);
+        });
       }
 
       await api.post("/rooms", data, {
@@ -174,7 +205,7 @@ const AddRoom = () => {
           onClick={() => navigate(-1)}
           className="text-blue-600 hover:underline text-sm font-medium"
         >
-          &larr; Back to Dashboard
+          &larr; Back
         </button>
       </div>
 
@@ -195,7 +226,7 @@ const AddRoom = () => {
                 required
                 value={formData.roomNumber}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -207,7 +238,7 @@ const AddRoom = () => {
                 name="roomName"
                 value={formData.roomName}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -218,7 +249,7 @@ const AddRoom = () => {
                 name="roomType"
                 value={formData.roomType}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {[
                   "Standard",
@@ -243,7 +274,7 @@ const AddRoom = () => {
                 name="floorNumber"
                 value={formData.floorNumber}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="md:col-span-2 lg:col-span-4">
@@ -255,7 +286,7 @@ const AddRoom = () => {
                 rows="2"
                 value={formData.description}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               ></textarea>
             </div>
           </div>
@@ -277,7 +308,7 @@ const AddRoom = () => {
                 required
                 value={formData.pricePerNight}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -289,7 +320,7 @@ const AddRoom = () => {
                 name="weekendPrice"
                 value={formData.weekendPrice}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -301,7 +332,7 @@ const AddRoom = () => {
                 name="holidayPrice"
                 value={formData.holidayPrice}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -313,7 +344,7 @@ const AddRoom = () => {
                 name="discount"
                 value={formData.discount}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex items-end pb-2">
@@ -323,7 +354,7 @@ const AddRoom = () => {
                   name="taxIncluded"
                   checked={formData.taxIncluded}
                   onChange={handleInputChange}
-                  className="w-4 h-4"
+                  className="w-4 h-4 cursor-pointer"
                 />
                 Tax Included
               </label>
@@ -346,7 +377,7 @@ const AddRoom = () => {
                 name="maxAdults"
                 value={formData.maxAdults}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -358,7 +389,7 @@ const AddRoom = () => {
                 name="maxChildren"
                 value={formData.maxChildren}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -370,7 +401,7 @@ const AddRoom = () => {
                 name="totalGuests"
                 value={formData.totalGuests}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -382,7 +413,7 @@ const AddRoom = () => {
                 name="numberOfBeds"
                 value={formData.numberOfBeds}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -393,7 +424,7 @@ const AddRoom = () => {
                 name="bedType"
                 value={formData.bedType}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 {[
                   "Single Bed",
@@ -428,13 +459,13 @@ const AddRoom = () => {
                   {items.map((facility) => (
                     <label
                       key={facility}
-                      className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer"
+                      className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer hover:text-gray-900 dark:hover:text-gray-100"
                     >
                       <input
                         type="checkbox"
                         checked={formData.facilities.includes(facility)}
                         onChange={() => handleFacilityToggle(facility)}
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
                       />
                       {facility}
                     </label>
@@ -459,7 +490,7 @@ const AddRoom = () => {
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="Available">Available</option>
                 <option value="Occupied">Occupied</option>
@@ -476,7 +507,7 @@ const AddRoom = () => {
                 name="cancellationPolicy"
                 value={formData.cancellationPolicy}
                 onChange={handleInputChange}
-                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="Free Cancellation">Free Cancellation</option>
                 <option value="Non-Refundable">Non-Refundable</option>
@@ -488,17 +519,46 @@ const AddRoom = () => {
                 </option>
               </select>
             </div>
+
+            {/* STYLED FILE UPLOAD AREA */}
             <div>
               <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
                 Room Images
               </label>
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-gray-700 dark:file:text-gray-300"
-              />
+
+              <div
+                className={`p-4 border-2 border-dashed ${imageError ? "border-red-400 dark:border-red-500 bg-red-50/50 dark:bg-red-900/10" : "border-gray-300 dark:border-gray-600"} rounded-lg text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors`}
+              >
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 cursor-pointer">
+                  {images.length > 0
+                    ? `Selected: ${images.length} valid file(s)`
+                    : "Upload Room Images"}
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/jpeg, image/jpg, image/png"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+                {images.length === 0 && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Click to browse (JPG, JPEG, PNG)
+                  </span>
+                )}
+              </div>
+
+              {/* Inline Error Display */}
+              {imageError && (
+                <p className="text-xs text-red-500 dark:text-red-400 mt-2 font-medium whitespace-pre-wrap">
+                  {imageError}
+                </p>
+              )}
+
+              {/* Basic Helper Text */}
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                Max 8 images allowed. Max 5MB per file.
+              </p>
             </div>
           </div>
         </section>
@@ -507,14 +567,14 @@ const AddRoom = () => {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-6 py-2.5 border rounded-lg text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
+            className="px-6 py-2.5 border rounded-lg text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors cursor-pointer active:scale-95"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95"
           >
             {loading ? "Saving Room..." : "Save Room"}
           </button>
