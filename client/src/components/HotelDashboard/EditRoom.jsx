@@ -232,7 +232,7 @@ const EditRoom = () => {
           onClick={() => navigate(-1)}
           className="text-blue-600 hover:underline text-sm font-medium"
         >
-          &larr; Back to Dashboard
+          &larr; Back
         </button>
       </div>
 

@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import api from "../../api";
 
-import HotelDashboardOverview from "./HotelDashboardOverview";
-import ManageRooms from "./ManageRooms";
-import Reservations from "./Reservations";
-
-const HotelDashboard = () => {
-  const [currentView, setCurrentView] = useState("dashboard");
+const HotelLayout = () => {
+  const location = useLocation();
   const [hotelInfo, setHotelInfo] = useState(null);
   const [rooms, setRooms] = useState([]);
 
@@ -29,11 +25,15 @@ const HotelDashboard = () => {
     fetchInitialData();
   }, []);
 
-  const SidebarItem = ({ id, label, iconPath }) => (
-    <button
-      onClick={() => setCurrentView(id)}
+  const isDashboard = location.pathname === "/hotel-dashboard";
+  const isReservations = location.pathname.includes("/reservations");
+  const isRooms = location.pathname.includes("/rooms");
+
+  const SidebarItem = ({ to, label, iconPath, activeCondition }) => (
+    <Link
+      to={to}
       className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
-        currentView === id
+        activeCondition
           ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
           : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
       }`}
@@ -52,7 +52,7 @@ const HotelDashboard = () => {
         ></path>
       </svg>
       {label}
-    </button>
+    </Link>
   );
 
   return (
@@ -70,18 +70,21 @@ const HotelDashboard = () => {
 
         <nav className="flex-1 p-4 space-y-2">
           <SidebarItem
-            id="dashboard"
+            to="/hotel-dashboard"
             label="Dashboard"
+            activeCondition={isDashboard}
             iconPath="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
           />
           <SidebarItem
-            id="Reservations"
+            to="/hotel-dashboard/reservations"
             label="Reservations"
+            activeCondition={isReservations}
             iconPath="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
           />
           <SidebarItem
-            id="rooms"
+            to="/hotel-dashboard/rooms"
             label="Manage Rooms"
+            activeCondition={isRooms}
             iconPath="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
           />
         </nav>
@@ -89,26 +92,26 @@ const HotelDashboard = () => {
 
       {/* MAIN CONTENT CONTAINER */}
       <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {/* MOBILE VIEW */}
+        {/* MOBILE VIEW NAVIGATION */}
         <div className="flex md:hidden flex-wrap gap-2 mb-6 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <button
-            onClick={() => setCurrentView("dashboard")}
-            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "dashboard" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+          <Link
+            to="/hotel-dashboard"
+            className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isDashboard ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
           >
             Dashboard
-          </button>
-          <button
-            onClick={() => setCurrentView("Reservations")}
-            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "Reservations" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+          </Link>
+          <Link
+            to="/hotel-dashboard/reservations"
+            className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isReservations ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
           >
             Reservations
-          </button>
-          <button
-            onClick={() => setCurrentView("rooms")}
-            className={`flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-all ${currentView === "rooms" ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+          </Link>
+          <Link
+            to="/hotel-dashboard/rooms"
+            className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isRooms ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
           >
             Rooms
-          </button>
+          </Link>
         </div>
 
         {/* TOP HOTEL PROFILE BAR */}
@@ -135,7 +138,7 @@ const HotelDashboard = () => {
             </div>
           </div>
 
-          {currentView === "rooms" && (
+          {isRooms && (
             <Link
               to="/hotel-dashboard/add-room"
               className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all flex items-center gap-2"
@@ -157,23 +160,10 @@ const HotelDashboard = () => {
           )}
         </div>
 
-        {currentView === "dashboard" && (
-          <HotelDashboardOverview hotelInfo={hotelInfo} rooms={rooms} />
-        )}
-
-        {currentView === "Reservations" &&
-          (hotelInfo ? (
-            <Reservations hotelId={hotelInfo._id} />
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              Loading hotel reservations...
-            </div>
-          ))}
-
-        {currentView === "rooms" && <ManageRooms />}
+        <Outlet context={{ hotelInfo, rooms }} />
       </main>
     </div>
   );
 };
 
-export default HotelDashboard;
+export default HotelLayout;

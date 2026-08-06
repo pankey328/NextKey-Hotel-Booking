@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
 
-const Reservations = ({ hotelId }) => {
+const Reservations = (props) => {
+  const context = useOutletContext();
+  const hotelId = props.hotelId || context?.hotelInfo?._id;
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,6 +51,8 @@ const Reservations = ({ hotelId }) => {
 
   useEffect(() => {
     const fetchBookings = async () => {
+      if (!hotelId) return;
+
       setLoading(true);
       try {
         let url = `/bookings/hotel/${hotelId}?page=${page}&limit=${limit}&filterView=${filterView}`;
@@ -69,9 +75,7 @@ const Reservations = ({ hotelId }) => {
       }
     };
 
-    if (hotelId) {
-      fetchBookings();
-    }
+    fetchBookings();
   }, [
     hotelId,
     page,
@@ -119,6 +123,14 @@ const Reservations = ({ hotelId }) => {
     setSortBy(e.target.value);
     setPage(1);
   };
+
+  if (!hotelId) {
+    return (
+      <div className="text-center py-12 text-gray-500 font-medium">
+        Loading Hotel Reservations...
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

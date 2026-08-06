@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useOutletContext } from "react-router-dom";
 import api from "../../api";
 
-const HotelDashboardOverview = ({ hotelInfo, rooms }) => {
+const HotelDashboardOverview = (props) => {
+  const context = useOutletContext();
+  const hotelInfo = props.hotelInfo || context?.hotelInfo;
+  const rooms = props.rooms || context?.rooms || [];
+
   const [stats, setStats] = useState({
     newBookingsCount: 0,
     checkInsToday: 0,
@@ -45,6 +50,14 @@ const HotelDashboardOverview = ({ hotelInfo, rooms }) => {
   }, [hotelInfo]);
 
   const getRatingPercentage = (rating) => `${(Number(rating) / 5) * 100}%`;
+
+  if (!hotelInfo) {
+    return (
+      <div className="text-center py-10 text-gray-500 font-medium">
+        Loading Hotel Data...
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -17,7 +17,6 @@ import VendorDashboardOverview from "./components/VendorDashboard/VendorDashboar
 import VendorProperties from "./components/VendorDashboard/VendorProperties";
 import SpecificHotelOverview from "./components/VendorDashboard/SpecificHotelOverview";
 import VendorReservations from "./components/VendorDashboard/VendorReservations";
-
 import VendorRegistration from "./components/VendorRegistration";
 import CheckVendorStatus from "./components/CheckVendorStatus";
 import AddHotel from "./components/VendorDashboard/AddHotel";
@@ -25,7 +24,10 @@ import EditHotel from "./components/VendorDashboard/EditHotel";
 import AddRoomByVendor from "./components/VendorDashboard/AddRoomByVendor";
 import CouponManagement from "./components/VendorDashboard/CouponManagement";
 
-import HotelDashboard from "./components/HotelDashboard/HotelDashboard";
+import HotelLayout from "./components/HotelDashboard/HotelLayout";
+import HotelDashboardOverview from "./components/HotelDashboard/HotelDashboardOverview";
+import Reservations from "./components/HotelDashboard/Reservations";
+import ManageRooms from "./components/HotelDashboard/ManageRooms";
 import AddRoom from "./components/HotelDashboard/AddRoom";
 import EditRoom from "./components/HotelDashboard/EditRoom";
 
@@ -80,10 +82,16 @@ function App() {
             path="/hotel-dashboard"
             element={
               <ProtectedRoute allowedRoles={["hotel"]}>
-                <HotelDashboard />
+                <HotelLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<HotelDashboardOverview />} />
+            <Route path="overview" element={<HotelDashboardOverview />} />
+            <Route path="reservations" element={<Reservations />} />
+            <Route path="rooms" element={<ManageRooms />} />
+          </Route>
+
           <Route
             path="/hotel-dashboard/add-room"
             element={
@@ -105,7 +113,7 @@ function App() {
             path="/admin-dashboard"
             element={
               <ProtectedRoute allowedRoles={["vendor"]}>
-                <VendorLayout /> 
+                <VendorLayout />
               </ProtectedRoute>
             }
           >
