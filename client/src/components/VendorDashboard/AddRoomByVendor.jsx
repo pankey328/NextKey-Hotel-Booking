@@ -161,7 +161,7 @@ const AddRoomByVendor = () => {
       });
 
       alert("Room added successfully to your hotel!");
-      navigate("/admin-dashboard");
+      navigate(-1);
     } catch (error) {
       alert(
         error.response?.data?.message || error.message || "Failed to add room",
@@ -183,10 +183,10 @@ const AddRoomByVendor = () => {
           </p>
         </div>
         <button
-          onClick={() => navigate("/admin-dashboard")}
+          onClick={() => navigate(-1)}
           className="text-blue-600 hover:underline text-sm font-medium"
         >
-          &larr; Back to Dashboard
+          &larr; Back
         </button>
       </div>
 
@@ -506,7 +506,7 @@ const AddRoomByVendor = () => {
         <div className="pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-4">
           <button
             type="button"
-            onClick={() => navigate("/admin-dashboard")}
+            onClick={() => navigate(-1)}
             className="px-6 py-2.5 border rounded-lg text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700 transition-colors"
           >
             Cancel

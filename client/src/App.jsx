@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./components/Home";
 import Login from "./components/auth/Login";
@@ -12,7 +12,12 @@ import SearchHotels from "./components/SearchHotels";
 import HotelDetails from "./components/HotelDetails";
 import MyBookings from "./components/MyBookings";
 
-import VendorDashboard from "./components/VendorDashboard/VendorDashboard";
+import VendorLayout from "./components/VendorDashboard/VendorLayout";
+import VendorDashboardOverview from "./components/VendorDashboard/VendorDashboardOverview";
+import VendorProperties from "./components/VendorDashboard/VendorProperties";
+import SpecificHotelOverview from "./components/VendorDashboard/SpecificHotelOverview";
+import VendorReservations from "./components/VendorDashboard/VendorReservations";
+
 import VendorRegistration from "./components/VendorRegistration";
 import CheckVendorStatus from "./components/CheckVendorStatus";
 import AddHotel from "./components/VendorDashboard/AddHotel";
@@ -32,9 +37,9 @@ import HotelManager from "./SuperAdmin/pages/HotelManager";
 import VendorManager from "./SuperAdmin/pages/VendorManager";
 import SuperAdminAddVendor from "./SuperAdmin/pages/SuperAdminAddVendor";
 import SuperAdminAddHotel from "./SuperAdmin/pages/SuperAdminAddHotel";
+import SuperAdminDashboardOverview from "./SuperAdmin/pages/SuperAdminDashboardOverview";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
-import SuperAdminDashboardOverview from "./SuperAdmin/pages/SuperAdminDashboardOverview";
 
 function App() {
   return (
@@ -100,10 +105,22 @@ function App() {
             path="/admin-dashboard"
             element={
               <ProtectedRoute allowedRoles={["vendor"]}>
-                <VendorDashboard />
+                <VendorLayout /> 
               </ProtectedRoute>
             }
-          />
+          >
+            <Route index element={<VendorDashboardOverview />} />
+            <Route path="properties" element={<VendorProperties />} />
+            <Route
+              path="hotel/:hotelId/overview"
+              element={<SpecificHotelOverview />}
+            />
+            <Route
+              path="hotel/:hotelId/reservations"
+              element={<VendorReservations />}
+            />
+          </Route>
+
           <Route
             path="/admin-dashboard/add-hotel"
             element={
@@ -150,10 +167,8 @@ function App() {
             <Route path="states" element={<StateManager />} />
             <Route path="districts" element={<DistrictManager />} />
             <Route path="cities" element={<CityManager />} />
-
             <Route path="vendors" element={<VendorManager />} />
             <Route path="add-vendor" element={<SuperAdminAddVendor />} />
-
             <Route path="hotels" element={<HotelManager />} />
             <Route path="add-hotel" element={<SuperAdminAddHotel />} />
           </Route>

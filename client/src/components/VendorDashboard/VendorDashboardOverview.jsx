@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import api from "../../api";
 
-const VendorDashboardOverview = ({ myHotels, jumpToHotelOverview }) => {
+const VendorDashboardOverview = () => {
+  const { myHotels } = useOutletContext() || { myHotels: [] };
+  const navigate = useNavigate();
+
   const [stats, setStats] = useState({
     totalProperties: 0,
     newBookingsCount: 0,
@@ -174,7 +178,9 @@ const VendorDashboardOverview = ({ myHotels, jumpToHotelOverview }) => {
               .map((hotel) => (
                 <div
                   key={hotel._id}
-                  onClick={() => jumpToHotelOverview(hotel._id)}
+                  onClick={() =>
+                    navigate(`/admin-dashboard/hotel/${hotel._id}/overview`)
+                  }
                   className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-lg border border-gray-100 dark:border-gray-700 transition-colors cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">

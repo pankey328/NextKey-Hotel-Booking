@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
+import ExportRoomsButton from "./ExportRoomsButton";
 
 const ManageRooms = () => {
   const [activeTab, setActiveTab] = useState("active");
@@ -22,6 +23,8 @@ const ManageRooms = () => {
 
   const token = localStorage.getItem("token");
   const config = { headers: { Authorization: `Bearer ${token}` } };
+
+  const currentHotelId = rooms.length > 0 ? rooms[0].hotelId : null;
 
   useEffect(() => {
     setPage(1);
@@ -113,6 +116,17 @@ const ManageRooms = () => {
 
   return (
     <div>
+      {/* HEADER SECTION: Title & Export Button */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+          Manage Rooms
+        </h1>
+        <ExportRoomsButton
+          hotelId={currentHotelId}
+          disabled={rooms.length === 0 || loading}
+        />
+      </div>
+
       {/* TABS & CONTROLS ROW */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 lg:pb-0">
         {/* TABS (LEFT) */}

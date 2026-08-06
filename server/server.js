@@ -64,6 +64,10 @@ app.use("/api/bookings", bookingRoutes);
 const superadminRoutes = require("./routes/superadminRoutes");
 app.use("/api/superadmin", superadminRoutes);
 
+// EXPORT ROUTES
+const exportRoutes = require("./routes/exportRoutes")
+app.use("/api/export", exportRoutes);
+
 mongoose
   .connect(url)
   .then(() => console.log(`DATABASE Connected`))

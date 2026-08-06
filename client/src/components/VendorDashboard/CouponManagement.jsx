@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
+import ExportCouponsButton from "./ExportCouponsButton";
 
 const CouponManagement = () => {
   const { hotelId } = useParams();
@@ -125,31 +126,38 @@ const CouponManagement = () => {
             onClick={() => navigate(-1)}
             className="text-blue-600 hover:underline text-sm font-medium mb-2 block cursor-pointer"
           >
-            &larr; Back to Dashboard
+            &larr; Back
           </button>
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
             Coupon Management
           </h1>
         </div>
 
-        <button
-          onClick={() => {
-            setCurrentCoupon({
-              code: "",
-              discount: "",
-              maxDiscount: "",
-              minPrice: "",
-              availFrom: "",
-              expiryDate: "",
-              status: "active",
-            });
-            setIsEdit(false);
-            setShowModal(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-5 py-2.5 rounded-lg shadow-sm font-medium cursor-pointer"
-        >
-          + Add Coupon
-        </button>
+        {/* Buttons Container */}
+        <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+          <ExportCouponsButton
+            hotelId={hotelId}
+            disabled={coupons.length === 0 || loading}
+          />
+          <button
+            onClick={() => {
+              setCurrentCoupon({
+                code: "",
+                discount: "",
+                maxDiscount: "",
+                minPrice: "",
+                availFrom: "",
+                expiryDate: "",
+                status: "active",
+              });
+              setIsEdit(false);
+              setShowModal(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-5 py-2.5 rounded-lg shadow-sm font-medium cursor-pointer w-full sm:w-auto whitespace-nowrap"
+          >
+            + Add Coupon
+          </button>
+        </div>
       </div>
 
       {/* TABS & CONTROLS ROW */}

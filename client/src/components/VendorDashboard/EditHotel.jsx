@@ -174,7 +174,7 @@ const EditHotel = () => {
     try {
       await api.put(`/hotels/update/${id}`, submitData);
       alert("Property updated successfully! Status is now pending review.");
-      navigate("/admin-dashboard");
+      navigate(-1);
     } catch (error) {
       alert(error.response?.data?.message || "Update failed.");
     } finally {
@@ -442,7 +442,7 @@ const EditHotel = () => {
           <div className="flex gap-4 pt-4">
             <button
               type="button"
-              onClick={() => navigate("/admin-dashboard")}
+              onClick={() => navigate(-1)}
               className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg transition-all"
             >
               Cancel

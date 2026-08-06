@@ -8,7 +8,6 @@ cron.schedule("0 0 * * *", async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Find bookings where check-in date is today, status is still 'pending' or 'confirmed' (not checked-in)
     const expiredBookings = await Booking.find({
       status: { $in: ["pending", "confirmed"] },
       checkInDate: { $lte: today },
@@ -17,11 +16,9 @@ cron.schedule("0 0 * * *", async () => {
       .populate("roomId", "roomType");
 
     for (const booking of expiredBookings) {
-      // Update status to rejected/cancelled due to no-show
       booking.status = "rejected";
       await booking.save();
 
-      // Send cancellation email
       if (booking.userId && booking.userId.email) {
         const emailBody = `
           <h2>Booking Auto-Cancelled</h2>
