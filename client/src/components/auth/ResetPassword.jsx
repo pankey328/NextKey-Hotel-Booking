@@ -11,12 +11,14 @@ const ResetPassword = () => {
     confirmpassword: "",
   });
   const [error, setError] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
 
   const token = localStorage.getItem("token");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError({});
+    setSuccessMessage("");
 
     let obj = {};
     if (!form.email.trim()) obj.email = "Email is required";
@@ -42,41 +44,58 @@ const ResetPassword = () => {
       });
 
       console.log(result.data);
-      alert("Password changed successfully");
+      setSuccessMessage(
+        "Password changed successfully! Redirecting to login...",
+      );
 
       localStorage.removeItem("token");
-      navigate("/login");
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (error) {
       console.error(error.response?.data?.message || error.message);
-      alert(
-        `Error : ${error.response?.data?.message || "Something went wrong"}`,
-      );
+      setError({
+        form:
+          error.response?.data?.message ||
+          "Something went wrong. Please check your details.",
+      });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-neutral-950 p-4 transition-colors duration-500 font-sans">
-      <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-[2rem] shadow-2xl shadow-black/5 dark:shadow-black/40 p-8 sm:p-10 border border-neutral-100 dark:border-neutral-800 transition-colors duration-500">
-        {/* Brand & Heading */}
-        <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-block font-serif text-2xl tracking-tight text-neutral-900 dark:text-white mb-6 hover:opacity-80 transition-opacity"
-          >
-            MyApp<span className="text-neutral-400">.</span>
-          </Link>
-          <h2 className="text-3xl font-serif text-neutral-900 dark:text-white tracking-tight">
+    <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8 transition-colors duration-500 font-sans overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-[400px] bg-blue-500/5 dark:bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+      <div className="relative w-full max-w-[420px] bg-white dark:bg-neutral-900/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 border border-neutral-100 dark:border-neutral-800 transition-all duration-500 z-10">
+        {/* Heading Section */}
+        <div className="text-center mb-5 mt-1">
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white tracking-tight">
             Update Password
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 font-light">
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1.5 font-light">
             Secure your account with a new password.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-3">
+          {successMessage && (
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+              <p className="text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                {successMessage}
+              </p>
+            </div>
+          )}
+
+          {error.form && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+              <p className="text-red-600 dark:text-red-400 text-xs font-medium">
+                {error.form}
+              </p>
+            </div>
+          )}
+
           {/* Email Input */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
               Email Address
             </label>
             <input
@@ -84,14 +103,14 @@ const ResetPassword = () => {
               placeholder="name@example.com"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.email
                   ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
               }`}
             />
             {error.email && (
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                 {error.email}
               </p>
             )}
@@ -99,7 +118,7 @@ const ResetPassword = () => {
 
           {/* Current Password Input */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
               Current Password
             </label>
             <input
@@ -107,14 +126,14 @@ const ResetPassword = () => {
               placeholder="Enter current password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.password
                   ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
               }`}
             />
             {error.password && (
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                 {error.password}
               </p>
             )}
@@ -122,7 +141,7 @@ const ResetPassword = () => {
 
           {/* New Password Input */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
               New Password
             </label>
             <input
@@ -132,14 +151,14 @@ const ResetPassword = () => {
               onChange={(e) =>
                 setForm({ ...form, newpassword: e.target.value })
               }
-              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.newpassword
                   ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
               }`}
             />
             {error.newpassword && (
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                 {error.newpassword}
               </p>
             )}
@@ -147,7 +166,7 @@ const ResetPassword = () => {
 
           {/* Confirm Password Input */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
               Confirm New Password
             </label>
             <input
@@ -160,14 +179,14 @@ const ResetPassword = () => {
                   confirmpassword: e.target.value,
                 })
               }
-              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.confirmpassword
                   ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
               }`}
             />
             {error.confirmpassword && (
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                 {error.confirmpassword}
               </p>
             )}
@@ -175,15 +194,15 @@ const ResetPassword = () => {
 
           <button
             type="submit"
-            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 mt-6"
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3.5 rounded-xl shadow-md hover:opacity-90 transition-all active:scale-[0.98] mt-3"
           >
             Save Password
           </button>
 
-          <div className="text-center mt-6 pt-4 border-t border-neutral-100 dark:border-neutral-800 text-sm">
+          <div className="text-center mt-3 pt-3 border-t border-neutral-100 dark:border-neutral-800">
             <Link
               to="/"
-              className="inline-flex items-center justify-center gap-2 text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+              className="inline-flex items-center justify-center gap-2 text-xs sm:text-sm font-medium text-neutral-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
               <svg
                 className="w-4 h-4"

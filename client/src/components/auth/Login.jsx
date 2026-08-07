@@ -110,28 +110,24 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-neutral-950 p-4 transition-colors duration-500 font-sans">
-      <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-[2rem] shadow-2xl shadow-black/5 dark:shadow-black/40 p-8 sm:p-10 border border-neutral-100 dark:border-neutral-800 transition-colors duration-500">
-        {/* Brand & Heading */}
-        <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-block font-serif text-2xl tracking-tight text-neutral-900 dark:text-white mb-6 hover:opacity-80 transition-opacity"
-          >
-            MyApp<span className="text-neutral-400">.</span>
-          </Link>
-          <h2 className="text-3xl font-serif text-neutral-900 dark:text-white tracking-tight">
+    <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8 transition-colors duration-500 font-sans overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-[400px] bg-blue-500/5 dark:bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+
+      <div className="relative w-full max-w-[420px] bg-white dark:bg-neutral-900/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 border border-neutral-100 dark:border-neutral-800 transition-all duration-500">
+        {/* Heading Section */}
+        <div className="text-center mb-6 mt-2">
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white tracking-tight">
             Welcome Back
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 font-light">
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-2 font-light">
             Enter your details to access your account.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="space-y-5">
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
           {/* Email Input */}
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
               Email Address
             </label>
             <input
@@ -141,14 +137,14 @@ const Login = () => {
               onChange={(e) =>
                 setLoginForm({ ...loginForm, email: e.target.value })
               }
-              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.email
                   ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
               }`}
             />
             {error.email && (
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                 {error.email}
               </p>
             )}
@@ -156,15 +152,15 @@ const Login = () => {
 
           {/* Password Input */}
           <div>
-            <div className="flex justify-between items-center mb-2 mx-1">
+            <div className="flex justify-between items-center mb-1.5 mx-1">
               <label className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                 Password
               </label>
               <Link
                 to="/forget-password"
-                className="text-xs font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
-                Forgot?
+                Forgot password?
               </Link>
             </div>
             <input
@@ -174,14 +170,14 @@ const Login = () => {
               onChange={(e) =>
                 setLoginForm({ ...loginForm, password: e.target.value })
               }
-              className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+              className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                 error.password
                   ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                  : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
               }`}
             />
             {error.password && (
-              <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+              <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                 {error.password}
               </p>
             )}
@@ -189,8 +185,8 @@ const Login = () => {
 
           {/* Global Form Error */}
           {error.form && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 text-center">
-              <p className="text-red-600 dark:text-red-400 text-sm font-medium">
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+              <p className="text-red-600 dark:text-red-400 text-xs font-medium">
                 {error.form}
               </p>
             </div>
@@ -199,7 +195,7 @@ const Login = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 mt-2"
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3.5 rounded-xl shadow-md hover:opacity-90 transition-all active:scale-[0.98] mt-2"
           >
             Sign In
           </button>
@@ -208,7 +204,7 @@ const Login = () => {
           <div className="flex items-center gap-3 py-2">
             <div className="h-px w-full bg-neutral-200 dark:bg-neutral-800"></div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 whitespace-nowrap">
-              Or continue with
+              Or
             </span>
             <div className="h-px w-full bg-neutral-200 dark:bg-neutral-800"></div>
           </div>
@@ -217,7 +213,7 @@ const Login = () => {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full bg-transparent border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold py-3.5 rounded-xl flex items-center justify-center gap-3 transition-colors"
+            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold py-3 rounded-xl flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -237,16 +233,16 @@ const Login = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Google
+            Continue with Google
           </button>
 
           {/* Footer Link */}
           <div className="text-center pt-2">
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">
               Don't have an account?{" "}
               <Link
                 to="/signup"
-                className="font-semibold text-neutral-900 dark:text-white hover:underline transition-all"
+                className="font-semibold text-neutral-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 Sign Up
               </Link>

@@ -5,68 +5,8 @@ const VendorRequest = require("../models/VendorRequestModel");
 const Hotel = require("../models/HotelModel");
 const mongoose = require("mongoose");
 
-// Creates new booking (Without Transaction)
-exports.createBooking = async (req, res) => {
-  try {
-    const {
-      hotelId,
-      roomId,
-      couponId,
-      checkInDate,
-      checkOutDate,
-      totalDays,
-      originalPrice,
-      finalPrice,
-    } = req.body;
-
-    const userId = req.user.id;
-
-    if (!hotelId || !roomId || !checkInDate || !checkOutDate || !totalDays) {
-      return res
-        .status(400)
-        .json({ message: "Missing required booking details" });
-    }
-
-    const platformFeePercentage = 10;
-    const platformFeeAmount = (finalPrice * platformFeePercentage) / 100;
-    const hotelEarningAmount = finalPrice - platformFeeAmount;
-
-    const newBooking = new Booking({
-      userId,
-      hotelId,
-      roomId,
-      couponId: couponId || null,
-      checkInDate,
-      checkOutDate,
-      totalDays,
-      originalPrice,
-      finalPrice,
-      platformFeePercentage,
-      platformFeeAmount,
-      hotelEarningAmount,
-      status: "pending",
-    });
-
-    await newBooking.save();
-
-    await TempBooking.deleteMany({
-      userId,
-      roomId: new mongoose.Types.ObjectId(roomId),
-    });
-
-    return res.status(201).json({
-      message: "Booking request submitted successfully",
-      data: newBooking,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: error.message,
-    });
-  }
-};
-
 // Creates new booking (With Transaction)
-/* exports.createBooking = async (req, res) => {
+exports.createBooking = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -85,7 +25,7 @@ exports.createBooking = async (req, res) => {
     const userId = req.user.id;
 
     if (!hotelId || !roomId || !checkInDate || !checkOutDate || !totalDays) {
-      await session.abortTransaction(); 
+      await session.abortTransaction();
       session.endSession();
       return res
         .status(400)
@@ -115,9 +55,9 @@ exports.createBooking = async (req, res) => {
     await newBooking.save({ session });
 
     await TempBooking.deleteMany(
-      { 
+      {
         userId,
-        roomId: new mongoose.Types.ObjectId(roomId) 
+        roomId: new mongoose.Types.ObjectId(roomId),
       },
       { session },
     );
@@ -137,7 +77,7 @@ exports.createBooking = async (req, res) => {
       message: error.message,
     });
   }
-}; */
+};
 
 // Get all bookings for the logged-in User
 exports.getUserBookings = async (req, res) => {
@@ -198,7 +138,7 @@ exports.getHotelBookings = async (req, res) => {
 
     let bookings = await Booking.find(query)
       .populate("userId", "name email phone")
-      .populate("roomId", "roomType roomNumber")
+      .populate("roomId", "roomType roomNumber");
 
     // Searching
     if (search) {
@@ -598,8 +538,8 @@ exports.getVendorDashboardStats = async (req, res) => {
       Review.find({ hotelId: { $in: hotelIds } }),
     ]);
 
-    let totalRevenue = 0; 
-    let netRevenue = 0; // 90% 
+    let totalRevenue = 0;
+    let netRevenue = 0; // 90%
 
     for (const booking of completedBookings) {
       totalRevenue += booking.finalPrice || 0;

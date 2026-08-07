@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import api from "../../api";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -13,11 +13,13 @@ const Signup = () => {
     otp: "",
   });
   const [error, setError] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Send OTP
   const sendOtp = async (e) => {
     e.preventDefault();
     setError({});
+    setSuccessMessage("");
 
     try {
       let obj = {};
@@ -44,12 +46,18 @@ const Signup = () => {
       };
 
       let res = await api.post("/auth/send-otp", data);
-      alert(res.data.message || "OTP Sent successfully!");
 
+      setSuccessMessage(
+        res.data.message || "OTP sent successfully to your email!",
+      );
       setIsOtpSent(true);
     } catch (error) {
       console.log(">>>Error", error.response?.data?.message || error.message);
-      alert(`Error: ${error.response?.data?.message || "Failed to send OTP"}`);
+      setError({
+        form:
+          error.response?.data?.message ||
+          "Failed to send OTP. Please try again.",
+      });
     }
   };
 
@@ -57,6 +65,7 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError({});
+    setSuccessMessage("");
 
     if (!signupForm.otp.trim()) {
       setError({ otp: "OTP is required" });
@@ -69,7 +78,9 @@ const Signup = () => {
         otp: signupForm.otp,
       });
 
-      alert(res.data.message || "Signup successful!");
+      setSuccessMessage(
+        res.data.message || "Signup successful! Redirecting...",
+      );
 
       setSignupForm({
         name: "",
@@ -78,27 +89,29 @@ const Signup = () => {
         confirmpassword: "",
         otp: "",
       });
-      navigate("/login");
+
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     } catch (error) {
-      alert(`Error: ${error.response?.data?.message || "Invalid OTP"}`);
+      setError({
+        form: error.response?.data?.message || "Invalid OTP. Please try again.",
+      });
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#fdfdfd] dark:bg-neutral-950 p-4 transition-colors duration-500 font-sans py-12">
-      <div className="max-w-md w-full bg-white dark:bg-neutral-900 rounded-[2rem] shadow-2xl shadow-black/5 dark:shadow-black/40 p-8 sm:p-10 border border-neutral-100 dark:border-neutral-800 transition-colors duration-500">
-        {/* Brand & Heading */}
-        <div className="text-center mb-8">
-          <Link
-            to="/"
-            className="inline-block font-serif text-2xl tracking-tight text-neutral-900 dark:text-white mb-6 hover:opacity-80 transition-opacity"
-          >
-            MyApp<span className="text-neutral-400">.</span>
-          </Link>
-          <h2 className="text-3xl font-serif text-neutral-900 dark:text-white tracking-tight">
+    <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center bg-white dark:bg-neutral-950 px-4 sm:px-6 lg:px-8 transition-colors duration-500 font-sans overflow-hidden">
+      {/* Background ambient glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-[400px] bg-blue-500/5 dark:bg-blue-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+
+      <div className="relative w-full max-w-[420px] bg-white dark:bg-neutral-900/80 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] p-6 sm:p-8 border border-neutral-100 dark:border-neutral-800 transition-all duration-500 z-10">
+        {/* Heading Section */}
+        <div className="text-center mb-5 mt-1">
+          <h2 className="text-2xl font-semibold text-neutral-900 dark:text-white tracking-tight">
             {isOtpSent ? "Verify Email" : "Create Account"}
           </h2>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2 font-light">
+          <p className="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 mt-1.5 font-light">
             {isOtpSent
               ? "Enter the code we just sent to your inbox."
               : "Join our exclusive collection of premium stays."}
@@ -108,13 +121,29 @@ const Signup = () => {
         <form
           onSubmit={isOtpSent ? handleSubmit : sendOtp}
           noValidate
-          className="space-y-5"
+          className="space-y-3"
         >
+          {successMessage && (
+            <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+              <p className="text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+                {successMessage}
+              </p>
+            </div>
+          )}
+
+          {error.form && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-center animate-in fade-in slide-in-from-top-2 duration-300">
+              <p className="text-red-600 dark:text-red-400 text-xs font-medium">
+                {error.form}
+              </p>
+            </div>
+          )}
+
           {!isOtpSent && (
             <>
               {/* Name Input */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
                   Full Name
                 </label>
                 <input
@@ -124,15 +153,15 @@ const Signup = () => {
                   onChange={(e) =>
                     setSignupForm({ ...signupForm, name: e.target.value })
                   }
-                  className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+                  className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                     error.name
                       ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
                   }`}
                   required
                 />
                 {error.name && (
-                  <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+                  <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                     {error.name}
                   </p>
                 )}
@@ -140,7 +169,7 @@ const Signup = () => {
 
               {/* Email Input */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
                   Email Address
                 </label>
                 <input
@@ -150,15 +179,15 @@ const Signup = () => {
                   onChange={(e) =>
                     setSignupForm({ ...signupForm, email: e.target.value })
                   }
-                  className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+                  className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                     error.email
                       ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
                   }`}
                   required
                 />
                 {error.email && (
-                  <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+                  <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                     {error.email}
                   </p>
                 )}
@@ -166,7 +195,7 @@ const Signup = () => {
 
               {/* Password Input */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
                   Password
                 </label>
                 <input
@@ -176,15 +205,15 @@ const Signup = () => {
                   onChange={(e) =>
                     setSignupForm({ ...signupForm, password: e.target.value })
                   }
-                  className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+                  className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                     error.password
                       ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
                   }`}
                   required
                 />
                 {error.password && (
-                  <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+                  <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                     {error.password}
                   </p>
                 )}
@@ -192,7 +221,7 @@ const Signup = () => {
 
               {/* Confirm Password Input */}
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-2 ml-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 dark:text-neutral-400 mb-1.5 ml-1">
                   Confirm Password
                 </label>
                 <input
@@ -205,15 +234,15 @@ const Signup = () => {
                       confirmpassword: e.target.value,
                     })
                   }
-                  className={`w-full px-4 py-3.5 rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
+                  className={`w-full px-4 py-3 rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none transition-colors ${
                     error.confirmpassword
                       ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
                   }`}
                   required
                 />
                 {error.confirmpassword && (
-                  <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 ml-1">
+                  <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1 ml-1">
                     {error.confirmpassword}
                   </p>
                 )}
@@ -222,10 +251,10 @@ const Signup = () => {
           )}
 
           {isOtpSent && (
-            <div className="space-y-6">
+            <div className="space-y-4 py-2">
               {/* Display Target Email */}
-              <div className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-100 dark:border-neutral-800 rounded-xl p-4 text-center">
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest font-bold mb-1">
+              <div className="bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-100 dark:border-neutral-800 rounded-xl p-3 text-center">
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400 uppercase tracking-widest font-bold mb-1">
                   Code Sent To
                 </p>
                 <p className="text-sm font-medium text-neutral-900 dark:text-white">
@@ -246,25 +275,25 @@ const Signup = () => {
                   onChange={(e) =>
                     setSignupForm({ ...signupForm, otp: e.target.value })
                   }
-                  className={`w-full px-4 py-3.5 text-center tracking-[0.5em] font-mono text-xl rounded-xl border bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white placeholder-neutral-300 dark:placeholder-neutral-600 focus:outline-none transition-colors ${
+                  className={`w-full px-4 py-3 text-center tracking-[0.5em] font-mono text-xl rounded-xl border bg-neutral-50 dark:bg-neutral-950/50 text-neutral-900 dark:text-white placeholder-neutral-300 dark:placeholder-neutral-600 focus:outline-none transition-colors ${
                     error.otp
                       ? "border-red-300 dark:border-red-800 bg-red-50/50 dark:bg-red-900/10"
-                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-600"
+                      : "border-neutral-200 dark:border-neutral-800 focus:border-neutral-400 dark:focus:border-neutral-500"
                   }`}
                   required
                 />
                 {error.otp && (
-                  <p className="text-red-500 dark:text-red-400 text-xs font-medium mt-1.5 text-center">
+                  <p className="text-red-500 dark:text-red-400 text-[10px] font-medium mt-1.5 text-center">
                     {error.otp}
                   </p>
                 )}
               </div>
 
-              <div className="text-center pt-2">
+              <div className="text-center pt-1">
                 <button
                   type="button"
                   onClick={() => setIsOtpSent(false)}
-                  className="text-sm font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                  className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                 >
                   Edit email address
                 </button>
@@ -275,35 +304,22 @@ const Signup = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-4 rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 mt-4"
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3.5 rounded-xl shadow-md hover:opacity-90 transition-all active:scale-[0.98] mt-2"
           >
             {isOtpSent ? "Verify & Sign Up" : "Continue"}
           </button>
 
           {!isOtpSent && (
-            <div className="mt-8 pt-6 border-t border-neutral-100 dark:border-neutral-800 flex flex-col gap-5">
-              <div className="text-center text-sm">
+            <div className="mt-4 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <div className="text-center text-xs sm:text-sm">
                 <span className="text-neutral-500 dark:text-neutral-400">
                   Already have an account?{" "}
                 </span>
                 <Link
                   to="/login"
-                  className="font-semibold text-neutral-900 dark:text-white hover:underline transition-all"
+                  className="font-semibold text-neutral-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                 >
                   Sign In
-                </Link>
-              </div>
-
-              {/* Partner CTA */}
-              <div className="text-center flex flex-col items-center bg-neutral-50 dark:bg-neutral-950 p-5 rounded-2xl border border-neutral-100 dark:border-neutral-800">
-                <span className="text-xs font-bold uppercase tracking-widest text-neutral-500 mb-2">
-                  For Property Owners
-                </span>
-                <Link
-                  to="/partner-registration"
-                  className="text-sm font-medium text-black dark:text-white border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:bg-neutral-100 dark:hover:bg-neutral-800 px-6 py-2.5 rounded-lg transition-colors"
-                >
-                  List your property
                 </Link>
               </div>
             </div>

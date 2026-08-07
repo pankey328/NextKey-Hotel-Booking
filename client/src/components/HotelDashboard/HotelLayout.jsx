@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import api from "../../api";
 
 const HotelLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [hotelInfo, setHotelInfo] = useState(null);
   const [rooms, setRooms] = useState([]);
 
@@ -24,6 +25,13 @@ const HotelLayout = () => {
     };
     fetchInitialData();
   }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+    window.location.reload();
+  };
 
   const isDashboard = location.pathname === "/hotel-dashboard";
   const isReservations = location.pathname.includes("/reservations");
@@ -58,7 +66,7 @@ const HotelLayout = () => {
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
       {/* DASHBOARD SIDEBAR */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col shrink-0">
+      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col shrink-0 sticky top-0 h-screen">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-extrabold text-gray-800 dark:text-white tracking-wide">
             Manager Panel
@@ -68,7 +76,7 @@ const HotelLayout = () => {
           </p>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <SidebarItem
             to="/hotel-dashboard"
             label="Dashboard"
@@ -88,6 +96,49 @@ const HotelLayout = () => {
             iconPath="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
           />
         </nav>
+
+        {/* BOTTOM LINKS */}
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+          <Link
+            to="/"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all cursor-pointer"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to NextKey
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer"
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+              />
+            </svg>
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* MAIN CONTENT CONTAINER */}
@@ -111,6 +162,12 @@ const HotelLayout = () => {
             className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isRooms ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
           >
             Rooms
+          </Link>
+          <Link
+            to="/"
+            className="flex-1 py-2 px-1 text-xs font-bold text-center text-gray-600 dark:text-gray-300 rounded-lg transition-all"
+          >
+            Exit
           </Link>
         </div>
 

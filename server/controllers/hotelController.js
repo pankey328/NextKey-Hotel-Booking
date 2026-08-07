@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const { uploadImage } = require("../utils/cloudinary");
 const sendMail = require("../config/nodemailer");
 const { v4: uuidv4 } = require("uuid");
+const mongoose = require("mongoose");
 
 // Register New Hotel
 exports.registerHotel = async (req, res) => {
@@ -165,7 +166,7 @@ exports.getHotels = async (req, res) => {
     let sortObj = { createdAt: -1 };
 
     if (sortBy === "oldest") sortObj = { createdAt: 1 };
-    if (sortBy === "name_asc") sortObj = { name: 1 }; 
+    if (sortBy === "name_asc") sortObj = { name: 1 };
     if (sortBy === "name_desc") sortObj = { name: -1 };
 
     // Pagination
@@ -196,84 +197,30 @@ exports.getHotels = async (req, res) => {
   }
 };
 
-// Approve Hotel (Transaction)
-/* exports.approveHotel = async (req, res) => {
+// Approve Hotel (Without Transaction)
+exports.approveHotel = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
+
   try {
     const hotel = await Hotel.findById(req.params.id).session(session);
 
     if (!hotel) {
       await session.abortTransaction();
-      session.endSession();
-      return res
-        .status(404)
-        .json({  message: "Hotel not found" });
-    }
-
-    const generatedPassword = uuidv4().slice(0, 8);
-    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
-
-    hotel.status = "approved";
-    await hotel.save({ session });
-
-    await User.create(
-      [
-        {
-          name: hotel.name,
-          email: hotel.email,  // This is the hotel's business email
-          password: hashedPassword,
-          role: "hotel",
-          hotelId: hotel._id,
-          vendorId: hotel.vendorId // Link to parent vendor
-        },
-      ],
-      { session },
-    );
-
-    const emailBody = `
-      <h2>Hotel Live!</h2>
-      <p>Your hotel <b>${hotel.name}</b> is now live on our platform.</p>
-      <p>Use these credentials to log in and manage your property bookings:</p>
-      <p><b>Login:</b> ${hotel.email}<br><b>Password:</b> ${generatedPassword}</p>
-    `;
-    await sendMail.sendMail(
-      hotel.email,
-      "Hotel Approved - Login Credentials",
-      emailBody,
-    );
-
-    await session.commitTransaction();
-
-   return res.status(200).json({
-      message: "Hotel approved and credentials sent via email.",
-    });
-  } catch (error) {
-    await session.abortTransaction();
-   return res.status(500).json({ message: error.message });
-  } finally {
-    session.endSession();
-  }
-}; */
-
-// Approve Hotel (Without Transaction)
-exports.approveHotel = async (req, res) => {
-  try {
-    const hotel = await Hotel.findById(req.params.id);
-
-    if (!hotel) {
       return res.status(404).json({
         message: "Hotel not found",
       });
     }
 
     if (hotel.isDeleted) {
+      await session.abortTransaction();
       return res.status(400).json({
         message: "Cannot approve an inactive/deleted hotel",
       });
     }
 
     if (hotel.status === "approved") {
+      await session.abortTransaction();
       return res.status(400).json({
         message: "Hotel is already approved",
       });
@@ -281,9 +228,10 @@ exports.approveHotel = async (req, res) => {
 
     const existingUser = await User.findOne({
       email: hotel.email.toLowerCase().trim(),
-    });
+    }).session(session);
 
     if (existingUser) {
+      await session.abortTransaction();
       return res.status(400).json({
         message: "A user with this email already exists.",
       });
@@ -294,31 +242,31 @@ exports.approveHotel = async (req, res) => {
 
     hotel.status = "approved";
     hotel.rejectRemark = "";
-    await hotel.save();
+    await hotel.save({ session });
 
-    await User.create({
-      name: hotel.name,
-      email: hotel.email.toLowerCase().trim(),
-      password: hashedPassword,
-      role: "hotel",
-      hotelId: hotel._id,
-      vendorId: hotel.vendorId,
-    });
+    await User.create(
+      [
+        {
+          name: hotel.name,
+          email: hotel.email.toLowerCase().trim(),
+          password: hashedPassword,
+          role: "hotel",
+          hotelId: hotel._id,
+          vendorId: hotel.vendorId,
+        },
+      ],
+      { session },
+    );
 
     const emailBody = `
       <h2>Hotel Live!</h2>
-
       <p>Congratulations! Your hotel <b>${hotel.name}</b> has been approved and is now live on our platform.</p>
-
       <p><strong>Your Login Credentials</strong></p>
-
       <p>
         <b>Email:</b> ${hotel.email}<br>
         <b>Password:</b> ${generatedPassword}
       </p>
-
       <p>Please log in and change your password after your first login.</p>
-
       <p>Thank you for partnering with us.</p>
     `;
 
@@ -328,13 +276,18 @@ exports.approveHotel = async (req, res) => {
       emailBody,
     );
 
+    await session.commitTransaction();
+
     return res.status(200).json({
       message: "Hotel approved successfully, Login credentials have been sent",
     });
   } catch (error) {
+    await session.abortTransaction();
     return res.status(500).json({
       message: error.message || "Internal Server Error",
     });
+  } finally {
+    session.endSession();
   }
 };
 

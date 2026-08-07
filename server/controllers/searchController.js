@@ -12,6 +12,8 @@ exports.searchHotels = async (req, res) => {
       starRating,
       hotelType,
       features,
+      page = 1,
+      limit = 50,
     } = req.query;
 
     let query = {
@@ -37,14 +39,29 @@ exports.searchHotels = async (req, res) => {
       query.features = { $all: featuresArray };
     }
 
-    const hotels = await Hotel.find(query)
-      .populate("stateId", "name")
-      .populate("districtId", "name")
-      .populate("cityId", "name")
-      .sort({ createdAt: -1 });
+    const pageNumber = Number(page);
+    const limitNumber = Number(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [totalHotels, hotels] = await Promise.all([
+      Hotel.countDocuments(query),
+      Hotel.find(query)
+        .populate("stateId", "name")
+        .populate("districtId", "name")
+        .populate("cityId", "name")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber),
+    ]);
 
     return res.status(200).json({
       data: hotels,
+      pagination: {
+        total: totalHotels,
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalHotels / limitNumber),
+        limit: limitNumber,
+      },
     });
   } catch (error) {
     return res.status(500).json({

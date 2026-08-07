@@ -6,6 +6,7 @@ const sendMail = require("../config/nodemailer");
 const { uploadImage } = require("../utils/cloudinary");
 const bcrypt = require("bcrypt");
 const { v4: uuidv4 } = require("uuid");
+const mongoose = require("mongoose");
 
 // Register a Vendor(admin)
 exports.registerVendor = async (req, res) => {
@@ -124,9 +125,8 @@ exports.getVendorRequests = async (req, res) => {
   }
 };
 
-// Approve = SUPERADMIN (Transaction)
-
-/* exports.approveVendor = async (req, res) => {
+// Approve = SUPERADMIN (With Transaction)
+exports.approveVendor = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -136,19 +136,35 @@ exports.getVendorRequests = async (req, res) => {
     );
 
     if (!vendorReq) {
-      throw new Error("Vendor request not found");
+      await session.abortTransaction();
+      return res.status(404).json({
+        message: "Vendor request not found",
+      });
+    }
+
+    if (vendorReq.isDeleted) {
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Cannot approve an inactive vendor request",
+      });
     }
 
     if (vendorReq.status === "approved") {
-      throw new Error("Vendor is already approved");
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Vendor is already approved",
+      });
     }
 
     const existingUser = await User.findOne({
-      email: vendorReq.email,
+      email: vendorReq.email.toLowerCase().trim(),
     }).session(session);
 
     if (existingUser) {
-      throw new Error("A user with this email already exists");
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "A user with this email already exists",
+      });
     }
 
     const generatedPassword = uuidv4().slice(0, 8);
@@ -162,7 +178,7 @@ exports.getVendorRequests = async (req, res) => {
       [
         {
           name: vendorReq.applicantName,
-          email: vendorReq.email,
+          email: vendorReq.email.toLowerCase().trim(),
           password: hashedPassword,
           role: "vendor",
         },
@@ -177,7 +193,7 @@ exports.getVendorRequests = async (req, res) => {
 
       <p>Your vendor application has been <b>approved</b>.</p>
 
-      <p><b>Login Credentials</b></p>
+      <p><strong>Your Login Credentials</strong></p>
 
       <p>
         <b>Email:</b> ${vendorReq.email}<br>
@@ -205,93 +221,10 @@ exports.getVendorRequests = async (req, res) => {
     await session.abortTransaction();
 
     return res.status(500).json({
-      message: error.message,
+      message: error.message || "Internal Server Error",
     });
   } finally {
     session.endSession();
-  }
-}; */
-
-// Approve = SUPERADMIN (Without Transaction)
-exports.approveVendor = async (req, res) => {
-  try {
-    const vendorReq = await VendorRequest.findById(req.params.id);
-
-    if (!vendorReq) {
-      return res.status(404).json({
-        message: "Vendor request not found",
-      });
-    }
-
-    if (vendorReq.isDeleted) {
-      return res.status(400).json({
-        message: "Cannot approve an inactive vendor request",
-      });
-    }
-
-    if (vendorReq.status === "approved") {
-      return res.status(400).json({
-        message: "Vendor is already approved",
-      });
-    }
-
-    const existingUser = await User.findOne({
-      email: vendorReq.email.toLowerCase().trim(),
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        message: "A user with this email already exists",
-      });
-    }
-
-    const generatedPassword = uuidv4().slice(0, 8);
-    const hashedPassword = await bcrypt.hash(generatedPassword, 10);
-
-    vendorReq.status = "approved";
-    vendorReq.rejectRemark = "";
-    await vendorReq.save();
-
-    await User.create({
-      name: vendorReq.applicantName,
-      email: vendorReq.email.toLowerCase().trim(),
-      password: hashedPassword,
-      role: "vendor",
-    });
-
-    const emailBody = `
-      <h2>Welcome to Our Platform!</h2>
-
-      <p>Dear <b>${vendorReq.applicantName}</b>,</p>
-
-      <p>Your vendor application has been <b>approved</b>.</p>
-
-      <p><strong>Your Login Credentials</strong></p>
-
-      <p>
-        <b>Email:</b> ${vendorReq.email}<br>
-        <b>Password:</b> ${generatedPassword}
-      </p>
-
-      <p>Please log in and change your password immediately after your first login.</p>
-
-      <p>Thank you for partnering with us.</p>
-    `;
-
-    await sendMail.sendMail(
-      vendorReq.email,
-      "Vendor Account Approved",
-      emailBody,
-    );
-
-    return res.status(200).json({
-      message:
-        "Vendor approved successfully. Login credentials have been sent via email",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      message: error.message || "Internal Server Error",
-    });
   }
 };
 
