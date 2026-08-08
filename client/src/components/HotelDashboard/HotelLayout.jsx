@@ -7,6 +7,8 @@ const HotelLayout = () => {
   const navigate = useNavigate();
   const [hotelInfo, setHotelInfo] = useState(null);
   const [rooms, setRooms] = useState([]);
+  
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -26,6 +28,10 @@ const HotelLayout = () => {
     fetchInitialData();
   }, []);
 
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -40,14 +46,14 @@ const HotelLayout = () => {
   const SidebarItem = ({ to, label, iconPath, activeCondition }) => (
     <Link
       to={to}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm transition-all cursor-pointer ${
+      className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl font-bold text-[13px] uppercase tracking-wide transition-all duration-300 cursor-pointer ${
         activeCondition
-          ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-bold"
-          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+          ? "bg-gray-900 text-white dark:bg-gray-800 dark:text-white shadow-md"
+          : "text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800/50 dark:hover:text-white"
       }`}
     >
       <svg
-        className="w-5 h-5"
+        className="w-5 h-5 shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -59,24 +65,62 @@ const HotelLayout = () => {
           d={iconPath}
         ></path>
       </svg>
-      {label}
+      <span className="truncate">{label}</span>
     </Link>
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      {/* DASHBOARD SIDEBAR */}
-      <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 hidden md:flex flex-col shrink-0 sticky top-0 h-screen">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-xl font-extrabold text-gray-800 dark:text-white tracking-wide">
-            Manager Panel
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors duration-500 font-sans text-gray-900 dark:text-gray-100 relative">
+      
+      <div className="md:hidden flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 sticky top-0 z-30 shadow-sm">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMobileSidebarOpen(true)}
+            className="p-2 -ml-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <h2 className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+            NextKey <span className="font-medium text-gray-400 italic">Partner</span>
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            Hotel Operations Dashboard
-          </p>
+        </div>
+      </div>
+
+      {isMobileSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
+
+      <aside 
+        className={`fixed md:sticky top-0 left-0 h-screen w-72 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 flex flex-col shrink-0 z-50 transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none ${
+          isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <div className="flex justify-between items-center p-8 border-b border-gray-200 dark:border-gray-800">
+          <div>
+            <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              NextKey{" "}
+              <span className="font-medium text-gray-400 italic">Partner</span>
+            </h2>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-2">
+              Manager Panel
+            </p>
+          </div>
+          <button 
+            onClick={() => setIsMobileSidebarOpen(false)}
+            className="md:hidden p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-800 rounded-full transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-5 space-y-2 overflow-y-auto hide-scrollbar">
           <SidebarItem
             to="/hotel-dashboard"
             label="Dashboard"
@@ -97,14 +141,13 @@ const HotelLayout = () => {
           />
         </nav>
 
-        {/* BOTTOM LINKS */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+        <div className="p-5 border-t border-gray-200 dark:border-gray-800 space-y-2">
           <Link
             to="/"
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all cursor-pointer"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[13px] uppercase tracking-wide text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-all cursor-pointer"
           >
             <svg
-              className="w-5 h-5"
+              className="w-5 h-5 shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -116,15 +159,15 @@ const HotelLayout = () => {
                 d="M10 19l-7-7m0 0l7-7m-7 7h18"
               />
             </svg>
-            Back to NextKey
+            Exit Dashboard
           </Link>
 
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl font-medium text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all cursor-pointer"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-[13px] uppercase tracking-wide text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all cursor-pointer"
           >
             <svg
-              className="w-5 h-5"
+              className="w-5 h-5 shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -142,54 +185,29 @@ const HotelLayout = () => {
       </aside>
 
       {/* MAIN CONTENT CONTAINER */}
-      <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {/* MOBILE VIEW NAVIGATION */}
-        <div className="flex md:hidden flex-wrap gap-2 mb-6 bg-white dark:bg-gray-800 p-2 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <Link
-            to="/hotel-dashboard"
-            className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isDashboard ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
-          >
-            Dashboard
-          </Link>
-          <Link
-            to="/hotel-dashboard/reservations"
-            className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isReservations ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
-          >
-            Reservations
-          </Link>
-          <Link
-            to="/hotel-dashboard/rooms"
-            className={`flex-1 py-2 px-1 text-xs font-bold text-center rounded-lg transition-all ${isRooms ? "bg-blue-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
-          >
-            Rooms
-          </Link>
-          <Link
-            to="/"
-            className="flex-1 py-2 px-1 text-xs font-bold text-center text-gray-600 dark:text-gray-300 rounded-lg transition-all"
-          >
-            Exit
-          </Link>
-        </div>
+      <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
+        
+        {/* TOP HOTEL PROFILE HEADER */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6 bg-white dark:bg-gray-900 p-6 md:p-8 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+          {/* Subtle background decoration */}
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-gray-100 dark:bg-gray-800/50 rounded-full blur-3xl pointer-events-none"></div>
 
-        {/* TOP HOTEL PROFILE BAR */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400 rounded-xl flex items-center justify-center text-2xl font-bold shadow-sm">
+          <div className="flex items-center gap-5 relative z-10">
+            <div className="w-16 h-16 bg-gray-900 text-white dark:bg-gray-800 dark:text-gray-100 rounded-xl flex items-center justify-center text-3xl font-extrabold shadow-sm shrink-0">
               {hotelInfo?.name ? hotelInfo.name.charAt(0).toUpperCase() : "H"}
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
                 {hotelInfo ? hotelInfo.name : "Loading Hotel Details..."}
               </h1>
-              <div className="flex flex-wrap items-center gap-2 text-sm mt-1">
-                <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded font-medium text-xs">
+              <div className="flex flex-wrap items-center gap-3 text-sm mt-1">
+                <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-md font-bold uppercase tracking-wider text-[10px]">
                   {hotelInfo ? hotelInfo.hotelType : "Hotel Dashboard"}
                 </span>
-                <span className="text-gray-500 dark:text-gray-400">
-                  •{" "}
+                <span className="text-gray-500 font-medium text-[13px] hidden sm:inline">
                   {hotelInfo
                     ? hotelInfo.email
-                    : "Manage properties and guest bookings"}
+                    : "Manage properties and bookings"}
                 </span>
               </div>
             </div>
@@ -198,7 +216,7 @@ const HotelLayout = () => {
           {isRooms && (
             <Link
               to="/hotel-dashboard/add-room"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-sm transition-all flex items-center gap-2"
+              className="w-full md:w-auto bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 rounded-xl font-bold text-[13px] uppercase tracking-wide shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 relative z-10"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -219,6 +237,7 @@ const HotelLayout = () => {
 
         <Outlet context={{ hotelInfo, rooms }} />
       </main>
+
     </div>
   );
 };

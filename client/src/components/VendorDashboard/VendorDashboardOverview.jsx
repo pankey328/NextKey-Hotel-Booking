@@ -43,21 +43,41 @@ const VendorDashboardOverview = () => {
 
   if (loading) {
     return (
-      <div className="text-center py-10 text-gray-500 font-medium">
-        Fetching Data Across All Properties...
+      <div className="flex h-[50vh] items-center justify-center flex-col gap-4">
+        <div className="flex items-center space-x-2">
+          <div
+            className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"
+            style={{ animationDelay: "-0.3s" }}
+          ></div>
+          <div
+            className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"
+            style={{ animationDelay: "-0.15s" }}
+          ></div>
+          <div className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"></div>
+        </div>
+        <div className="text-gray-500 font-medium text-sm">
+          Fetching Data Across All Properties...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Total Properties
-            </h3>
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded-lg">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 font-sans">
+      {/* TOP STATS ROW */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Properties */}
+        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">
+                Total Properties
+              </h3>
+              <div className="text-3xl font-extrabold text-gray-900 dark:text-white">
+                {stats.totalProperties}
+              </div>
+            </div>
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -73,17 +93,20 @@ const VendorDashboardOverview = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {stats.totalProperties}
-          </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Total Check-Ins
-            </h3>
-            <div className="p-2 bg-green-50 dark:bg-green-900/30 text-green-600 rounded-lg">
+        {/* Check-In Today */}
+        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">
+                Total Check-Ins
+              </h3>
+              <div className="text-3xl font-extrabold text-gray-900 dark:text-white">
+                {stats.checkInsToday}
+              </div>
+            </div>
+            <div className="w-10 h-10 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -99,17 +122,20 @@ const VendorDashboardOverview = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {stats.checkInsToday}
-          </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-              Total Pending
-            </h3>
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-lg">
+        {/* Total Pending */}
+        <div className="bg-white dark:bg-gray-900 p-5 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow duration-200">
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <h3 className="text-[13px] font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">
+                Total Pending
+              </h3>
+              <div className="text-3xl font-extrabold text-gray-900 dark:text-white">
+                {stats.newBookingsCount}
+              </div>
+            </div>
+            <div className="w-10 h-10 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -125,151 +151,167 @@ const VendorDashboardOverview = () => {
               </svg>
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {stats.newBookingsCount}
-          </div>
         </div>
 
-        {/* Vendor Earnings (Net Revenue) */}
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+        {/* Vendor Earnings */}
+        <div className="bg-gray-900 dark:bg-gray-950 p-5 rounded-2xl border border-gray-800 shadow-lg flex flex-col justify-between hover:shadow-xl transition-shadow duration-200">
+          <div className="flex justify-between items-start mb-1">
+            <div>
+              <h3 className="text-[13px] font-bold text-gray-400 mb-1 uppercase tracking-wider">
                 Earnings
               </h3>
-              <div className="p-2 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 rounded-lg">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 3h12 M6 8h12 M6 13l8.5 8 M6 13h3 M9 13c6.667 0 6.667-10 0-10"
-                  ></path>
-                </svg>
+              <div className="text-2xl font-extrabold text-white tracking-tight">
+                ₹{(stats.netRevenue || 0).toLocaleString("en-IN")}
               </div>
             </div>
-            <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-              ₹{(stats.netRevenue || 0).toLocaleString("en-IN")}
+            <div className="w-10 h-10 bg-gray-800 text-gray-300 rounded-xl flex items-center justify-center">
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 3h12 M6 8h12 M6 13l8.5 8 M6 13h3 M9 13c6.667 0 6.667-10 0-10"
+                ></path>
+              </svg>
             </div>
           </div>
-          <div className="text-xs font-medium text-gray-400 dark:text-gray-500 mt-1">
+          <div className="text-[11px] font-medium text-gray-500 mt-2">
             Gross: ₹{(stats.totalRevenue || 0).toLocaleString("en-IN")}
           </div>
         </div>
       </div>
 
+      {/* MIDDLE ROW */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Hotel List */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm lg:col-span-2">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm lg:col-span-2">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">
               Active Properties
             </h2>
           </div>
           <div className="space-y-4">
-            {myHotels
-              .filter((h) => h.status === "approved")
-              .slice(0, 4)
-              .map((hotel) => (
-                <div
-                  key={hotel._id}
-                  onClick={() =>
-                    navigate(`/admin-dashboard/hotel/${hotel._id}/overview`)
-                  }
-                  className="flex items-center justify-between p-3 hover:bg-gray-50 dark:hover:bg-gray-700/30 rounded-lg border border-gray-100 dark:border-gray-700 transition-colors cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 text-blue-600 dark:bg-blue-900/40 rounded-lg flex items-center justify-center font-bold">
-                      {hotel.name.charAt(0).toUpperCase()}
+            {myHotels.filter((h) => h.status === "approved").length === 0 ? (
+              <div className="text-center py-10 text-gray-400 font-medium">
+                No active properties found.
+              </div>
+            ) : (
+              myHotels
+                .filter((h) => h.status === "approved")
+                .slice(0, 4)
+                .map((hotel) => (
+                  <div
+                    key={hotel._id}
+                    onClick={() =>
+                      navigate(`/admin-dashboard/hotel/${hotel._id}/overview`)
+                    }
+                    className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl border border-gray-100 dark:border-gray-800 transition-colors cursor-pointer group shadow-sm"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl flex items-center justify-center text-lg font-extrabold">
+                        {hotel.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
+                          {hotel.name}
+                        </h4>
+                        <p className="text-[12px] font-bold uppercase tracking-wider text-gray-500 mt-1">
+                          {hotel.cityId?.name} • {hotel.starRating}★{" "}
+                          {hotel.hotelType}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                        {hotel.name}
-                      </h4>
-                      <p className="text-xs text-gray-500">
-                        {hotel.cityId?.name} • {hotel.starRating}★{" "}
-                        {hotel.hotelType}
-                      </p>
-                    </div>
+                    <span className="text-gray-300 group-hover:text-blue-600 group-hover:translate-x-1 transition-all">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 5l7 7-7 7"
+                        ></path>
+                      </svg>
+                    </span>
                   </div>
-                  <span className="text-gray-400 group-hover:text-blue-600">
-                    &rarr;
-                  </span>
-                </div>
-              ))}
+                ))
+            )}
           </div>
         </div>
 
         {/* Global Rating */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+        <div className="bg-white dark:bg-gray-900 p-6 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-base font-bold text-gray-900 dark:text-white">
               Network Rating
             </h2>
           </div>
-          <div className="flex items-end gap-3 mb-6">
-            <div className="text-5xl font-extrabold text-gray-900 dark:text-white">
+          <div className="flex items-end gap-3 mb-8">
+            <div className="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white flex items-baseline">
               {stats.ratings.overall > 0 ? stats.ratings.overall : "--"}
-              <span className="text-2xl text-gray-400 font-medium">/5</span>
+              <span className="text-lg text-gray-400 font-medium ml-1">/5</span>
             </div>
             <div className="mb-1">
-              <div className="text-sm font-bold text-gray-800 dark:text-gray-200">
+              <div className="text-[13px] font-bold text-gray-700 dark:text-gray-300">
                 {stats.ratings.overall >= 4.5
                   ? "Impressive"
                   : stats.ratings.overall >= 4
                     ? "Good"
                     : "Average"}
               </div>
-              <div className="text-xs text-gray-500">
+              <div className="text-[11px] font-medium text-gray-400">
                 across {stats.ratings.totalReviews} reviews
               </div>
             </div>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center text-sm">
-              <span className="w-24 text-gray-600 dark:text-gray-400">
+          <div className="space-y-4">
+            <div className="flex items-center text-[13px]">
+              <span className="w-24 font-bold text-gray-600 dark:text-gray-400">
                 Cleanliness
               </span>
-              <div className="flex-1 h-2 mx-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 mx-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div
-                  className="bg-yellow-400 h-full transition-all duration-1000"
+                  className="bg-emerald-500 h-full transition-all duration-1000 ease-out rounded-full"
                   style={{ width: getRatingPercentage(stats.ratings.cleaning) }}
                 ></div>
               </div>
-              <span className="font-bold w-6 text-right">
+              <span className="font-extrabold text-gray-900 dark:text-gray-100 w-6 text-right">
                 {stats.ratings.cleaning > 0 ? stats.ratings.cleaning : "--"}
               </span>
             </div>
-            <div className="flex items-center text-sm">
-              <span className="w-24 text-gray-600 dark:text-gray-400">
+            <div className="flex items-center text-[13px]">
+              <span className="w-24 font-bold text-gray-600 dark:text-gray-400">
                 Room Quality
               </span>
-              <div className="flex-1 h-2 mx-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 mx-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div
-                  className="bg-yellow-400 h-full transition-all duration-1000"
+                  className="bg-emerald-500 h-full transition-all duration-1000 ease-out rounded-full"
                   style={{ width: getRatingPercentage(stats.ratings.room) }}
                 ></div>
               </div>
-              <span className="font-bold w-6 text-right">
+              <span className="font-extrabold text-gray-900 dark:text-gray-100 w-6 text-right">
                 {stats.ratings.room > 0 ? stats.ratings.room : "--"}
               </span>
             </div>
-            <div className="flex items-center text-sm">
-              <span className="w-24 text-gray-600 dark:text-gray-400">
+            <div className="flex items-center text-[13px]">
+              <span className="w-24 font-bold text-gray-600 dark:text-gray-400">
                 Service
               </span>
-              <div className="flex-1 h-2 mx-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 mx-3 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                 <div
-                  className="bg-yellow-400 h-full transition-all duration-1000"
+                  className="bg-emerald-500 h-full transition-all duration-1000 ease-out rounded-full"
                   style={{ width: getRatingPercentage(stats.ratings.service) }}
                 ></div>
               </div>
-              <span className="font-bold w-6 text-right">
+              <span className="font-extrabold text-gray-900 dark:text-gray-100 w-6 text-right">
                 {stats.ratings.service > 0 ? stats.ratings.service : "--"}
               </span>
             </div>
@@ -278,26 +320,37 @@ const VendorDashboardOverview = () => {
       </div>
 
       {/* Global Bookings List */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden mt-6">
-        <div className="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center">
+          <h2 className="text-base font-bold text-gray-900 dark:text-white">
             Recent Global Bookings
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-gray-500 bg-gray-50 dark:bg-gray-700/50 uppercase border-b border-gray-100 dark:border-gray-700">
+          <table className="w-full text-[13px] text-left whitespace-nowrap">
+            <thead className="text-gray-500 bg-gray-50 dark:bg-gray-950/50 border-b border-gray-200 dark:border-gray-800">
               <tr>
-                <th className="px-6 py-4 font-medium">Hotel</th>
-                <th className="px-6 py-4 font-medium">Guest Name</th>
-                <th className="px-6 py-4 font-medium">Check-In & Out</th>
-                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">
+                  Hotel
+                </th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">
+                  Guest Name
+                </th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">
+                  Check-In & Out
+                </th>
+                <th className="px-6 py-4 font-bold uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
               {stats.recentBookings.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="text-center py-6 text-gray-500">
+                  <td
+                    colSpan="4"
+                    className="text-center py-10 text-gray-400 font-medium"
+                  >
                     No recent bookings found.
                   </td>
                 </tr>
@@ -305,7 +358,7 @@ const VendorDashboardOverview = () => {
                 stats.recentBookings.map((booking) => (
                   <tr
                     key={booking._id}
-                    className="border-b border-gray-50 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                    className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                   >
                     <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
                       {booking.hotelId?.name || "Unknown"}
@@ -313,27 +366,28 @@ const VendorDashboardOverview = () => {
                     <td className="px-6 py-4 font-medium text-gray-600 dark:text-gray-300">
                       {booking.userId?.name || "Guest"}
                     </td>
-                    <td className="px-6 py-4 text-gray-500">
+                    <td className="px-6 py-4 text-gray-500 font-medium">
                       {new Date(booking.checkInDate).toLocaleDateString(
                         "en-GB",
-                        { month: "short", day: "2-digit" },
-                      )}{" "}
-                      -{" "}
+                        { month: "short", day: "2-digit", year: "numeric" },
+                      )}
+                      {" - "}
                       {new Date(booking.checkOutDate).toLocaleDateString(
                         "en-GB",
-                        { month: "short", day: "2-digit" },
+                        { month: "short", day: "2-digit", year: "numeric" },
                       )}
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide uppercase ${
                           booking.status === "pending"
-                            ? "bg-yellow-100 text-yellow-800"
-                            : booking.status === "checked-in"
-                              ? "bg-green-100 text-green-800"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
+                            : booking.status === "checked-in" ||
+                                booking.status === "confirmed"
+                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
                               : booking.status === "cancelled"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-blue-100 text-blue-800"
+                                ? "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
+                                : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400"
                         }`}
                       >
                         {booking.status}

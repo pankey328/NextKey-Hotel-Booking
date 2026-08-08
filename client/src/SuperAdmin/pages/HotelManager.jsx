@@ -79,7 +79,7 @@ const HotelManager = () => {
         },
       });
       setHotels(res.data.data || []);
-      
+
       const newTotalPages = res.data.totalPages || 1;
       setTotalPages(newTotalPages);
 
@@ -179,49 +179,53 @@ const HotelManager = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 sm:p-6 transition-colors duration-300 flex flex-col h-full">
-      {/* HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-            Hotel Partner Approvals
+    <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500 font-sans h-full flex flex-col">
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white dark:bg-gray-900 p-6 md:p-8 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 relative overflow-hidden shrink-0">
+        <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div className="relative z-10">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+            Hotel Approvals
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-            Review and manage vendor registrations.
+          <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-2">
+            Review and manage vendor property registrations
           </p>
         </div>
 
-        <button
-          onClick={() => navigate("/superadmin-dashboard/add-hotel")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-all flex items-center gap-2 cursor-pointer active:scale-95 whitespace-nowrap"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5"
-            viewBox="0 0 20 20"
-            fill="currentColor"
+        <div className="relative z-10 w-full md:w-auto">
+          <button
+            onClick={() => navigate("/superadmin-dashboard/add-hotel")}
+            className="w-full md:w-auto px-6 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
           >
-            <path
-              fillRule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clipRule="evenodd"
-            />
-          </svg>
-          Add Hotel
-        </button>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            Add Hotel
+          </button>
+        </div>
       </div>
 
       {/* TABS & CONTROLS ROW */}
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4 border-b border-gray-200 dark:border-gray-700 mb-6 pb-2 xl:pb-0">
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-5 border-b border-gray-200 dark:border-gray-800 pb-4 xl:pb-0 shrink-0">
         {/* TABS (LEFT) */}
-        <div className="flex gap-4 sm:gap-6 overflow-x-auto whitespace-nowrap text-sm sm:text-base w-full xl:w-auto border-b-0">
+        <div className="flex gap-6 px-2 overflow-x-auto whitespace-nowrap w-full xl:w-auto border-b-0 hide-scrollbar">
           {["approved", "pending", "rejected", "bin"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-3 px-1 font-medium transition-all duration-200 border-b-2 cursor-pointer capitalize ${
+              className={`pb-4 px-1 text-[13px] font-bold uppercase tracking-wide border-b-2 transition-all cursor-pointer ${
                 activeTab === tab
-                  ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                  ? "border-gray-900 text-gray-900 dark:border-white dark:text-white"
                   : "border-transparent text-gray-500 hover:text-gray-800 dark:hover:text-gray-300"
               }`}
             >
@@ -231,12 +235,12 @@ const HotelManager = () => {
         </div>
 
         {/* CONTROLS (DATE, SORT, SEARCH) - RIGHT */}
-        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto mb-2 px-2 sm:px-0">
+        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto mb-3 px-2 sm:px-0">
           {/* DATE RANGE DROPDOWN */}
           <select
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
-            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+            className="w-full sm:w-auto border border-gray-200 dark:border-gray-800 dark:bg-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:border-gray-400 dark:focus:border-gray-600 transition-colors shadow-sm cursor-pointer"
           >
             <option value="all">All Time</option>
             <option value="7days">Last 7 Days</option>
@@ -248,7 +252,7 @@ const HotelManager = () => {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="w-full sm:w-auto border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors cursor-pointer"
+            className="w-full sm:w-auto border border-gray-200 dark:border-gray-800 dark:bg-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:border-gray-400 dark:focus:border-gray-600 transition-colors shadow-sm cursor-pointer"
           >
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
@@ -260,60 +264,49 @@ const HotelManager = () => {
           <div className="relative w-full sm:w-64">
             <input
               type="text"
-              placeholder="Search by Name, Email, Type..."
+              placeholder="Search Name, Email, Type..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+              className="w-full border border-gray-200 dark:border-gray-800 dark:bg-gray-900 dark:text-white rounded-xl px-4 py-2.5 text-[13px] font-medium outline-none focus:border-gray-400 dark:focus:border-gray-600 transition-colors shadow-sm placeholder-gray-400"
             />
             {/* Loading spinner */}
             {searchInput !== debouncedSearch && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="w-3.5 h-3.5 border-2 border-gray-300 border-t-gray-900 dark:border-gray-600 dark:border-t-white rounded-full animate-spin"></div>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Table Container */}
-      <div className="overflow-hidden rounded-lg border border-gray-100 dark:border-gray-700/60 flex flex-col flex-1">
+      {/* TABLE SECTION */}
+      <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 flex flex-col flex-1 overflow-hidden min-h-[50vh]">
         <div className="overflow-x-auto flex-1">
           <table className="w-full text-left border-collapse min-w-[1000px]">
             <thead>
-              <tr className="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
-                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                  Hotel Info
-                </th>
-                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                  Vendor
-                </th>
-                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                  Location
-                </th>
-                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold">
-                  Contact
-                </th>
-                <th className="py-3 px-4 text-xs sm:text-sm uppercase tracking-wider text-gray-600 dark:text-gray-400 font-semibold text-right">
-                  Actions
-                </th>
+              <tr className="bg-gray-50 dark:bg-gray-950/50 text-gray-500 text-[11px] font-bold uppercase tracking-wider border-b border-gray-200 dark:border-gray-800">
+                <th className="px-6 py-5">Hotel Info</th>
+                <th className="px-6 py-5">Vendor</th>
+                <th className="px-6 py-5">Location</th>
+                <th className="px-6 py-5">Contact</th>
+                <th className="px-6 py-5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60 text-[13px]">
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="py-16 text-center">
-                    {/* 3 DOTS LOADER */}
+                  <td colSpan="5" className="p-20 text-center">
                     <div className="flex flex-col items-center justify-center">
                       <div className="flex items-center space-x-2">
                         <div
-                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          className="w-2.5 h-2.5 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"
                           style={{ animationDelay: "-0.3s" }}
                         ></div>
                         <div
-                          className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"
+                          className="w-2.5 h-2.5 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"
                           style={{ animationDelay: "-0.15s" }}
                         ></div>
-                        <div className="w-3 h-3 bg-blue-500 rounded-full animate-bounce"></div>
+                        <div className="w-2.5 h-2.5 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"></div>
                       </div>
                       <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
                         Loading hotels...
@@ -323,7 +316,10 @@ const HotelManager = () => {
                 </tr>
               ) : hotels.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-gray-500">
+                  <td
+                    colSpan="5"
+                    className="p-16 text-center text-gray-500 dark:text-gray-400 font-medium"
+                  >
                     {debouncedSearch
                       ? `No matching hotels found for "${debouncedSearch}".`
                       : `No ${activeTab === "bin" ? "deleted" : activeTab} hotels found.`}
@@ -333,108 +329,114 @@ const HotelManager = () => {
                 hotels.map((hotel) => (
                   <tr
                     key={hotel._id}
-                    className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors"
                   >
                     {/* Hotel Info */}
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-gray-800 dark:text-gray-200">
+                    <td className="px-6 py-5">
+                      <div className="font-extrabold text-gray-900 dark:text-white text-sm">
                         {hotel.name}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {hotel.hotelType} • {hotel.starRating} Stars
+                      <div className="text-[11px] font-bold uppercase tracking-widest text-gray-500 mt-1">
+                        {hotel.hotelType} • {hotel.starRating}★
                       </div>
                     </td>
 
                     {/* VENDOR INFO */}
-                    <td className="py-3 px-4">
-                      <div className="font-bold text-gray-800 dark:text-gray-200 text-sm">
+                    <td className="px-6 py-5">
+                      <div className="font-extrabold text-gray-900 dark:text-white text-[13px]">
                         {hotel.vendorId?.companyName || "No Company"}
                       </div>
-                      <div className="font-medium text-gray-600 dark:text-gray-400 text-xs mt-0.5">
+                      <div className="font-medium text-gray-600 dark:text-gray-400 text-[12px] mt-0.5">
                         {hotel.vendorId?.applicantName || "Unknown Applicant"}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                      <div className="text-[11px] font-bold tracking-wider text-gray-400 mt-1">
                         {hotel.vendorId?.email || "No Email"}
                       </div>
                     </td>
 
                     {/* Location */}
-                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
+                    <td className="px-6 py-5 font-medium text-gray-600 dark:text-gray-400">
                       {hotel.cityId?.name?.toUpperCase()},{" "}
                       {hotel.stateId?.name?.toUpperCase()}
                     </td>
 
                     {/* Contact */}
-                    <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                      <div>{hotel.email}</div>
-                      <div className="text-xs">{hotel.phone}</div>
+                    <td className="px-6 py-5">
+                      <div className="font-medium text-gray-900 dark:text-gray-300">
+                        {hotel.email}
+                      </div>
+                      <div className="text-[12px] font-bold tracking-wider text-gray-500 mt-0.5">
+                        {hotel.phone}
+                      </div>
                     </td>
 
                     {/* Actions */}
-                    <td className="py-3 px-4 text-right space-x-2 whitespace-nowrap">
-                      <button
-                        onClick={() => handleView(hotel)}
-                        className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 transition-all cursor-pointer active:scale-95"
-                      >
-                        View
-                      </button>
+                    <td className="px-6 py-5 text-right">
+                      <div className="flex justify-end gap-2 flex-wrap">
+                        <button
+                          onClick={() => handleView(hotel)}
+                          className="px-4 py-2 text-[12px] font-bold rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors cursor-pointer active:scale-95"
+                        >
+                          View
+                        </button>
 
-                      {/* Pending actions */}
-                      {activeTab === "pending" && (
-                        <>
-                          <button
-                            onClick={() => handleApprove(hotel._id)}
-                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30 transition-all cursor-pointer active:scale-95"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => openRejectModal(hotel)}
-                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
+                        {/* Pending actions */}
+                        {activeTab === "pending" && (
+                          <>
+                            <button
+                              onClick={() => handleApprove(hotel._id)}
+                              className="px-4 py-2 text-[12px] font-bold rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer active:scale-95"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() => openRejectModal(hotel)}
+                              className="px-4 py-2 text-[12px] font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-colors cursor-pointer active:scale-95"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
 
-                      {/* (Soft Delete, Restore, Hard Delete) */}
-                      {activeTab !== "bin" ? (
-                        <>
-                          <button
-                            onClick={() =>
-                              handleAction("softDelete", hotel._id)
-                            }
-                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-orange-500 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30 transition-all cursor-pointer active:scale-95"
-                          >
-                            Soft Delete
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleAction("hardDelete", hotel._id)
-                            }
-                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
-                          >
-                            Hard Delete
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleAction("restore", hotel._id)}
-                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/30 transition-all cursor-pointer active:scale-95"
-                          >
-                            Restore
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleAction("hardDelete", hotel._id)
-                            }
-                            className="inline-block px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 transition-all cursor-pointer active:scale-95"
-                          >
-                            Hard Delete
-                          </button>
-                        </>
-                      )}
+                        {/* (Soft Delete, Restore, Hard Delete) */}
+                        {activeTab !== "bin" ? (
+                          <>
+                            <button
+                              onClick={() =>
+                                handleAction("softDelete", hotel._id)
+                              }
+                              className="px-4 py-2 text-[12px] font-bold rounded-xl bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/40 transition-colors cursor-pointer active:scale-95"
+                            >
+                              Bin
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleAction("hardDelete", hotel._id)
+                              }
+                              className="px-4 py-2 text-[12px] font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-colors cursor-pointer active:scale-95"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleAction("restore", hotel._id)}
+                              className="px-4 py-2 text-[12px] font-bold rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition-colors cursor-pointer active:scale-95"
+                            >
+                              Restore
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleAction("hardDelete", hotel._id)
+                              }
+                              className="px-4 py-2 text-[12px] font-bold rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-colors cursor-pointer active:scale-95"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -445,17 +447,18 @@ const HotelManager = () => {
 
         {/* PAGINATION FOOTER */}
         {!loading && hotels.length > 0 && (
-          <div className="flex flex-col sm:flex-row justify-between items-center p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="mt-auto flex flex-col sm:flex-row justify-between items-center p-5 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 gap-4 shrink-0">
+            <div className="flex items-center gap-3">
+              <span className="text-[13px] font-medium text-gray-500">
                 Rows per page:
               </span>
               <select
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));
+                  setPage(1);
                 }}
-                className="border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-white outline-none cursor-pointer focus:ring-1 focus:ring-blue-500"
+                className="border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-[13px] font-bold bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-white outline-none cursor-pointer focus:border-gray-400 transition-colors"
               >
                 <option value="5">5</option>
                 <option value="10">10</option>
@@ -464,22 +467,26 @@ const HotelManager = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
-              <span className="font-medium">
-                Page {page} of {totalPages}
+            <div className="flex items-center gap-5 text-[13px] text-gray-600 dark:text-gray-300 font-medium">
+              <span>
+                Page{" "}
+                <span className="font-bold text-gray-900 dark:text-white">
+                  {page}
+                </span>{" "}
+                of {totalPages}
               </span>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage((p) => p - 1)}
-                  className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm font-bold text-gray-700 dark:text-gray-200"
                 >
                   Prev
                 </button>
                 <button
                   disabled={page === totalPages || totalPages === 0}
                   onClick={() => setPage((p) => p + 1)}
-                  className="px-3 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer active:scale-95 shadow-sm font-bold text-gray-700 dark:text-gray-200"
                 >
                   Next
                 </button>
@@ -491,103 +498,178 @@ const HotelManager = () => {
 
       {/* VIEW MODAL */}
       {showViewModal && selectedHotel && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-opacity">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100 dark:border-gray-700">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Hotel Profile
-              </h2>
-              <button
-                onClick={() => setShowViewModal(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer text-2xl"
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 sm:p-6 transition-opacity overflow-y-auto animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-4xl shadow-2xl relative my-auto overflow-hidden flex flex-col md:flex-row border border-gray-200 dark:border-gray-800">
+            <button
+              onClick={() => setShowViewModal(false)}
+              className="absolute top-5 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/40 text-white hover:bg-black/60 backdrop-blur-md transition-colors cursor-pointer"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                &times;
-              </button>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
 
-            <div className="px-6 py-5 flex flex-col md:flex-row gap-6 max-h-[70vh] overflow-y-auto">
-              {/* Image */}
-              <div className="w-full md:w-1/2">
+            {/* Left Image Pane */}
+            <div className="w-full md:w-2/5 h-64 md:h-auto bg-gray-100 dark:bg-gray-950 relative border-r border-gray-200 dark:border-gray-800">
+              {selectedHotel.imageUrl ? (
                 <img
                   src={selectedHotel.imageUrl}
                   alt={selectedHotel.name}
-                  className="w-full h-64 object-cover rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+                  className="w-full h-full object-cover"
                 />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400 font-bold uppercase tracking-widest text-sm">
+                  No Cover Image
+                </div>
+              )}
+              <div className="absolute top-6 left-6">
+                <span
+                  className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-lg shadow-lg backdrop-blur-md border border-white/20 ${
+                    selectedHotel.status === "approved"
+                      ? "bg-emerald-500/90 text-white"
+                      : selectedHotel.status === "rejected"
+                        ? "bg-rose-600/90 text-white"
+                        : selectedHotel.status === "pending"
+                          ? "bg-amber-500/90 text-white"
+                          : "bg-gray-600/90 text-white"
+                  }`}
+                >
+                  {selectedHotel.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Right Details Pane */}
+            <div className="w-full md:w-3/5 p-8 sm:p-10 max-h-[80vh] overflow-y-auto">
+              <div className="mb-8 border-b border-gray-100 dark:border-gray-800 pb-6">
+                <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight mb-2">
+                  {selectedHotel.name}
+                </h2>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-md">
+                    {selectedHotel.hotelType}
+                  </span>
+                  <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-500 rounded-md">
+                    {selectedHotel.starRating}★ Rating
+                  </span>
+                </div>
               </div>
 
-              {/* Details */}
-              <div className="w-full md:w-1/2 space-y-3 text-sm">
-                <div>
-                  <span className="text-gray-500">Name:</span>{" "}
-                  <span className="font-semibold dark:text-white">
-                    {selectedHotel.name}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Type:</span>{" "}
-                  <span className="font-medium dark:text-white">
-                    {selectedHotel.hotelType} ({selectedHotel.starRating}★)
-                  </span>
-                </div>
-
+              <div className="space-y-6">
                 {/* VENDOR DETAILS IN MODAL */}
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-md border border-gray-100 dark:border-gray-600">
-                  <span className="text-gray-500 text-xs uppercase font-bold tracking-wider block mb-2">
+                <div className="bg-blue-50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100 dark:border-blue-800/30">
+                  <span className="text-blue-500 dark:text-blue-400 text-[10px] uppercase font-bold tracking-widest block mb-3">
                     Managed By (Vendor)
                   </span>
-                  <div className="font-bold text-gray-800 dark:text-white mb-1">
+                  <div className="font-extrabold text-gray-900 dark:text-white mb-1">
                     🏢{" "}
                     {selectedHotel.vendorId?.companyName ||
                       "No Company Provided"}
                   </div>
-                  <div className="font-medium text-gray-700 dark:text-gray-200 text-sm">
+                  <div className="font-medium text-gray-700 dark:text-gray-200 text-[13px] mb-2">
                     👤{" "}
                     {selectedHotel.vendorId?.applicantName ||
                       "Unknown Applicant"}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    ✉️ {selectedHotel.vendorId?.email || "No Email"}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                    📞 {selectedHotel.vendorId?.phone || "No Phone"}
+                  <div className="flex flex-col gap-1 text-[12px] font-bold tracking-wider text-gray-500 dark:text-gray-400">
+                    <span>
+                      ✉️ {selectedHotel.vendorId?.email || "No Email"}
+                    </span>
+                    <span>
+                      📞 {selectedHotel.vendorId?.phone || "No Phone"}
+                    </span>
                   </div>
                 </div>
 
                 <div>
-                  <span className="text-gray-500">Email:</span>{" "}
-                  <span className="dark:text-white">{selectedHotel.email}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Phone:</span>{" "}
-                  <span className="dark:text-white">{selectedHotel.phone}</span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Location:</span>{" "}
-                  <span className="dark:text-white">
-                    {selectedHotel.cityId?.name},{" "}
-                    {selectedHotel.districtId?.name},{" "}
-                    {selectedHotel.stateId?.name}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-500">Address:</span>{" "}
-                  <span className="dark:text-white">
-                    {selectedHotel.address}
-                  </span>
+                  <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                    Contact Information
+                  </h4>
+                  <ul className="space-y-3 text-[13px] font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
+                    <li className="flex items-center gap-3">
+                      <svg
+                        className="w-5 h-5 text-gray-400 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        ></path>
+                      </svg>
+                      <span className="truncate">{selectedHotel.email}</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <svg
+                        className="w-5 h-5 text-gray-400 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        ></path>
+                      </svg>
+                      {selectedHotel.phone}
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <svg
+                        className="w-5 h-5 text-gray-400 shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        ></path>
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="1.5"
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                      </svg>
+                      <span className="leading-relaxed">
+                        {selectedHotel.address},<br />
+                        {selectedHotel.cityId?.name},{" "}
+                        {selectedHotel.districtId?.name},<br />
+                        {selectedHotel.stateId?.name} - {selectedHotel.pincode}
+                      </span>
+                    </li>
+                  </ul>
                 </div>
 
                 {/* Features Section */}
                 {selectedHotel.features &&
                   selectedHotel.features.length > 0 && (
-                    <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                      <span className="text-gray-500 block mb-2">
-                        Features & Amenities:
-                      </span>
-                      <div className="flex flex-wrap gap-2">
+                    <div>
+                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                        Amenities
+                      </h4>
+                      <div className="flex flex-wrap gap-2 bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
                         {selectedHotel.features.map((feature, index) => (
                           <span
                             key={index}
-                            className="px-2.5 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs border border-blue-100 dark:border-blue-800"
+                            className="px-3 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-[11px] font-bold uppercase tracking-widest border border-gray-200 dark:border-gray-600 shadow-sm"
                           >
                             {feature}
                           </span>
@@ -596,19 +678,28 @@ const HotelManager = () => {
                     </div>
                   )}
 
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
-                  <span className="text-gray-500 block mb-1">Description:</span>{" "}
-                  <p className="text-gray-700 dark:text-gray-300 italic">
-                    "{selectedHotel.description}"
-                  </p>
-                </div>
-
-                {selectedHotel.status === "rejected" && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
-                    <strong>Rejection Reason:</strong>{" "}
-                    {selectedHotel.rejectRemark}
+                {selectedHotel.description && (
+                  <div>
+                    <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                      Property Description
+                    </h4>
+                    <p className="text-[13px] text-gray-600 dark:text-gray-400 leading-relaxed font-medium bg-gray-50 dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-100 dark:border-gray-800">
+                      {selectedHotel.description}
+                    </p>
                   </div>
                 )}
+
+                {selectedHotel.status === "rejected" &&
+                  selectedHotel.rejectRemark && (
+                    <div className="mt-4 p-5 bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/30 rounded-2xl">
+                      <h4 className="text-[10px] font-bold text-rose-500 uppercase tracking-widest mb-2">
+                        Rejection Reason
+                      </h4>
+                      <p className="text-[13px] font-medium text-rose-700 dark:text-rose-400">
+                        {selectedHotel.rejectRemark}
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
           </div>
@@ -617,36 +708,42 @@ const HotelManager = () => {
 
       {/* REJECT MODAL */}
       {showRejectModal && selectedHotel && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4 transition-opacity">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md shadow-2xl p-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-              Reject Hotel Application
-            </h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-4 text-sm">
-              Please provide a reason for rejecting{" "}
-              <strong>{selectedHotel.name}</strong>. This will be emailed to the
-              vendor.
-            </p>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[110] p-4 transition-opacity animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl w-full max-w-md shadow-2xl border border-gray-200 dark:border-gray-800 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-rose-500"></div>
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+                Reject Application
+              </h2>
+              <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">
+                Provide a reason for rejecting{" "}
+                <strong>{selectedHotel.name}</strong>. This feedback will be
+                emailed directly to the vendor.
+              </p>
+            </div>
+
             <form onSubmit={handleRejectSubmit}>
               <textarea
                 rows="4"
                 required
                 value={rejectRemark}
                 onChange={(e) => setRejectRemark(e.target.value)}
-                placeholder="E.g., Incomplete documentation, poor image quality..."
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 mb-4"
+                placeholder="E.g., Incomplete business documentation, poor image quality..."
+                className="w-full px-4 py-3 rounded-2xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-[13px] font-medium text-gray-900 dark:text-white focus:border-rose-500 outline-none transition-colors shadow-sm resize-none mb-6 placeholder-gray-400"
               ></textarea>
-              <div className="flex justify-end gap-3">
+
+              <div className="flex justify-end gap-4">
                 <button
                   type="button"
                   onClick={() => setShowRejectModal(false)}
-                  className="px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors cursor-pointer"
+                  className="px-6 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer active:scale-95 shadow-sm"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-all active:scale-95 cursor-pointer"
+                  className="px-6 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide bg-rose-600 hover:bg-rose-700 text-white transition-all cursor-pointer active:scale-95 shadow-md hover:shadow-lg"
                 >
                   Confirm Rejection
                 </button>

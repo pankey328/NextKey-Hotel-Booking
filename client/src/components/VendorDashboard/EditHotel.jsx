@@ -18,7 +18,7 @@ const hotelFeaturesList = [
 ];
 
 const EditHotel = () => {
-  const { id } = useParams(); 
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -182,25 +182,69 @@ const EditHotel = () => {
     }
   };
 
-  if (loading)
+  if (loading) {
     return (
-      <div className="p-12 text-center text-gray-500">
-        Loading Property Details...
+      <div className="flex flex-col items-center justify-center py-32 bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm max-w-5xl mx-auto">
+        <div className="flex items-center space-x-2">
+          <div
+            className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"
+            style={{ animationDelay: "-0.3s" }}
+          ></div>
+          <div
+            className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"
+            style={{ animationDelay: "-0.15s" }}
+          ></div>
+          <div className="w-3 h-3 bg-gray-400 dark:bg-gray-600 rounded-full animate-bounce"></div>
+        </div>
+        <p className="text-gray-500 dark:text-gray-400 mt-4 text-sm font-medium">
+          Loading Property Details...
+        </p>
       </div>
     );
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-10 w-full max-w-3xl">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center mb-8">
-          Edit Property
-        </h1>
+    <div className="max-w-5xl mx-auto p-6 sm:p-10 bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-200 dark:border-gray-800 animate-in fade-in duration-500 font-sans">
+      {/* HEADER SECTION */}
+      <div className="flex justify-between items-center mb-8 border-b border-gray-100 dark:border-gray-800 pb-6">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+            Edit Property
+          </h1>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-2">
+            Update your property's core details
+          </p>
+        </div>
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 flex items-center justify-center rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Property Name
+      <form onSubmit={handleSubmit} className="space-y-10">
+        {/* Basic Information */}
+        <section>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-5 border-b border-gray-100 dark:border-gray-800 pb-2">
+            Basic Information
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="lg:col-span-2">
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                Property Name <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -209,12 +253,11 @@ const EditHotel = () => {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
                 Property Type
               </label>
               <select
@@ -222,7 +265,7 @@ const EditHotel = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, hotelType: e.target.value })
                 }
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm cursor-pointer"
               >
                 <option value="Hotel">Hotel</option>
                 <option value="Resort">Resort</option>
@@ -232,10 +275,9 @@ const EditHotel = () => {
                 <option value="Villa">Villa</option>
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Rating
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                Star Rating
               </label>
               <select
                 value={formData.starRating}
@@ -245,7 +287,7 @@ const EditHotel = () => {
                     starRating: Number(e.target.value),
                   })
                 }
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm cursor-pointer"
               >
                 <option value={1}>1 Star</option>
                 <option value={2}>2 Stars</option>
@@ -254,10 +296,9 @@ const EditHotel = () => {
                 <option value={5}>5 Stars</option>
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Business Email
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                Business Email <span className="text-rose-500">*</span>
               </label>
               <input
                 type="email"
@@ -266,13 +307,12 @@ const EditHotel = () => {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Phone Number
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                Phone Number <span className="text-rose-500">*</span>
               </label>
               <input
                 type="tel"
@@ -281,13 +321,21 @@ const EditHotel = () => {
                   setFormData({ ...formData, phone: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm"
               />
             </div>
+          </div>
+        </section>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Local Address
+        {/* Location Details */}
+        <section>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-5 border-b border-gray-100 dark:border-gray-800 pb-2">
+            Location Details
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="md:col-span-3">
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                Local Address <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -296,19 +344,18 @@ const EditHotel = () => {
                   setFormData({ ...formData, address: e.target.value })
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm"
               />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                State
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                State <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedStateId}
                 onChange={handleStateChange}
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm cursor-pointer"
               >
                 <option value="" disabled>
                   Select State...
@@ -320,17 +367,16 @@ const EditHotel = () => {
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                District
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                District <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedDistrictId}
                 onChange={handleDistrictChange}
                 required
                 disabled={!selectedStateId}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
               >
                 <option value="" disabled>
                   Select District...
@@ -342,17 +388,16 @@ const EditHotel = () => {
                 ))}
               </select>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                City
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                City <span className="text-rose-500">*</span>
               </label>
               <select
                 value={selectedCityId}
                 onChange={(e) => setSelectedCityId(e.target.value)}
                 required
                 disabled={!selectedDistrictId}
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
               >
                 <option value="" disabled>
                   Select City...
@@ -364,38 +409,44 @@ const EditHotel = () => {
                 ))}
               </select>
             </div>
+            <div className="md:col-span-3">
+              <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+                Google Maps Link (Optional)
+              </label>
+              <input
+                type="url"
+                value={formData.locationLink}
+                onChange={(e) =>
+                  setFormData({ ...formData, locationLink: e.target.value })
+                }
+                placeholder="https://maps.google.com/..."
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm placeholder-gray-400"
+              />
+            </div>
           </div>
+        </section>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Google Maps Link (Optional)
-            </label>
-            <input
-              type="url"
-              value={formData.locationLink}
-              onChange={(e) =>
-                setFormData({ ...formData, locationLink: e.target.value })
-              }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-          </div>
+        {/* Amenities & Description */}
+        <section>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-5 border-b border-gray-100 dark:border-gray-800 pb-2">
+            Property Features & Description
+          </h2>
 
-          {/* Property Features Selection */}
-          <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-            <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-3">
-              Property Features & Amenities
+          <div className="mb-6">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-3">
+              Amenities
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-800/50 p-6 rounded-2xl border border-gray-100 dark:border-gray-800">
               {hotelFeaturesList.map((feature) => (
                 <label
                   key={feature}
-                  className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-3 text-[13px] font-medium text-gray-700 dark:text-gray-300 cursor-pointer hover:text-gray-900 dark:hover:text-white transition-colors"
                 >
                   <input
                     type="checkbox"
                     checked={formData.features.includes(feature)}
                     onChange={() => handleFeatureChange(feature)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 dark:bg-gray-700 cursor-pointer"
+                    className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
                   />
                   {feature}
                 </label>
@@ -404,59 +455,86 @@ const EditHotel = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Description
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-2">
+              Detailed Description
             </label>
             <textarea
-              rows="3"
+              rows="4"
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
-              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl p-3 text-[13px] font-medium bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none focus:border-gray-400 dark:focus:border-gray-500 transition-colors shadow-sm resize-none"
             ></textarea>
           </div>
+        </section>
 
-          {/* Image Upload section for Editing */}
-          <div className="p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700/50 flex flex-col sm:flex-row items-center gap-4">
+        {/* Media */}
+        <section>
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mb-5 border-b border-gray-100 dark:border-gray-800 pb-2">
+            Media
+          </h2>
+          <div className="p-6 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50 flex flex-col md:flex-row items-start md:items-center gap-6">
             {currentImageUrl && !image && (
-              <img
-                src={currentImageUrl}
-                alt="Current Property"
-                className="w-24 h-24 object-cover rounded-md shadow-sm"
-              />
+              <div className="shrink-0 relative group">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                  Current Cover
+                </p>
+                <img
+                  src={currentImageUrl}
+                  alt="Current Property"
+                  className="w-32 h-32 object-cover rounded-xl shadow-sm border border-gray-200 dark:border-gray-700"
+                />
+              </div>
             )}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Update Property Image (Leave empty to keep current image)
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setImage(e.target.files[0])}
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
+
+            <div className="flex-1 w-full">
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+                Update Cover Image
+              </p>
+              <div className="p-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl text-center hover:bg-white dark:hover:bg-gray-800 transition-colors flex flex-col items-center justify-center bg-transparent">
+                <label className="block text-[13px] font-bold text-gray-900 dark:text-white mb-2 cursor-pointer">
+                  {image
+                    ? `Selected: ${image.name}`
+                    : "Click to select a new image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setImage(e.target.files[0])}
+                    className="hidden"
+                  />
+                </label>
+                {!image && (
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                    Leave empty to keep current image
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+        </section>
 
-          <div className="flex gap-4 pt-4">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all"
-            >
-              {submitting ? "Saving Updates..." : "Save Changes"}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* FOOTER ACTIONS */}
+        <div className="pt-8 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-6 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer active:scale-95 shadow-sm"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="px-8 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide bg-emerald-600 hover:bg-emerald-700 text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer active:scale-95 shadow-md hover:shadow-lg flex items-center gap-2"
+          >
+            {submitting && (
+              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            )}
+            {submitting ? "Saving Updates..." : "Save Changes"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

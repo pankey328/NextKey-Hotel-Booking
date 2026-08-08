@@ -3,7 +3,7 @@ const User = require("../models/userModel");
 const VendorRequest = require("../models/VendorRequestModel");
 const bcrypt = require("bcrypt");
 const { uploadImage } = require("../utils/cloudinary");
-const sendMail = require("../config/nodemailer");
+const { sendMail } = require("../utils/sendMail");
 const { v4: uuidv4 } = require("uuid");
 const mongoose = require("mongoose");
 
@@ -95,15 +95,92 @@ exports.registerHotel = async (req, res) => {
     });
 
     const emailBody = `
-      <h2>Registration Received!</h2>
-      <p>Your hotel <b>${name}</b> has been submitted for Superadmin approval.</p>      
-      <p>Your Tracking ID is: <b>${trackingId}</b></p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Registration Received</title>
+      </head>
+      <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+        
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4f6; padding: 40px 0;">
+          <tr>
+            <td align="center">
+              
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin: 0 auto;">
+                
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="padding: 30px 40px; border-bottom: 1px solid #f3f4f6;">
+                    <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">
+                      NextKey <span style="color: #2563eb; font-weight: 500; font-style: italic;">App</span>
+                    </h1>
+                  </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                  <td style="padding: 40px;">
+                    
+                    <!-- Status Badge -->
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <span style="display: inline-block; background-color: #dbeafe; color: #1d4ed8; padding: 8px 16px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                        Application Submitted
+                      </span>
+                    </div>
+
+                    <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      Hello,
+                    </p>
+                    
+                    <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 24px;">
+                      Thank you for applying to list your property with NextKey. We have successfully received the registration request for <strong style="color: #111827;">${name}</strong>.
+                    </p>
+
+                    <!-- Highlighted Tracking ID Box -->
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 30px;">
+                      <p style="margin: 0 0 8px 0; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                        Your Tracking ID
+                      </p>
+                      <p style="margin: 0; color: #0f172a; font-size: 24px; font-weight: 800; font-family: monospace; letter-spacing: 2px;">
+                        ${trackingId}
+                      </p>
+                    </div>
+
+                    <p style="margin: 0 0 24px 0; color: #4b5563; font-size: 15px; line-height: 24px;">
+                      Our superadmin team is currently reviewing your submission. You will receive another email as soon as your property is approved and your vendor credentials are generated.
+                    </p>
+
+                    <p style="margin: 0; color: #4b5563; font-size: 15px; line-height: 24px;">
+                      Best regards,<br>
+                      <strong style="color: #111827;">The NextKey Team</strong>
+                    </p>
+
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="padding: 24px 40px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 18px;">
+                      If you have any questions, keep your tracking ID handy and reply to this email.
+                      <br><br>
+                      &copy; ${new Date().getFullYear()} NextKey Hospitality. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </body>
+      </html>
     `;
-    await sendMail.sendMail(
-      email,
-      "Hotel Application Pending - Tracking ID",
-      emailBody,
-    );
+    await sendMail(email, "Hotel Application Pending - Tracking ID", emailBody);
 
     return res.status(201).json({
       message:
@@ -270,7 +347,7 @@ exports.approveHotel = async (req, res) => {
       <p>Thank you for partnering with us.</p>
     `;
 
-    await sendMail.sendMail(
+    await sendMail(
       hotel.email,
       "Hotel Approved - Login Credentials",
       emailBody,
@@ -315,15 +392,92 @@ exports.rejectHotel = async (req, res) => {
     await hotel.save();
 
     const emailBody = `
-      <h2>Registration Update</h2>
-      <p>We regret to inform you that your registration for <b>${hotel.name}</b> has been rejected.</p>
-      <p><b>Reason:</b> ${remark}</p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Registration Update</title>
+      </head>
+      <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+        
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4f6; padding: 40px 0;">
+          <tr>
+            <td align="center">
+              
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin: 0 auto;">
+                
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="padding: 30px 40px; border-bottom: 1px solid #f3f4f6;">
+                    <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">
+                      NextKey <span style="color: #2563eb; font-weight: 500; font-style: italic;">App</span>
+                    </h1>
+                  </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                  <td style="padding: 40px;">
+                    
+                    <!-- Status Badge (Rose/Red for Rejected) -->
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <span style="display: inline-block; background-color: #fff1f2; color: #e11d48; padding: 8px 16px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                        Application Rejected
+                      </span>
+                    </div>
+
+                    <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      Hello,
+                    </p>
+                    
+                    <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 24px;">
+                      Thank you for your interest in listing your property with NextKey. After carefully reviewing your application, we regret to inform you that your registration for <strong style="color: #111827;">${hotel.name}</strong> has been declined at this time.
+                    </p>
+
+                    <!-- Highlighted Reason Box (Soft Red Tint) -->
+                    <div style="background-color: #fffafb; border: 1px solid #fecdd3; border-radius: 12px; padding: 24px; margin-bottom: 30px;">
+                      <p style="margin: 0 0 8px 0; color: #e11d48; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                        Reason for Rejection
+                      </p>
+                      <p style="margin: 0; color: #111827; font-size: 15px; font-weight: 500; line-height: 24px;">
+                        ${remark}
+                      </p>
+                    </div>
+
+                    <p style="margin: 0 0 24px 0; color: #4b5563; font-size: 15px; line-height: 24px;">
+                      You are welcome to address the issue(s) mentioned above and submit a new application when you are ready. 
+                    </p>
+
+                    <p style="margin: 0; color: #4b5563; font-size: 15px; line-height: 24px;">
+                      Best regards,<br>
+                      <strong style="color: #111827;">The NextKey Team</strong>
+                    </p>
+
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="padding: 24px 40px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 18px;">
+                      If you believe this decision was made in error or need further clarification, please reply to this email to contact support.
+                      <br><br>
+                      &copy; ${new Date().getFullYear()} NextKey Hospitality. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </body>
+      </html>
     `;
-    await sendMail.sendMail(
-      hotel.email,
-      "Hotel Registration Status",
-      emailBody,
-    );
+    await sendMail(hotel.email, "Hotel Registration Status", emailBody);
 
     return res.status(200).json({
       message: "Hotel rejected and notification sent",
@@ -557,15 +711,110 @@ exports.superAdminAddHotel = async (req, res) => {
     });
 
     const emailBody = `
-      <h2>Hotel Live!</h2>
-      <p>Your hotel <b>${name}</b> has been added directly by the Admin and is live.</p>
-      <p><b>Email:</b> ${hotelEmail}<br><b>Password:</b> ${generatedPassword}</p>
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hotel Live - Account Created</title>
+      </head>
+      <body style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+        
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f3f4f6; padding: 40px 0;">
+          <tr>
+            <td align="center">
+              
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #ffffff; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); margin: 0 auto;">
+                
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="padding: 30px 40px; border-bottom: 1px solid #f3f4f6;">
+                    <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 800; letter-spacing: -0.5px;">
+                      NextKey <span style="color: #2563eb; font-weight: 500; font-style: italic;">App</span>
+                    </h1>
+                  </td>
+                </tr>
+
+                <!-- Body -->
+                <tr>
+                  <td style="padding: 40px;">
+                    
+                    <!-- Status Badge (Emerald/Green for Live/Success) -->
+                    <div style="text-align: center; margin-bottom: 30px;">
+                      <span style="display: inline-block; background-color: #dcfce7; color: #16a34a; padding: 8px 16px; border-radius: 9999px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                        Account Active & Live
+                      </span>
+                    </div>
+
+                    <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 24px;">
+                      Hello,
+                    </p>
+                    
+                    <p style="margin: 0 0 30px 0; color: #4b5563; font-size: 16px; line-height: 24px;">
+                      Great news! Your property <strong style="color: #111827;">${name}</strong> has been successfully onboarded by our admin team and is now live on the NextKey platform. You can now log in to your vendor dashboard to manage your profile and bookings.
+                    </p>
+
+                    <!-- Highlighted Credentials Box -->
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 24px;">
+                      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px;">
+                        Your Login Credentials
+                      </p>
+                      
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding-bottom: 12px; width: 90px;">
+                            <span style="color: #64748b; font-size: 15px;">Email:</span>
+                          </td>
+                          <td style="padding-bottom: 12px;">
+                            <strong style="color: #111827; font-size: 15px;">${hotelEmail}</strong>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <span style="color: #64748b; font-size: 15px;">Password:</span>
+                          </td>
+                          <td>
+                            <span style="display: inline-block; color: #0f172a; font-size: 16px; font-weight: 600; font-family: monospace; letter-spacing: 1px; background-color: #e2e8f0; padding: 6px 10px; border-radius: 6px;">
+                              ${generatedPassword}
+                            </span>
+                          </td>
+                        </tr>
+                      </table>
+                    </div>
+
+                    <p style="margin: 0 0 30px 0; color: #e7662c; font-size: 14px; line-height: 20px; font-weight: 500;">
+                      * For security purposes, we strongly recommend changing this password immediately after your first login.
+                    </p>
+
+                    <p style="margin: 0; color: #4b5563; font-size: 15px; line-height: 24px;">
+                      Best regards,<br>
+                      <strong style="color: #111827;">The NextKey Team</strong>
+                    </p>
+
+                  </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                  <td style="padding: 24px 40px; background-color: #f9fafb; text-align: center; border-top: 1px solid #e5e7eb;">
+                    <p style="margin: 0; color: #9ca3af; font-size: 12px; line-height: 18px;">
+                      You are receiving this email because an admin registered your property on NextKey. If you did not authorize this, please contact support immediately.
+                      <br><br>
+                      &copy; ${new Date().getFullYear()} NextKey Hospitality. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+        </table>
+
+      </body>
+      </html>
     `;
-    await sendMail.sendMail(
-      hotelEmail,
-      "Hotel Live - Login Credentials",
-      emailBody,
-    );
+    await sendMail(hotelEmail, "Hotel Live - Login Credentials", emailBody);
 
     return res
       .status(201)

@@ -55,7 +55,7 @@ const roomSchema = new mongoose.Schema(
     },
     totalGuests: {
       type: Number,
-      default: 2,
+      default: 0,
     },
     numberOfBeds: {
       type: Number,

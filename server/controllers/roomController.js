@@ -300,10 +300,19 @@ exports.updateRoom = async (req, res) => {
       }
     }
 
+   
+    const maxAdults = parseInt(req.body.maxAdults, 10) || room.maxAdults || 2;
+    const maxChildren = parseInt(req.body.maxChildren, 10) || 0;
+
+    const safeTotalGuests = maxAdults + maxChildren;
+
     const updatedRoom = await Room.findByIdAndUpdate(
       id,
       {
         ...req.body,
+        maxAdults: maxAdults,
+        maxChildren: maxChildren,
+        totalGuests: safeTotalGuests, 
         facilities: parsedFacilities,
         images: finalImages,
       },

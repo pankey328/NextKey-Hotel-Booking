@@ -1,6 +1,6 @@
 const cron = require("node-cron");
 const Booking = require("../models/BookingModel");
-const sendMail = require("../config/nodemailer");
+const sendMail = require("./sendMail");
 
 // Runs every night at 12:00 AM (0 0 * * *)
 cron.schedule("0 0 * * *", async () => {
