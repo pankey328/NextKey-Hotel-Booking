@@ -105,7 +105,11 @@ const Navbar = () => {
     const initial = user?.email ? user.email.charAt(0).toUpperCase() : "U";
     return (
       <div
-        className={`w-10 h-10 rounded-full font-semibold flex items-center justify-center text-sm shadow-sm transition-transform active:scale-95 ${isTransparent ? "bg-white text-black" : "bg-black dark:bg-white text-white dark:text-black"}`}
+        className={`w-10 h-10 rounded-full font-semibold flex items-center justify-center text-sm shadow-sm transition-transform active:scale-95 ${
+          isTransparent
+            ? "bg-white text-black"
+            : "bg-black dark:bg-white text-white dark:text-black"
+        }`}
       >
         {initial}
       </div>
@@ -131,19 +135,26 @@ const Navbar = () => {
         >
           <Link
             to="/"
-            className="hover:opacity-80 transition-opacity flex items-center"
+            className="hover:opacity-80 transition-opacity flex items-center gap-2.5"
           >
-            <span className="font-bold">Next</span>
-            <span className="font-light">Key</span>
-            <span
-              className={
-                isTransparent
-                  ? "text-white"
-                  : "text-blue-600 dark:text-blue-500"
-              }
-            >
-              .
-            </span>
+            <img
+              src="/favicon.svg"
+              alt="NextKey Logo"
+              className="w-8 h-8 md:w-9 md:h-9 object-contain drop-shadow-sm"
+            />
+            <div className="flex items-baseline">
+              <span className="font-bold">Next</span>
+              <span className="font-light">Key</span>
+              <span
+                className={
+                  isTransparent
+                    ? "text-white"
+                    : "text-blue-600 dark:text-blue-500"
+                }
+              >
+                .
+              </span>
+            </div>
           </Link>
         </div>
 

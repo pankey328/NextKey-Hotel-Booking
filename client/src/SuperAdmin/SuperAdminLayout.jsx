@@ -92,16 +92,23 @@ const SuperAdminLayout = () => {
         }`}
       >
         <div className="flex justify-between items-center p-8 border-b border-gray-200 dark:border-gray-800">
-          <div>
-            <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-              NextKey{" "}
-              <span className="font-medium text-blue-600 dark:text-blue-500 italic">
-                Admin
-              </span>
-            </h2>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-2">
-              System Management
-            </p>
+          <div className="flex items-center gap-3">
+            <img
+              src="/favicon.svg"
+              alt="NextKey Logo"
+              className="w-9 h-9 object-contain drop-shadow-sm"
+            />
+            <div>
+              <h2 className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-none">
+                NextKey{" "}
+                <span className="font-medium text-blue-600 dark:text-blue-500 italic">
+                  Admin
+                </span>
+              </h2>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mt-0.5">
+                System Management
+              </p>
+            </div>
           </div>
           <button
             onClick={() => setIsMobileSidebarOpen(false)}

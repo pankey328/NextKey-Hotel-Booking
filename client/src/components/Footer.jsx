@@ -14,6 +14,11 @@ const Footer = () => {
               to="/"
               className="inline-flex items-center text-2xl tracking-tight mb-6"
             >
+              <img
+                src="/favicon.svg"
+                alt="NextKey Logo"
+                className="w-8 h-8 md:w-9 md:h-9 object-contain drop-shadow-sm"
+              />
               <span className="font-bold text-neutral-900 dark:text-white">
                 Next
               </span>
