@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
 import ExportHotelsButton from "./ExportHotelsButton";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css"; 
 
 const VendorProperties = () => {
   const navigate = useNavigate();
@@ -282,9 +284,11 @@ const VendorProperties = () => {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-4">
                         {hotel.imageUrl ? (
-                          <img
+                          <LazyLoadImage
                             src={hotel.imageUrl}
                             alt="Hotel"
+                            effect="blur"
+                            wrapperClassName="w-12 h-12 block flex-shrink-0 rounded-xl"
                             className="w-12 h-12 rounded-xl object-cover border border-gray-200 dark:border-gray-700"
                           />
                         ) : (

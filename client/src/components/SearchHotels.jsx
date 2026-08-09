@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import api from "../api";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css";
 import {
   FunnelIcon,
   MapPinIcon,
@@ -514,24 +516,26 @@ const SearchHotels = () => {
                       className="relative h-[240px] md:h-[260px] w-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden cursor-pointer group/image"
                       onClick={() => openHotelModal(hotel._id)}
                     >
-                      <img
+                      <LazyLoadImage
                         src={
                           hotel.imageUrl ||
                           "https://via.placeholder.com/800x600?text=No+Image"
                         }
                         alt={hotel.name}
+                        effect="blur"
+                        wrapperClassName="w-full h-full block"
                         className="w-full h-full object-cover group-hover/image:scale-105 transition-transform duration-700 ease-out"
                       />
 
                       {/* Quick View Hover Overlay */}
-                      <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/20 transition-colors duration-300 flex items-center justify-center pointer-events-none">
                         <div className="bg-white/95 text-black px-5 py-2.5 rounded-full font-bold text-xs opacity-0 group-hover/image:opacity-100 transition-all duration-300 translate-y-4 group-hover/image:translate-y-0 shadow-lg tracking-wide uppercase">
                           Quick View
                         </div>
                       </div>
 
                       {/* Star Badge */}
-                      <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/70 backdrop-blur-md text-neutral-900 dark:text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 border border-white/20">
+                      <div className="absolute top-4 right-4 bg-white/90 dark:bg-black/70 backdrop-blur-md text-neutral-900 dark:text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1 border border-white/20 pointer-events-none">
                         <span>{hotel.starRating}</span>
                         <StarSolid className="w-3.5 h-3.5 text-yellow-500" />
                       </div>
@@ -635,17 +639,19 @@ const SearchHotels = () => {
 
             <div className="overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-700 flex-1">
               {/* Modal Header Image */}
-              <div className="h-64 w-full relative">
-                <img
+              <div className="h-64 w-full relative bg-neutral-200 dark:bg-neutral-800">
+                <LazyLoadImage
                   src={
                     selectedHotel.imageUrl ||
                     "https://via.placeholder.com/800x600?text=No+Image"
                   }
                   alt={selectedHotel.name}
+                  effect="blur"
+                  wrapperClassName="w-full h-full block"
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                <div className="absolute bottom-6 left-6 text-white">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"></div>
+                <div className="absolute bottom-6 left-6 text-white pointer-events-none">
                   <div className="text-xs font-bold uppercase tracking-widest text-neutral-300 mb-2">
                     {selectedHotel.hotelType}
                   </div>

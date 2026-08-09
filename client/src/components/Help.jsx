@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import helpHeroImage from "../assets/help-bg.avif";
 import {
   MagnifyingGlassIcon,
   ChevronDownIcon,
@@ -9,6 +10,8 @@ import {
   UserCircleIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css"; 
 
 const categories = [
   {
@@ -167,10 +170,13 @@ const Help = () => {
     <div className="min-h-screen bg-[#fdfdfd] dark:bg-neutral-950 transition-colors duration-500 font-sans text-neutral-900 dark:text-neutral-100 pb-24">
       {/* HERO SECTION WITH SEARCH */}
       <section className="relative w-full py-32 flex flex-col items-center justify-center overflow-hidden bg-neutral-900">
-        <img
-          src="https://images.unsplash.com/photo-1582719508461-905c673771fd?q=80&w=3400&auto=format&fit=crop"
+        <LazyLoadImage
+          src={helpHeroImage}
           alt="Support Team"
-          className="absolute inset-0 w-full h-full object-cover opacity-30"
+          effect="blur"
+          fetchPriority="high"
+          wrapperClassName="absolute inset-0 w-full h-full block bg-neutral-900"
+          className="w-full h-full object-cover opacity-30"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-transparent to-transparent dark:from-neutral-950 transition-colors duration-500"></div>
 

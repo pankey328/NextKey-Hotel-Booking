@@ -117,6 +117,7 @@ const HotelLayout = () => {
             <img
               src="/favicon.svg"
               alt="NextKey Logo"
+              fetchpriority="high"
               className="w-9 h-9 object-contain drop-shadow-sm"
             />
             <div>

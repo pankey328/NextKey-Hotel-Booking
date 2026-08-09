@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import api from "../api";
+import api from "../api"
+import heroImage from "../assets/hero-bg.avif"
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css"; 
+
 import {
   ArrowRightIcon,
   ShieldCheckIcon,
@@ -35,8 +39,9 @@ const Home = () => {
       <section className="relative w-full h-screen min-h-[700px] flex flex-col items-center justify-center pt-20">
         <div className="absolute inset-0 overflow-hidden bg-neutral-900">
           <img
-            src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=3400&auto=format&fit=crop"
+            src={heroImage}
             alt="Luxury Coastal Pool"
+            fetchpriority="high"
             className="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-[#fdfdfd] dark:to-neutral-950 transition-colors duration-500"></div>
@@ -123,15 +128,17 @@ const Home = () => {
                 to={`/hotel/${featuredHotels[0]._id}`}
                 className="col-span-1 md:col-span-8 group relative overflow-hidden rounded-[2rem] h-[400px] md:h-[500px] bg-neutral-100 dark:bg-neutral-900 shadow-xl border border-neutral-200/50 dark:border-neutral-800"
               >
-                <img
+                <LazyLoadImage
                   src={
                     featuredHotels[0].imageUrl ||
                     "https://via.placeholder.com/1200x800"
                   }
                   alt={featuredHotels[0].name}
+                  effect="blur"
+                  wrapperClassName="w-full h-full block"
                   className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 pointer-events-none">
                   <div className="flex items-center justify-between w-full mb-3">
                     <div className="text-xs font-bold uppercase tracking-widest text-white/80">
                       {featuredHotels[0].cityId?.name || "Featured"}
@@ -158,15 +165,17 @@ const Home = () => {
                       to={`/hotel/${hotel._id}`}
                       className="group relative overflow-hidden rounded-[2rem] h-[200px] md:h-[238px] bg-neutral-100 dark:bg-neutral-900 flex-1 shadow-xl border border-neutral-200/50 dark:border-neutral-800"
                     >
-                      <img
+                      <LazyLoadImage
                         src={
                           hotel.imageUrl ||
                           "https://via.placeholder.com/800x600"
                         }
                         alt={hotel.name}
+                        effect="blur"
+                        wrapperClassName="w-full h-full block"
                         className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 pointer-events-none">
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-[10px] font-bold uppercase tracking-widest text-white/80">
                             {hotel.cityId?.name || "Featured"}
@@ -191,15 +200,17 @@ const Home = () => {
                 to={`/hotel/${featuredHotels[3]._id}`}
                 className="col-span-1 md:col-span-5 group relative overflow-hidden rounded-[2rem] h-[300px] md:h-[400px] bg-neutral-100 dark:bg-neutral-900 shadow-xl border border-neutral-200/50 dark:border-neutral-800"
               >
-                <img
+                <LazyLoadImage
                   src={
                     featuredHotels[3].imageUrl ||
                     "https://via.placeholder.com/800x600"
                   }
                   alt={featuredHotels[3].name}
+                  effect="blur"
+                  wrapperClassName="w-full h-full block"
                   className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8 pointer-events-none">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-white/80">
                       {featuredHotels[3].cityId?.name || "Trending"}
@@ -222,15 +233,17 @@ const Home = () => {
                 to={`/hotel/${featuredHotels[4]._id}`}
                 className="col-span-1 md:col-span-7 group relative overflow-hidden rounded-[2rem] h-[300px] md:h-[400px] bg-neutral-100 dark:bg-neutral-900 shadow-xl border border-neutral-200/50 dark:border-neutral-800"
               >
-                <img
+                <LazyLoadImage
                   src={
                     featuredHotels[4].imageUrl ||
                     "https://via.placeholder.com/1200x800"
                   }
                   alt={featuredHotels[4].name}
+                  effect="blur"
+                  wrapperClassName="w-full h-full block"
                   className="w-full h-full object-cover transform scale-100 group-hover:scale-105 transition-transform duration-1000 ease-out"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8 pointer-events-none">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-bold uppercase tracking-widest text-white/80">
                       {featuredHotels[4].cityId?.name || "Exclusive"}
@@ -273,45 +286,54 @@ const Home = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             <Link
               to="/search"
-              className="group relative h-64 rounded-2xl overflow-hidden shadow-sm"
+              className="group relative h-64 rounded-2xl overflow-hidden shadow-sm bg-neutral-200 dark:bg-neutral-800"
             >
-              <img
+              <LazyLoadImage
                 src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=800&auto=format&fit=crop"
+                placeholderSrc="https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=10&w=50&auto=format&fit=crop"
                 alt="Beachfront"
+                effect="blur"
+                wrapperClassName="w-full h-full block"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
-              <h3 className="absolute bottom-6 left-6 text-white font-serif text-2xl">
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors pointer-events-none"></div>
+              <h3 className="absolute bottom-6 left-6 text-white font-serif text-2xl pointer-events-none">
                 Coastal Escapes
               </h3>
             </Link>
 
             <Link
               to="/search"
-              className="group relative h-64 rounded-2xl overflow-hidden shadow-sm"
+              className="group relative h-64 rounded-2xl overflow-hidden shadow-sm bg-neutral-200 dark:bg-neutral-800"
             >
-              <img
+              <LazyLoadImage
                 src="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop"
+                placeholderSrc="https://images.unsplash.com/photo-1519681393784-d120267933ba?q=10&w=50&auto=format&fit=crop"
                 alt="Mountains"
+                effect="blur"
+                wrapperClassName="w-full h-full block"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
-              <h3 className="absolute bottom-6 left-6 text-white font-serif text-2xl">
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors pointer-events-none"></div>
+              <h3 className="absolute bottom-6 left-6 text-white font-serif text-2xl pointer-events-none">
                 Mountain Retreats
               </h3>
             </Link>
 
             <Link
               to="/search"
-              className="group relative h-64 rounded-2xl overflow-hidden shadow-sm"
+              className="group relative h-64 rounded-2xl overflow-hidden shadow-sm bg-neutral-200 dark:bg-neutral-800"
             >
-              <img
+              <LazyLoadImage
                 src="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=800&auto=format&fit=crop"
+                placeholderSrc="https://images.unsplash.com/photo-1449844908441-8829872d2607?q=10&w=50&auto=format&fit=crop"
                 alt="Urban"
+                effect="blur"
+                wrapperClassName="w-full h-full block"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors"></div>
-              <h3 className="absolute bottom-6 left-6 text-white font-serif text-2xl">
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors pointer-events-none"></div>
+              <h3 className="absolute bottom-6 left-6 text-white font-serif text-2xl pointer-events-none">
                 Urban Luxury
               </h3>
             </Link>
@@ -322,10 +344,13 @@ const Home = () => {
       {/* NEWSLETTER BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-24">
         <div className="relative rounded-3xl overflow-hidden bg-neutral-900 shadow-2xl">
-          <img
+          <LazyLoadImage
             src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=80&w=2000&auto=format&fit=crop"
+            placeholderSrc="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?q=10&w=50&auto=format&fit=crop"
             alt="Luxury Interior"
-            className="absolute inset-0 w-full h-full object-cover opacity-30"
+            effect="blur"
+            wrapperClassName="absolute inset-0 w-full h-full block"
+            className="w-full h-full object-cover opacity-30"
           />
           <div className="relative z-10 p-10 md:p-20 text-center flex flex-col items-center">
             <h2 className="text-3xl md:text-5xl font-serif text-white mb-4 leading-tight">

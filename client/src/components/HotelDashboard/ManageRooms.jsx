@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
 import ExportRoomsButton from "./ExportRoomsButton";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css"; 
 
 const ManageRooms = () => {
   const [activeTab, setActiveTab] = useState("active");
@@ -223,9 +225,11 @@ const ManageRooms = () => {
                   onClick={() => handleView(room)}
                 >
                   {room.images && room.images.length > 0 ? (
-                    <img
+                    <LazyLoadImage
                       src={room.images[0]}
                       alt={`Room ${room.roomNumber}`}
+                      effect="blur"
+                      wrapperClassName="w-full h-full block"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
                   ) : (
@@ -436,9 +440,11 @@ const ManageRooms = () => {
             <div className="w-full md:w-1/2 bg-gray-100 dark:bg-gray-950 flex flex-col relative border-r border-gray-200 dark:border-gray-800">
               <div className="h-64 md:flex-1 w-full relative bg-gray-200 dark:bg-gray-800">
                 {selectedRoom.images && selectedRoom.images.length > 0 ? (
-                  <img
+                  <LazyLoadImage
                     src={selectedRoom.images[activeModalImage]}
                     alt="Room"
+                    effect="blur"
+                    wrapperClassName="w-full h-full block"
                     className="w-full h-full object-cover"
                   />
                 ) : (

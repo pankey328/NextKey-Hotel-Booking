@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import aboutHeroImage from "../assets/about-bg.avif";
 import {
   GlobeAltIcon,
   ShieldCheckIcon,
@@ -7,6 +8,8 @@ import {
   UserGroupIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css"; 
 
 const About = () => {
   return (
@@ -14,9 +17,12 @@ const About = () => {
       {/* HERO SECTION */}
       <section className="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-neutral-900">
-          <img
-            src="https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=3400&auto=format&fit=crop"
+          <LazyLoadImage
+            src={aboutHeroImage}
             alt="Luxury Architecture"
+            effect="blur"
+            fetchPriority="high"
+            wrapperClassName="w-full h-full block bg-neutral-900"
             className="w-full h-full object-cover opacity-50 scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-[#fdfdfd]/20 to-transparent dark:from-neutral-950 dark:via-neutral-950/40 transition-colors duration-500"></div>
@@ -128,10 +134,13 @@ const About = () => {
             </Link>
           </div>
           <div className="w-full lg:w-1/2 h-80 lg:h-auto relative">
-            <img
+            <LazyLoadImage
               src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2000&auto=format&fit=crop"
+              placeholderSrc="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=10&w=50&auto=format&fit=crop"
               alt="Vendor Dashboard"
-              className="absolute inset-0 w-full h-full object-cover"
+              effect="blur"
+              wrapperClassName="absolute inset-0 w-full h-full block bg-neutral-200 dark:bg-neutral-800"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>

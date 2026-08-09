@@ -14,6 +14,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarSolid } from "@heroicons/react/24/solid";
 import useDebounce from "../hooks/useDebounce";
+import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css";
 
 const roomFacilitiesList = [
   "Wi-Fi",
@@ -447,14 +449,16 @@ const HotelDetails = () => {
 
       {/* HERO HEADER */}
       <div className="relative w-full h-[55vh] min-h-[450px] bg-neutral-900 flex items-end pb-16">
-        <img
+        <LazyLoadImage
           src={hotel.imageUrl || "https://via.placeholder.com/1600x800"}
           alt={hotel.name}
-          className="absolute inset-0 w-full h-full object-cover opacity-60"
+          effect="blur"
+          wrapperClassName="absolute inset-0 w-full h-full block bg-neutral-800"
+          className="w-full h-full object-cover opacity-60"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-[#fdfdfd]/20 to-transparent dark:from-neutral-950 dark:via-neutral-950/40"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-[#fdfdfd]/20 to-transparent dark:from-neutral-950 dark:via-neutral-950/40 pointer-events-none"></div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pointer-events-none">
           <div className="inline-flex items-center gap-1.5 bg-white/80 dark:bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-neutral-900 dark:text-white mb-4 border border-white/20">
             {hotel.starRating}{" "}
             <StarSolid className="w-3.5 h-3.5 text-yellow-500" />
@@ -669,18 +673,20 @@ const HotelDetails = () => {
                 >
                   {/* Room Image */}
                   <div
-                    className="w-full lg:w-2/5 h-64 lg:h-auto relative cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800"
+                    className="w-full lg:w-2/5 h-64 lg:h-auto relative cursor-pointer overflow-hidden bg-neutral-100 dark:bg-neutral-800 group"
                     onClick={() => handleViewRoom(room)}
                   >
-                    <img
+                    <LazyLoadImage
                       src={
                         room.images?.[0] ||
                         "https://via.placeholder.com/800x600"
                       }
                       alt={room.roomType}
+                      effect="blur"
+                      wrapperClassName="w-full h-full block"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300">
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 duration-300 pointer-events-none">
                       <span className="bg-white/90 dark:bg-black/80 backdrop-blur text-neutral-900 dark:text-white text-xs font-bold tracking-widest uppercase px-5 py-2.5 rounded-full shadow-lg translate-y-4 group-hover:translate-y-0 transition-all duration-300">
                         View Gallery
                       </span>
