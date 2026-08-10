@@ -19,7 +19,7 @@ const otpSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "vendor", "hotel", "super_admin"],
       default: "user",
     },
     otp: String,
