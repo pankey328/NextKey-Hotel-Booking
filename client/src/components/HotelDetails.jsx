@@ -977,6 +977,7 @@ const HotelDetails = () => {
                   </label>
                   <div className="relative">
                     <DatePicker
+                      portalId="root"
                       popperStrategy="fixed"
                       dateFormat="MMM d, yyyy"
                       selected={checkIn}
@@ -1021,6 +1022,7 @@ const HotelDetails = () => {
                   </label>
                   <div className="relative">
                     <DatePicker
+                      portalId="root"
                       popperStrategy="fixed"
                       dateFormat="MMM d, yyyy"
                       selected={checkOut}

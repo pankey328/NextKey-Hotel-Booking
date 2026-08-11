@@ -286,35 +286,32 @@ const MyBookings = () => {
                     </div>
 
                     {/* Guest details row */}
-                    {(booking.adults > 0 || booking.guestName) && (
-                      <div className="mb-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
-                        <div className="flex items-start gap-3">
-                          <UserGroupIcon className="w-5 h-5 text-neutral-400 shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-0.5">Guest Information</p>
-                            <div className="text-sm font-medium text-neutral-900 dark:text-white">
-                              {booking.guestName ? (
-                                <span className="font-bold">{booking.guestName}</span>
-                              ) : null}
-                              {booking.guestName && <span className="mx-2 text-neutral-400">•</span>}
-                              {booking.adults || 1} Adult(s) {booking.children > 0 && `, ${booking.children} Child(ren)`}
-                            </div>
-                            {(booking.guestPhone || booking.guestEmail) && (
-                              <div className="text-xs text-neutral-500 mt-1">
-                                {booking.guestPhone && <span>{booking.guestPhone}</span>}
-                                {booking.guestPhone && booking.guestEmail && <span className="mx-2">•</span>}
-                                {booking.guestEmail && <span>{booking.guestEmail}</span>}
-                              </div>
-                            )}
-                            {booking.specialRequests && (
-                              <div className="mt-2 text-xs italic text-neutral-500">
-                                <span className="font-semibold not-italic">Special Request:</span> {booking.specialRequests}
-                              </div>
-                            )}
+                    <div className="mb-6 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+                      <div className="flex items-start gap-3">
+                        <UserGroupIcon className="w-5 h-5 text-neutral-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 mb-0.5">Guest Information</p>
+                          <div className="text-sm font-medium text-neutral-900 dark:text-white">
+                            <span className="font-bold">{booking.guestName || "Primary Guest"}</span>
+                            {booking.guestName && <span className="mx-2 text-neutral-400">•</span>}
+                            {!booking.guestName && <span className="mx-2 text-neutral-400">•</span>}
+                            {booking.adults || 1} Adult(s) {booking.children > 0 && `, ${booking.children} Child(ren)`}
                           </div>
+                          {(booking.guestPhone || booking.guestEmail) && (
+                            <div className="text-xs text-neutral-500 mt-1">
+                              {booking.guestPhone && <span>{booking.guestPhone}</span>}
+                              {booking.guestPhone && booking.guestEmail && <span className="mx-2">•</span>}
+                              {booking.guestEmail && <span>{booking.guestEmail}</span>}
+                            </div>
+                          )}
+                          {booking.specialRequests && (
+                            <div className="mt-2 text-xs italic text-neutral-500">
+                              <span className="font-semibold not-italic">Special Request:</span> {booking.specialRequests}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </div>
 
                   <div className="mt-auto pt-6 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
