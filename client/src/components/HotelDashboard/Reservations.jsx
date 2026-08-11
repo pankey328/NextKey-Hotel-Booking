@@ -290,9 +290,9 @@ const Reservations = (props) => {
                           {booking.children > 0 && `, ${booking.children} Child(ren)`}
                         </p>
                       )}
-                      {booking.guestPhone && (
+                      {(booking.guestPhone || booking.userId?.phone) && (
                         <p className="text-[11px] text-gray-500 font-medium">
-                          {booking.guestPhone}
+                          {booking.guestPhone || booking.userId?.phone}
                         </p>
                       )}
                       {booking.specialRequests && (
