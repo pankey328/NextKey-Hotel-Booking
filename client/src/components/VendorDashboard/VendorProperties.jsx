@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
 import ExportHotelsButton from "./ExportHotelsButton";
+import ImportHotelsButton from "./ImportHotelsButton";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css"; 
 
@@ -132,6 +133,10 @@ const VendorProperties = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto relative z-10">
+          <ImportHotelsButton
+            vendorId={currentVendorId}
+            onSuccess={fetchProperties}
+          />
           <ExportHotelsButton
             vendorId={currentVendorId}
             disabled={paginatedHotels.length === 0 || loading}

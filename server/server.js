@@ -65,8 +65,12 @@ const superadminRoutes = require("./routes/superadminRoutes");
 app.use("/api/superadmin", superadminRoutes);
 
 // EXPORT ROUTES
-const exportRoutes = require("./routes/exportRoutes")
+const exportRoutes = require("./routes/exportRoutes");
 app.use("/api/export", exportRoutes);
+
+// IMPORT ROUTES
+const importRoutes = require("./routes/importRoutes");
+app.use("/api/import", importRoutes);
 
 mongoose
   .connect(url)

@@ -279,11 +279,27 @@ const Reservations = (props) => {
                   >
                     <td className="px-6 py-4">
                       <p className="font-bold text-gray-900 dark:text-white">
-                        {booking.userId?.name || "Guest"}
+                        {booking.guestName || booking.userId?.name || "Guest"}
                       </p>
                       <p className="text-[12px] text-gray-500 dark:text-gray-400 mt-0.5 font-medium">
-                        {booking.userId?.email}
+                        {booking.guestEmail || booking.userId?.email}
                       </p>
+                      {(booking.adults > 0 || booking.children > 0) && (
+                        <p className="text-[11px] text-gray-500 mt-1 font-semibold">
+                          {booking.adults || 1} Adult(s)
+                          {booking.children > 0 && `, ${booking.children} Child(ren)`}
+                        </p>
+                      )}
+                      {booking.guestPhone && (
+                        <p className="text-[11px] text-gray-500 font-medium">
+                          {booking.guestPhone}
+                        </p>
+                      )}
+                      {booking.specialRequests && (
+                        <p className="text-[10px] text-amber-600 dark:text-amber-500 mt-1 italic font-medium line-clamp-2" title={booking.specialRequests}>
+                          Note: {booking.specialRequests}
+                        </p>
+                      )}
                     </td>
 
                     <td className="px-6 py-4">

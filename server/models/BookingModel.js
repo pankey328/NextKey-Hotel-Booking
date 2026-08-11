@@ -44,6 +44,30 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    guestName: {
+      type: String,
+      default: "",
+    },
+    guestEmail: {
+      type: String,
+      default: "",
+    },
+    guestPhone: {
+      type: String,
+      default: "",
+    },
+    adults: {
+      type: Number,
+      default: 1,
+    },
+    children: {
+      type: Number,
+      default: 0,
+    },
+    specialRequests: {
+      type: String,
+      default: "",
+    },
     platformFeePercentage: {
       type: Number,
       default: 10,

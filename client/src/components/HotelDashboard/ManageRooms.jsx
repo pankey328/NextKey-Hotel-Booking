@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
 import ExportRoomsButton from "./ExportRoomsButton";
+import ImportRoomsButton from "./ImportRoomsButton";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/blur.css"; 
 
@@ -118,15 +119,21 @@ const ManageRooms = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 font-sans">
-      {/* HEADER SECTION: Title & Export Button */}
+      {/* HEADER SECTION: Title & Export/Import Buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight">
           Manage Rooms
         </h1>
-        <ExportRoomsButton
-          hotelId={currentHotelId}
-          disabled={rooms.length === 0 || loading}
-        />
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <ImportRoomsButton
+            hotelId={currentHotelId}
+            onSuccess={fetchRooms}
+          />
+          <ExportRoomsButton
+            hotelId={currentHotelId}
+            disabled={rooms.length === 0 || loading}
+          />
+        </div>
       </div>
 
       {/* TABS & CONTROLS ROW */}

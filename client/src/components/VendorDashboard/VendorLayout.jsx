@@ -118,7 +118,7 @@ const VendorLayout = () => {
             <img
               src="/favicon.svg"
               alt="NextKey Logo"
-              fetchpriority="high"
+              fetchPriority="high"
               className="w-9 h-9 object-contain drop-shadow-sm"
             />
             <div>

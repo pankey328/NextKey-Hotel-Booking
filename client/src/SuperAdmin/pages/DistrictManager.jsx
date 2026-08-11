@@ -94,6 +94,7 @@ const DistrictManager = () => {
     }
 
     try {
+      setIsSubmitting(true);
       await api.post("/districts", {
         name: newDistrictName,
         stateId: selectedStateId,
@@ -103,6 +104,8 @@ const DistrictManager = () => {
       fetchDistricts(selectedStateId);
     } catch (error) {
       alert(error.response?.data?.message || "Error adding district");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -179,22 +182,32 @@ const DistrictManager = () => {
 
           <button
             type="submit"
-            className="w-full sm:w-auto px-6 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap"
+            disabled={isSubmitting}
+            className="w-full sm:w-auto px-6 py-3 rounded-xl text-[12px] font-bold uppercase tracking-wide bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.5"
-                d="M12 4v16m8-8H4"
-              ></path>
-            </svg>
-            Add District
+            {isSubmitting ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                <span>Adding...</span>
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    d="M12 4v16m8-8H4"
+                  ></path>
+                </svg>
+                Add District
+              </>
+            )}
           </button>
         </form>
       </div>

@@ -11,6 +11,7 @@ const Login = () => {
     password: "",
   });
   const [error, setError] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -32,6 +33,8 @@ const Login = () => {
         setError(obj);
         return;
       }
+
+      setLoading(true);
 
       let res = await api.post(`/auth/login`, {
         email: loginForm.email,
@@ -66,11 +69,14 @@ const Login = () => {
       setError({
         form: error.response?.data?.message || "Login Failed",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     try {
+      setLoading(true);
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
 
@@ -106,6 +112,8 @@ const Login = () => {
       setError({
         form: error.response?.data?.message || "Google Login Failed",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,9 +203,36 @@ const Login = () => {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3.5 rounded-xl shadow-md hover:opacity-90 transition-all active:scale-[0.98] mt-2"
+            disabled={loading}
+            className="w-full bg-black dark:bg-white text-white dark:text-black font-semibold py-3.5 rounded-xl shadow-md hover:opacity-90 transition-all active:scale-[0.98] mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Sign In
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-current"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                <span>Signing In...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
 
           {/* Divider */}
@@ -212,8 +247,9 @@ const Login = () => {
           {/* Google Login Button */}
           <button
             type="button"
+            disabled={loading}
             onClick={handleGoogleLogin}
-            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold py-3 rounded-xl flex items-center justify-center gap-3 transition-colors active:scale-[0.98]"
+            className="w-full bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 text-neutral-700 dark:text-neutral-200 font-semibold py-3 rounded-xl flex items-center justify-center gap-3 transition-colors active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path

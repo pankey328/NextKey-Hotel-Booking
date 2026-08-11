@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api";
 import useDebounce from "../../hooks/useDebounce";
 import ExportCouponsButton from "./ExportCouponsButton";
+import ImportCouponsButton from "./ImportCouponsButton";
 
 const CouponManagement = () => {
   const { hotelId } = useParams();
@@ -153,6 +154,10 @@ const CouponManagement = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto relative z-10">
+          <ImportCouponsButton
+            hotelId={hotelId}
+            onSuccess={fetchCoupons}
+          />
           <ExportCouponsButton
             hotelId={hotelId}
             disabled={coupons.length === 0 || loading}

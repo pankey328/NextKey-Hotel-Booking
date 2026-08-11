@@ -20,6 +20,12 @@ exports.createBooking = async (req, res) => {
       totalDays,
       originalPrice,
       finalPrice,
+      guestName,
+      guestEmail,
+      guestPhone,
+      adults,
+      children,
+      specialRequests,
     } = req.body;
 
     const userId = req.user.id;
@@ -46,6 +52,12 @@ exports.createBooking = async (req, res) => {
       totalDays,
       originalPrice,
       finalPrice,
+      guestName,
+      guestEmail,
+      guestPhone,
+      adults,
+      children,
+      specialRequests,
       platformFeePercentage,
       platformFeeAmount,
       hotelEarningAmount,

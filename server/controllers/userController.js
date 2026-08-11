@@ -1,5 +1,4 @@
 const User = require("../models/userModel");
-const Otp = require("../models/otpModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -26,6 +25,12 @@ exports.login = async (req, res) => {
     if (userExist.provider === "google") {
       return res.status(400).json({
         message: "Please login using Google",
+      });
+    }
+
+    if (userExist.isVerified === false) {
+      return res.status(400).json({
+        message: "Please verify your account before logging in",
       });
     }
 
@@ -84,6 +89,7 @@ exports.googleLogin = async (req, res) => {
         googleId: uid,
         photo,
         provider: "google",
+        isVerified: true,
       });
     }
 
@@ -134,7 +140,7 @@ exports.sendOtp = async (req, res) => {
 
     const userExist = await User.findOne({ email });
 
-    if (userExist) {
+    if (userExist && userExist.isVerified) {
       return res.status(400).json({
         message: "User already exists",
       });
@@ -142,16 +148,18 @@ exports.sendOtp = async (req, res) => {
 
     const otp = generateOtp.generateOtp();
     const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedOtp = await bcrypt.hash(otp.toString(), 10);
 
-    await Otp.findOneAndUpdate(
+    await User.findOneAndUpdate(
       { email },
       {
         name,
         email,
         password: hashedPassword,
         role: role || "user",
-        otp,
+        otp: hashedOtp,
         otpExpiry: Date.now() + 5 * 60 * 1000,
+        isVerified: false,
       },
       {
         upsert: true,
@@ -261,7 +269,7 @@ exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const pendingUser = await Otp.findOne({ email });
+    const pendingUser = await User.findOne({ email });
 
     if (!pendingUser) {
       return res.status(404).json({
@@ -269,28 +277,39 @@ exports.verifyOtp = async (req, res) => {
       });
     }
 
-    if (pendingUser.otp !== otp || pendingUser.otpExpiry < Date.now()) {
+    if (pendingUser.isVerified) {
+      return res.status(400).json({
+        message: "User already verified",
+      });
+    }
+
+    if (!pendingUser.otp || !pendingUser.otpExpiry || pendingUser.otpExpiry < Date.now()) {
       return res.status(400).json({
         message: "Invalid or Expired OTP",
       });
     }
 
-    const user = await User.create({
-      name: pendingUser.name,
-      email: pendingUser.email,
-      password: pendingUser.password,
-      role: pendingUser.role,
-    });
+    const isMatch = await bcrypt.compare(otp.toString(), pendingUser.otp);
 
-    await Otp.deleteOne({ email });
+    if (!isMatch) {
+      return res.status(400).json({
+        message: "Invalid or Expired OTP",
+      });
+    }
+
+    pendingUser.isVerified = true;
+    pendingUser.otp = null;
+    pendingUser.otpExpiry = null;
+
+    await pendingUser.save();
 
     return res.status(201).json({
       message: "Registration Successful",
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+        id: pendingUser._id,
+        name: pendingUser.name,
+        email: pendingUser.email,
+        role: pendingUser.role,
       },
     });
   } catch (error) {
@@ -320,8 +339,9 @@ exports.forget = async (req, res) => {
     }
 
     const otp = generateOtp.generateOtp();
+    const hashedOtp = await bcrypt.hash(otp.toString(), 10);
 
-    user.otp = otp;
+    user.otp = hashedOtp;
     user.otpExpiry = Date.now() + 5 * 60 * 1000;
 
     await user.save();
@@ -456,7 +476,9 @@ exports.verifyForget = async (req, res) => {
       });
     }
 
-    if (user.otp !== otp) {
+    const isMatch = await bcrypt.compare(otp.toString(), user.otp);
+
+    if (!isMatch) {
       return res.status(400).json({
         message: "Invalid OTP",
       });

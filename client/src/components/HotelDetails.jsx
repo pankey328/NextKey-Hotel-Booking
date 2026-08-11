@@ -55,6 +55,13 @@ const HotelDetails = () => {
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
 
+  const [guestName, setGuestName] = useState("");
+  const [guestEmail, setGuestEmail] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [specialRequests, setSpecialRequests] = useState("");
+
   const [roomFilters, setRoomFilters] = useState({
     search: "",
     minPrice: "",
@@ -254,6 +261,14 @@ const HotelDetails = () => {
       setCheckOut(null);
       setTotalDays(0);
       setAppliedCoupon(null);
+      
+      setGuestName(currentUser?.name || "");
+      setGuestEmail(currentUser?.email || "");
+      setGuestPhone(currentUser?.phone || "");
+      setAdults(1);
+      setChildren(0);
+      setSpecialRequests("");
+
       setShowBookingModal(true);
     } catch (err) {
       alert("Failed to load calendar. Please try again.");
@@ -296,6 +311,12 @@ const HotelDetails = () => {
         totalDays,
         originalPrice: basePrice,
         finalPrice,
+        guestName,
+        guestEmail,
+        guestPhone,
+        adults,
+        children,
+        specialRequests,
       };
 
       await api.post("/bookings/create", payload, {
@@ -908,7 +929,7 @@ const HotelDetails = () => {
       {/* BOOKING MODAL */}
       {showBookingModal && roomToBook && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-          <div className="bg-white dark:bg-neutral-900 rounded-[2rem] w-full max-w-lg shadow-2xl border border-white/20 dark:border-neutral-800 flex flex-col animate-in fade-in zoom-in-95 duration-300">
+          <div className="bg-white dark:bg-neutral-900 rounded-[2rem] w-full max-w-lg max-h-[95vh] shadow-2xl border border-white/20 dark:border-neutral-800 flex flex-col animate-in fade-in zoom-in-95 duration-300">
             <div className="flex justify-between items-center px-6 lg:px-8 py-5 border-b border-neutral-100 dark:border-neutral-800">
               <h2 className="text-xl font-bold tracking-tight text-neutral-900 dark:text-white">
                 Reservation Details
@@ -921,7 +942,7 @@ const HotelDetails = () => {
               </button>
             </div>
 
-            <div className="px-6 lg:px-8 py-6 space-y-5">
+            <div className="px-6 lg:px-8 py-6 space-y-5 overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-200 dark:scrollbar-thumb-neutral-700">
               {/* Room Summary Header */}
               <div className="flex gap-4 items-center">
                 <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-neutral-100 border border-neutral-200 dark:border-neutral-700 flex-shrink-0">
@@ -1046,6 +1067,85 @@ const HotelDetails = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Guest Details Section */}
+              {totalDays > 0 && (
+                <div className="pt-5 border-t border-neutral-100 dark:border-neutral-800 space-y-4">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 ml-1">
+                    Guest Details
+                  </label>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 mb-1 ml-1">Name</label>
+                      <input
+                        type="text"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        placeholder="Primary Guest Name"
+                        className="w-full bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 mb-1 ml-1">Phone</label>
+                      <input
+                        type="tel"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        placeholder="Contact Number"
+                        className="w-full bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-neutral-500 mb-1 ml-1">Email</label>
+                    <input
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="Email Address"
+                      className="w-full bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 mb-1 ml-1">Adults</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max={roomToBook?.maxAdults || 4}
+                        value={adults}
+                        onChange={(e) => setAdults(Number(e.target.value))}
+                        className="w-full bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-neutral-500 mb-1 ml-1">Children</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="4"
+                        value={children}
+                        onChange={(e) => setChildren(Number(e.target.value))}
+                        className="w-full bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-neutral-500 mb-1 ml-1">Special Requests</label>
+                    <textarea
+                      value={specialRequests}
+                      onChange={(e) => setSpecialRequests(e.target.value)}
+                      placeholder="Any specific needs?"
+                      rows="2"
+                      className="w-full bg-neutral-50 dark:bg-neutral-950/50 border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-sm font-medium outline-none focus:border-neutral-400 dark:focus:border-neutral-600 transition-colors dark:text-white resize-none"
+                    ></textarea>
+                  </div>
+                </div>
+              )}
 
               {/* Coupon Section */}
               {totalDays > 0 && (

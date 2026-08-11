@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema(
     },
     otp: String,
     otpExpiry: Date,
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
 
     googleId: {
       type: String,
