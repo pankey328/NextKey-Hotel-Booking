@@ -74,9 +74,9 @@ const EditHotel = () => {
         });
         setCurrentImageUrl(hotel.imageUrl);
 
-        const stateId = hotel.stateId?._id || hotel.stateId;
-        const districtId = hotel.districtId?._id || hotel.districtId;
-        const cityId = hotel.cityId?._id || hotel.cityId;
+        const cityId = hotel.cityId?._id || (typeof hotel.cityId === 'string' ? hotel.cityId : "");
+        const districtId = hotel.cityId?.districtId?._id || hotel.cityId?.districtId || hotel.districtId?._id || hotel.districtId || "";
+        const stateId = hotel.cityId?.stateId?._id || hotel.cityId?.stateId || hotel.stateId?._id || hotel.stateId || "";
 
         setSelectedStateId(stateId);
 
@@ -111,13 +111,18 @@ const EditHotel = () => {
     setSelectedDistrictId("");
     setSelectedCityId("");
     setCities([]);
-    try {
-      const res = await api.get(
-        `/districts?stateId=${stateId}&isDeleted=false`,
-      );
-      setDistricts(res.data.data);
-    } catch (error) {
-      console.error(error);
+
+    if (stateId) {
+      try {
+        const res = await api.get(
+          `/districts?stateId=${stateId}&isDeleted=false`,
+        );
+        setDistricts(res.data.data);
+      } catch (error) {
+        console.error("Error fetching districts:", error);
+      }
+    } else {
+      setDistricts([]);
     }
   };
 
@@ -125,28 +130,39 @@ const EditHotel = () => {
     const districtId = e.target.value;
     setSelectedDistrictId(districtId);
     setSelectedCityId("");
-    try {
-      const res = await api.get(
-        `/cities?districtId=${districtId}&isDeleted=false`,
-      );
-      setCities(res.data.data);
-    } catch (error) {
-      console.error(error);
+
+    if (districtId) {
+      try {
+        const res = await api.get(
+          `/cities?districtId=${districtId}&isDeleted=false`,
+        );
+        setCities(res.data.data);
+      } catch (error) {
+        console.error("Error fetching cities:", error);
+      }
+    } else {
+      setCities([]);
     }
   };
 
-  const handleFeatureChange = (feature) => {
-    let features = [...formData.features];
+  const handleCityChange = (e) => {
+    setSelectedCityId(e.target.value);
+  };
 
-    if (features.includes(feature)) {
-      features = features.filter((item) => item !== feature);
-    } else {
-      features.push(feature);
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    setFormData({
-      ...formData,
-      features,
+  const handleFeatureToggle = (feature) => {
+    setFormData((prev) => {
+      const exists = prev.features.includes(feature);
+      return {
+        ...prev,
+        features: exists
+          ? prev.features.filter((f) => f !== feature)
+          : [...prev.features, feature],
+      };
     });
   };
 
@@ -165,8 +181,6 @@ const EditHotel = () => {
       }
     });
 
-    submitData.append("stateId", selectedStateId);
-    submitData.append("districtId", selectedDistrictId);
     submitData.append("cityId", selectedCityId);
 
     if (image) submitData.append("image", image);

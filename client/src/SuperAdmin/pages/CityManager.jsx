@@ -14,6 +14,7 @@ const CityManager = () => {
   const [newCityName, setNewCityName] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 1000);
@@ -32,7 +33,10 @@ const CityManager = () => {
 
   const fetchStates = async () => {
     try {
-      const res = await api.get("/states?isDeleted=false");
+      const token = localStorage.getItem("token");
+      const res = await api.get("/states?isDeleted=false", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setStates(res.data.data);
     } catch (error) {
       console.log(error);
@@ -41,8 +45,10 @@ const CityManager = () => {
 
   const fetchDistrictsByState = async (stateId) => {
     try {
+      const token = localStorage.getItem("token");
       const res = await api.get(
         `/districts?stateId=${stateId}&isDeleted=false`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setDistricts(res.data.data);
     } catch (error) {
@@ -64,7 +70,8 @@ const CityManager = () => {
       if (debouncedSearch) url += `&search=${debouncedSearch}`;
       if (sortBy) url += `&sortBy=${sortBy}`;
 
-      const res = await api.get(url);
+      const token = localStorage.getItem("token");
+      const res = await api.get(url, { headers: { Authorization: `Bearer ${token}` } });
       setCities(res.data.data || []);
 
       const newTotalPages = res.data.totalPages || 1;
@@ -135,11 +142,12 @@ const CityManager = () => {
 
     try {
       setIsSubmitting(true);
+      const token = localStorage.getItem("token");
       await api.post("/cities", {
         name: newCityName,
         districtId: selectedDistrictId,
         stateId: selectedStateId,
-      });
+      }, { headers: { Authorization: `Bearer ${token}` } });
 
       setNewCityName("");
       fetchCities(selectedStateId, selectedDistrictId);
@@ -152,10 +160,13 @@ const CityManager = () => {
 
   const handleAction = async (action, id) => {
     try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
       if (action === "softDelete") {
-        await api.patch(`/cities/${id}/soft-delete`);
+        await api.patch(`/cities/${id}/soft-delete`, {}, config);
       } else if (action === "restore") {
-        await api.patch(`/cities/${id}/restore`);
+        await api.patch(`/cities/${id}/restore`, {}, config);
       } else if (action === "hardDelete") {
         const confirmDelete = window.confirm(
           "Are you sure? This cannot be undone.",
@@ -163,7 +174,7 @@ const CityManager = () => {
 
         if (!confirmDelete) return;
 
-        await api.delete(`/cities/${id}`);
+        await api.delete(`/cities/${id}`, config);
       }
 
       fetchCities(selectedStateId, selectedDistrictId);
@@ -592,6 +603,17 @@ const CityManager = () => {
                   )}
                 </span>
               </div>
+
+              {selectedCity?.stateId?.createdBy?.name && (
+                <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                    Created By
+                  </span>
+                  <span className="font-extrabold text-blue-600 dark:text-blue-400 text-[13px] uppercase tracking-wider">
+                    {selectedCity.stateId.createdBy.name} (SuperAdmin)
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end">

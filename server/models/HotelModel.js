@@ -49,16 +49,6 @@ const hotelSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    stateId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "State",
-      required: true,
-    },
-    districtId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "District",
-      required: true,
-    },
     cityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "City",

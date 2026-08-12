@@ -85,7 +85,14 @@ exports.getAllDistricts = async (req, res) => {
 
     // query
     let queryExec = District.find(filter)
-      .populate("stateId", "name")
+      .populate({
+        path: "stateId",
+        select: "name createdBy",
+        populate: {
+          path: "createdBy",
+          select: "name",
+        },
+      })
       .sort(sortObj);
 
     // pagination
@@ -128,7 +135,14 @@ exports.getOneDistrict = async (req, res) => {
       });
     }
 
-    const district = await District.findById(id).populate("stateId", "name");
+    const district = await District.findById(id).populate({
+      path: "stateId",
+      select: "name createdBy",
+      populate: {
+        path: "createdBy",
+        select: "name",
+      },
+    });
 
     if (!district) {
       return res.status(404).json({

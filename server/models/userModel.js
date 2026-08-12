@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "VendorRequest",
     },
+    superAdminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SuperAdmin",
+    },
   },
   {
     timestamps: true,

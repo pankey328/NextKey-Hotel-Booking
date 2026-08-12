@@ -113,8 +113,6 @@ const AddHotel = () => {
         submitData.append(key, formData[key]);
       }
     });
-    submitData.append("stateId", selectedStateId);
-    submitData.append("districtId", selectedDistrictId);
     submitData.append("cityId", selectedCityId);
     submitData.append("image", image);
 

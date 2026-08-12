@@ -157,8 +157,6 @@ exports.confirmHotelsImport = async (req, res) => {
         address: data.address,
         starRating: data.starRating || 3,
         features: data.features || [],
-        stateId: stateObj._id,
-        districtId: districtObj._id,
         cityId: cityObj._id,
         vendorId,
         imageUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=1200",

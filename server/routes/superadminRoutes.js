@@ -10,4 +10,7 @@ router.get(
   superadminController.getSuperAdminDashboardStats,
 );
 
+// Register SuperAdmin
+router.post("/register", superadminController.registerSuperAdmin);
+
 module.exports = router;

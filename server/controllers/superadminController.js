@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Hotel = require("../models/HotelModel");
 const Room = require("../models/RoomModel");
 const User = require("../models/userModel");
-const VendorRequest = require("../models/VendorRequestModel");
+const VendorRequest = require("../models/VendorModel");
 const Booking = require("../models/BookingModel");
 
 exports.getSuperAdminDashboardStats = async (req, res) => {
@@ -127,6 +127,53 @@ exports.getSuperAdminDashboardStats = async (req, res) => {
         },
         hotelRevenue,
         vendorRevenue,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const SuperAdmin = require("../models/SuperAdminModel");
+const bcrypt = require("bcrypt");
+
+exports.registerSuperAdmin = async (req, res) => {
+  try {
+    const { name, email, phone, password } = req.body;
+
+    if (!name || !email || !phone || !password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email is already in use" });
+    }
+
+    const newSuperAdmin = await SuperAdmin.create({
+      name,
+      email: email.toLowerCase().trim(),
+      phone,
+    });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      name,
+      email: email.toLowerCase().trim(),
+      password: hashedPassword,
+      role: "super_admin",
+      superAdminId: newSuperAdmin._id,
+      isVerified: true,
+    });
+
+    res.status(201).json({
+      message: "SuperAdmin registered successfully",
+      superAdmin: newSuperAdmin,
+      user: {
+        _id: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
       },
     });
   } catch (error) {

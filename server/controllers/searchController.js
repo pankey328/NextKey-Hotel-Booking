@@ -1,5 +1,6 @@
 const Hotel = require("../models/HotelModel");
 const Room = require("../models/RoomModel");
+const City = require("../models/CityModel");
 
 // Get Hotels by serach query
 exports.searchHotels = async (req, res) => {
@@ -28,9 +29,17 @@ exports.searchHotels = async (req, res) => {
       ];
     }
 
-    if (stateId) query.stateId = stateId;
-    if (districtId) query.districtId = districtId;
-    if (cityId) query.cityId = cityId;
+    if (cityId) {
+      query.cityId = cityId;
+    } else if (stateId || districtId) {
+      const cityFilter = { isDeleted: false };
+      if (stateId) cityFilter.stateId = stateId;
+      if (districtId) cityFilter.districtId = districtId;
+      const matchingCities = await City.find(cityFilter).select("_id");
+      const cityIds = matchingCities.map((c) => c._id);
+      query.cityId = { $in: cityIds };
+    }
+
     if (starRating) query.starRating = Number(starRating);
     if (hotelType) query.hotelType = hotelType;
 
@@ -46,9 +55,14 @@ exports.searchHotels = async (req, res) => {
     const [totalHotels, hotels] = await Promise.all([
       Hotel.countDocuments(query),
       Hotel.find(query)
-        .populate("stateId", "name")
-        .populate("districtId", "name")
-        .populate("cityId", "name")
+        .populate({
+          path: "cityId",
+          select: "name districtId stateId",
+          populate: [
+            { path: "districtId", select: "name" },
+            { path: "stateId", select: "name" },
+          ],
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNumber),
@@ -81,10 +95,14 @@ exports.getSingleHotel = async (req, res) => {
       });
     }
 
-    const hotel = await Hotel.findById(id)
-      .populate("stateId", "name")
-      .populate("districtId", "name")
-      .populate("cityId", "name");
+    const hotel = await Hotel.findById(id).populate({
+      path: "cityId",
+      select: "name districtId stateId",
+      populate: [
+        { path: "districtId", select: "name" },
+        { path: "stateId", select: "name" },
+      ],
+    });
 
     if (!hotel || hotel.status !== "approved" || hotel.isDeleted) {
       return res.status(404).json({

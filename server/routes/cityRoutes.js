@@ -3,8 +3,10 @@ const router = express.Router();
 
 const cityController = require("../controllers/cityController");
 
+const authMiddleware = require("../middleware/authMiddleware");
+
 // Create
-router.post("/", cityController.createCity);
+router.post("/", authMiddleware, cityController.createCity);
 
 // Get All
 router.get("/", cityController.getAllCities);
@@ -13,12 +15,12 @@ router.get("/", cityController.getAllCities);
 router.get("/:id", cityController.getOneCity);
 
 // Soft Delete
-router.patch("/:id/soft-delete", cityController.softDeleteCity);
+router.patch("/:id/soft-delete", authMiddleware, cityController.softDeleteCity);
 
 // Restore
-router.patch("/:id/restore", cityController.restoreCity);
+router.patch("/:id/restore", authMiddleware, cityController.restoreCity);
 
 // Hard Delete
-router.delete("/:id", cityController.deleteCity);
+router.delete("/:id", authMiddleware, cityController.deleteCity);
 
 module.exports = router;

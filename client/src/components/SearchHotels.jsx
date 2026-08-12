@@ -553,7 +553,7 @@ const SearchHotels = () => {
 
                       <div className="flex items-center text-sm text-neutral-500 dark:text-neutral-400 mb-4 gap-1.5 font-medium">
                         <MapPinIcon className="w-4 h-4" />
-                        {hotel.cityId?.name}, {hotel.stateId?.name}
+                        {hotel.cityId?.name}, {hotel.cityId?.stateId?.name || hotel.stateId?.name}
                       </div>
 
                       <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-6 line-clamp-2 font-light leading-relaxed">
@@ -660,7 +660,7 @@ const SearchHotels = () => {
                   </h2>
                   <div className="flex items-center text-sm gap-1.5 font-medium">
                     <MapPinIcon className="w-4 h-4" />
-                    {selectedHotel.cityId?.name}, {selectedHotel.stateId?.name}
+                    {selectedHotel.cityId?.name}, {selectedHotel.cityId?.stateId?.name || selectedHotel.stateId?.name}
                   </div>
                 </div>
               </div>

@@ -19,7 +19,12 @@ exports.createState = async (req, res) => {
       });
     }
 
-    const state = await State.create({ name });
+    const stateData = { name };
+    if (req.user && req.user.superAdminId) {
+      stateData.createdBy = req.user.superAdminId;
+    }
+
+    const state = await State.create(stateData);
 
     return res.status(201).json({
       message: "State created successfully",
@@ -56,7 +61,7 @@ exports.getAllStates = async (req, res) => {
     if (sortBy === "name_desc") sortObj = { name: -1 }; // Z to A
 
     // query
-    let queryExec = State.find(filter).sort(sortObj);
+    let queryExec = State.find(filter).sort(sortObj).populate("createdBy", "name");
 
     // pagination
     if (limit) {
@@ -98,7 +103,7 @@ exports.getOneState = async (req, res) => {
       });
     }
 
-    const state = await State.findById(id);
+    const state = await State.findById(id).populate("createdBy", "name");
 
     if (!state) {
       return res.status(404).json({

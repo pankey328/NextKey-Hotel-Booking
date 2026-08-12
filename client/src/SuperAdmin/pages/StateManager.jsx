@@ -7,6 +7,7 @@ const StateManager = () => {
   const [states, setStates] = useState([]);
   const [newStateName, setNewStateName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 1000);
@@ -36,7 +37,10 @@ const StateManager = () => {
         url += `&sortBy=${sortBy}`;
       }
 
-      const res = await api.get(url);
+      const token = localStorage.getItem("token");
+      const res = await api.get(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setStates(res.data.data || []);
 
       const newTotalPages = res.data.totalPages || 1;
@@ -72,7 +76,12 @@ const StateManager = () => {
     }
     try {
       setIsSubmitting(true);
-      await api.post("/states", { name: newStateName });
+      const token = localStorage.getItem("token");
+      await api.post(
+        "/states",
+        { name: newStateName },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setNewStateName("");
       fetchStates();
     } catch (error) {
@@ -84,12 +93,15 @@ const StateManager = () => {
 
   const handleAction = async (action, id) => {
     try {
+      const token = localStorage.getItem("token");
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
       if (action === "softDelete") {
-        await api.patch(`/states/${id}/soft-delete`);
+        await api.patch(`/states/${id}/soft-delete`, {}, config);
       }
 
       if (action === "restore") {
-        await api.patch(`/states/${id}/restore`);
+        await api.patch(`/states/${id}/restore`, {}, config);
       }
 
       if (action === "hardDelete") {
@@ -99,7 +111,7 @@ const StateManager = () => {
 
         if (!confirmDelete) return;
 
-        await api.delete(`/states/${id}`);
+        await api.delete(`/states/${id}`, config);
       }
 
       fetchStates();
@@ -136,6 +148,7 @@ const StateManager = () => {
             type="text"
             placeholder="Enter new state name..."
             value={newStateName}
+            required
             onChange={(e) => setNewStateName(e.target.value)}
             className="w-full sm:w-64 px-4 py-3 text-[13px] font-bold rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white outline-none cursor-text shadow-sm focus:border-gray-400 transition-colors placeholder-gray-400 uppercase tracking-wide"
           />
@@ -462,6 +475,17 @@ const StateManager = () => {
                   )}
                 </span>
               </div>
+
+              {selectedState?.createdBy?.name && (
+                <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                    Created By
+                  </span>
+                  <span className="font-extrabold text-blue-600 dark:text-blue-400 text-[13px] uppercase tracking-wider">
+                    {selectedState.createdBy.name} (SuperAdmin)
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end">

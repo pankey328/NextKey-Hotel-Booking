@@ -125,24 +125,9 @@ function App() {
             <Route path="overview" element={<HotelDashboardOverview />} />
             <Route path="reservations" element={<Reservations />} />
             <Route path="rooms" element={<ManageRooms />} />
+            <Route path="add-room" element={<AddRoom />} />
+            <Route path="edit-room/:id" element={<EditRoom />} />
           </Route>
-
-          <Route
-            path="/hotel-dashboard/add-room"
-            element={
-              <ProtectedRoute allowedRoles={["hotel"]}>
-                <AddRoom />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/hotel-dashboard/edit-room/:id"
-            element={
-              <ProtectedRoute allowedRoles={["hotel"]}>
-                <EditRoom />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/admin-dashboard"
@@ -162,40 +147,11 @@ function App() {
               path="hotel/:hotelId/reservations"
               element={<VendorReservations />}
             />
+            <Route path="add-hotel" element={<AddHotel />} />
+            <Route path="edit-hotel/:id" element={<EditHotel />} />
+            <Route path="add-room/:hotelId" element={<AddRoomByVendor />} />
+            <Route path="coupons/:hotelId" element={<CouponManagement />} />
           </Route>
-
-          <Route
-            path="/admin-dashboard/add-hotel"
-            element={
-              <ProtectedRoute allowedRoles={["vendor"]}>
-                <AddHotel />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin-dashboard/edit-hotel/:id"
-            element={
-              <ProtectedRoute allowedRoles={["vendor"]}>
-                <EditHotel />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin-dashboard/add-room/:hotelId"
-            element={
-              <ProtectedRoute allowedRoles={["vendor"]}>
-                <AddRoomByVendor />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin-dashboard/coupons/:hotelId"
-            element={
-              <ProtectedRoute allowedRoles={["vendor"]}>
-                <CouponManagement />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/superadmin-dashboard"

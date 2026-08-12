@@ -312,7 +312,7 @@ const VendorProperties = () => {
                       </div>
                     </td>
                     <td className="px-6 py-5 font-medium text-gray-600 dark:text-gray-300">
-                      {hotel.cityId?.name}, {hotel.stateId?.name}
+                      {hotel.cityId?.name}, {hotel.cityId?.stateId?.name || hotel.stateId?.name}
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex flex-col items-end gap-3">
@@ -600,8 +600,8 @@ const VendorProperties = () => {
                       <span className="leading-relaxed">
                         {selectedHotel.address},<br />
                         {selectedHotel.cityId?.name},{" "}
-                        {selectedHotel.districtId?.name},<br />
-                        {selectedHotel.stateId?.name} - {selectedHotel.pincode}
+                        {selectedHotel.cityId?.districtId?.name || selectedHotel.districtId?.name},<br />
+                        {selectedHotel.cityId?.stateId?.name || selectedHotel.stateId?.name} - {selectedHotel.pincode}
                       </span>
                     </li>
                   </ul>

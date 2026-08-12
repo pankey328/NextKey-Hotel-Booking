@@ -83,9 +83,14 @@ exports.downloadVendorHotels = async (req, res) => {
     const { vendorId } = req.params;
 
     const hotels = await Hotel.find({ vendorId, isDeleted: false })
-      .populate("stateId", "name")
-      .populate("districtId", "name")
-      .populate("cityId", "name")
+      .populate({
+        path: "cityId",
+        select: "name districtId stateId",
+        populate: [
+          { path: "districtId", select: "name" },
+          { path: "stateId", select: "name" },
+        ],
+      })
       .sort({ createdAt: -1 });
 
     if (!hotels || hotels.length === 0) {
@@ -102,8 +107,8 @@ exports.downloadVendorHotels = async (req, res) => {
       Phone: hotel.phone,
       Address: hotel.address,
       City: hotel.cityId?.name || "N/A",
-      District: hotel.districtId?.name || "N/A",
-      State: hotel.stateId?.name || "N/A",
+      District: hotel.cityId?.districtId?.name || "N/A",
+      State: hotel.cityId?.stateId?.name || "N/A",
       Features: hotel.features ? hotel.features.join(", ") : "",
       Status: hotel.status.toUpperCase(),
       "Reject Remark": hotel.rejectRemark || "None",

@@ -1,7 +1,7 @@
 const Booking = require("../models/BookingModel");
 const TempBooking = require("../models/TempBookingModel");
 const Review = require("../models/ReviewModel");
-const VendorRequest = require("../models/VendorRequestModel");
+const VendorRequest = require("../models/VendorModel");
 const Hotel = require("../models/HotelModel");
 const mongoose = require("mongoose");
 

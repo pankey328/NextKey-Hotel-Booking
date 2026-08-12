@@ -357,7 +357,7 @@ const HotelManager = () => {
                     {/* Location */}
                     <td className="px-6 py-5 font-medium text-gray-600 dark:text-gray-400">
                       {hotel.cityId?.name?.toUpperCase()},{" "}
-                      {hotel.stateId?.name?.toUpperCase()}
+                      {(hotel.cityId?.stateId?.name || hotel.stateId?.name)?.toUpperCase()}
                     </td>
 
                     {/* Contact */}
@@ -651,8 +651,8 @@ const HotelManager = () => {
                       <span className="leading-relaxed">
                         {selectedHotel.address},<br />
                         {selectedHotel.cityId?.name},{" "}
-                        {selectedHotel.districtId?.name},<br />
-                        {selectedHotel.stateId?.name} - {selectedHotel.pincode}
+                        {selectedHotel.cityId?.districtId?.name || selectedHotel.districtId?.name},<br />
+                        {selectedHotel.cityId?.stateId?.name || selectedHotel.stateId?.name} - {selectedHotel.pincode}
                       </span>
                     </li>
                   </ul>

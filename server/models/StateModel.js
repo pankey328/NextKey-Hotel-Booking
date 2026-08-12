@@ -13,6 +13,11 @@ const stateSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "SuperAdmin",
+      required: true,
+    },
   },
   {
     timestamps: true,

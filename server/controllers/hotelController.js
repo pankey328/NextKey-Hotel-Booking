@@ -1,6 +1,6 @@
 const Hotel = require("../models/HotelModel");
 const User = require("../models/userModel");
-const VendorRequest = require("../models/VendorRequestModel");
+const VendorRequest = require("../models/VendorModel");
 const bcrypt = require("bcrypt");
 const { uploadImage } = require("../utils/cloudinary");
 const { sendMail } = require("../utils/sendMail");
@@ -24,8 +24,6 @@ exports.registerHotel = async (req, res) => {
       email,
       phone,
       locationLink,
-      stateId,
-      districtId,
       cityId,
       features,
     } = req.body;
@@ -36,8 +34,6 @@ exports.registerHotel = async (req, res) => {
       !address ||
       !email ||
       !phone ||
-      !stateId ||
-      !districtId ||
       !cityId
     ) {
       return res.status(400).json({ message: "Required fields are missing" });
@@ -86,8 +82,6 @@ exports.registerHotel = async (req, res) => {
       phone,
       locationLink,
       imageUrl,
-      stateId,
-      districtId,
       cityId,
       trackingId,
       vendorId: vendorDetails._id,
@@ -252,9 +246,14 @@ exports.getHotels = async (req, res) => {
     const skipNum = (pageNum - 1) * limitNum;
 
     const hotels = await Hotel.find(query)
-      .populate("stateId", "name")
-      .populate("districtId", "name")
-      .populate("cityId", "name")
+      .populate({
+        path: "cityId",
+        select: "name districtId stateId",
+        populate: [
+          { path: "districtId", select: "name" },
+          { path: "stateId", select: "name" },
+        ],
+      })
       .populate("vendorId", "companyName applicantName email phone")
       .sort(sortObj)
       .skip(skipNum)
@@ -626,8 +625,6 @@ exports.superAdminAddHotel = async (req, res) => {
       email,
       phone,
       locationLink,
-      stateId,
-      districtId,
       cityId,
       vendorId,
       features,
@@ -639,8 +636,6 @@ exports.superAdminAddHotel = async (req, res) => {
       !address ||
       !email ||
       !phone ||
-      !stateId ||
-      !districtId ||
       !cityId
     ) {
       return res.status(400).json({ message: "Required fields are missing" });
@@ -688,8 +683,6 @@ exports.superAdminAddHotel = async (req, res) => {
       email: hotelEmail,
       phone,
       locationLink,
-      stateId,
-      districtId,
       cityId,
       imageUrl,
       trackingId,

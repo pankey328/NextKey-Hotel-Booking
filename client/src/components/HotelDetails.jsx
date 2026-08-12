@@ -490,7 +490,7 @@ const HotelDetails = () => {
           </h1>
           <div className="flex items-center gap-2 text-neutral-700 dark:text-neutral-300 font-medium text-lg">
             <MapPinIcon className="w-5 h-5" />
-            {hotel.cityId?.name}, {hotel.stateId?.name}
+            {hotel.cityId?.name}, {hotel.cityId?.stateId?.name || hotel.stateId?.name}
           </div>
         </div>
       </div>

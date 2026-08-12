@@ -1,4 +1,4 @@
-const VendorRequest = require("../models/VendorRequestModel");
+const VendorRequest = require("../models/VendorModel");
 const User = require("../models/userModel");
 const Hotel = require("../models/HotelModel");
 const Room = require("../models/RoomModel");

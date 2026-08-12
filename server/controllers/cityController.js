@@ -90,7 +90,14 @@ exports.getAllCities = async (req, res) => {
     if (sortBy === "name_desc") sortObj = { name: -1 };
 
     let queryExec = City.find(filter)
-      .populate("stateId", "name")
+      .populate({
+        path: "stateId",
+        select: "name createdBy",
+        populate: {
+          path: "createdBy",
+          select: "name",
+        },
+      })
       .populate("districtId", "name")
       .sort(sortObj);
 
@@ -134,7 +141,14 @@ exports.getOneCity = async (req, res) => {
     }
 
     const city = await City.findById(id)
-      .populate("stateId", "name")
+      .populate({
+        path: "stateId",
+        select: "name createdBy",
+        populate: {
+          path: "createdBy",
+          select: "name",
+        },
+      })
       .populate("districtId", "name");
 
     if (!city) {

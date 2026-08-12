@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useOutletContext } from "react-router-dom";
 import api from "../../api";
 
 const facilityCategories = {
@@ -67,6 +67,8 @@ const facilityCategories = {
 
 const AddRoomByVendor = () => {
   const { hotelId } = useParams();
+  const { myHotels } = useOutletContext();
+  const hotelInfo = myHotels?.find((h) => h._id === hotelId);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
@@ -214,7 +216,7 @@ const AddRoomByVendor = () => {
             Add New Room
           </h1>
           <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400 mt-2">
-            Create a new listing for Hotel ID: {hotelId}
+            Create a new listing for {hotelInfo?.name ? `Property: ${hotelInfo.name}` : `Hotel ID: ${hotelId}`}
           </p>
         </div>
         <button
