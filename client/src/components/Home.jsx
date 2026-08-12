@@ -38,13 +38,12 @@ const Home = () => {
       {/* HERO SECTION */}
       <section className="relative w-full h-screen min-h-[700px] flex flex-col items-center justify-center pt-20">
         <div className="absolute inset-0 overflow-hidden bg-neutral-900">
-          <LazyLoadImage
+          <img
             src={heroImage}
             alt="Luxury Coastal Pool"
-            effect="blur"
             fetchPriority="high"
-            wrapperClassName="w-full h-full block bg-neutral-900"
-            className="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]"
+            rel="preload"
+            className="w-full h-full object-cover scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate] bg-neutral-900"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-[#fdfdfd] dark:to-neutral-950 transition-colors duration-500"></div>
         </div>

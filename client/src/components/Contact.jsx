@@ -40,13 +40,12 @@ const Contact = () => {
       {/* HERO SECTION */}
       <section className="relative w-full h-[50vh] min-h-[400px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 bg-neutral-900">
-          <LazyLoadImage
+          <img
             src={contactHeroImage}
             alt="Luxury Concierge"
-            effect="blur"
             fetchPriority="high"
-            wrapperClassName="w-full h-full block bg-neutral-900"
-            className="w-full h-full object-cover opacity-40 scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate]"
+            rel="preload"
+            className="w-full h-full object-cover opacity-40 scale-105 animate-[pulse_20s_ease-in-out_infinite_alternate] bg-neutral-900"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-[#fdfdfd]/20 to-transparent dark:from-neutral-950 dark:via-neutral-950/40 transition-colors duration-500"></div>
         </div>

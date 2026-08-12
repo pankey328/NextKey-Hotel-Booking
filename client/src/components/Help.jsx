@@ -170,13 +170,12 @@ const Help = () => {
     <div className="min-h-screen bg-[#fdfdfd] dark:bg-neutral-950 transition-colors duration-500 font-sans text-neutral-900 dark:text-neutral-100 pb-24">
       {/* HERO SECTION WITH SEARCH */}
       <section className="relative w-full py-32 flex flex-col items-center justify-center overflow-hidden bg-neutral-900">
-        <LazyLoadImage
+        <img
           src={helpHeroImage}
           alt="Support Team"
-          effect="blur"
           fetchPriority="high"
-          wrapperClassName="absolute inset-0 w-full h-full block bg-neutral-900"
-          className="w-full h-full object-cover opacity-30"
+          rel="preload"
+          className="absolute inset-0 w-full h-full object-cover opacity-30 bg-neutral-900"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#fdfdfd] via-transparent to-transparent dark:from-neutral-950 transition-colors duration-500"></div>
 
